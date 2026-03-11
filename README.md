@@ -2,6 +2,11 @@
 
 > Custom Boss Framework · Fabric 1.20.1 · JSON-Driven · Server-Side Only
 
+[![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-62B47A)](https://minecraft.net)
+[![Fabric](https://img.shields.io/badge/Mod_Loader-Fabric-DBB591)](https://fabricmc.net)
+[![License](https://img.shields.io/badge/License-GPL--v3-blue)](LICENSE)
+
 A data-driven boss framework for Fabric — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/boss reload`, and your boss is live.
 
 ---
