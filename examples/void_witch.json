@@ -1,0 +1,198 @@
+{
+  "id": "void_witch",
+  "displayName": "&5&lVoid Witch",
+  "health": 160.0,
+  "armor": 3.0,
+  "speed": 0.22,
+  "knockbackResistance": 0.35,
+  "attackDamage": 4.0,
+  "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" },
+  "skin": { "type": "player", "value": "Lythael" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:stick", "nbt": "{display:{Name:'{\"text\":\"Void Staff\",\"color\":\"dark_purple\",\"italic\":false}'},Enchantments:[{id:\"minecraft:knockback\",lvl:2}]}" },
+    "offHand":  { "item": "minecraft:amethyst_shard" },
+    "head":     { "item": "minecraft:leather_helmet",     "nbt": "{display:{color:4259584},Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "chest":    { "item": "minecraft:leather_chestplate", "nbt": "{display:{color:4259584},Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "legs":     { "item": "minecraft:leather_leggings",   "nbt": "{display:{color:4259584},Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "feet":     { "item": "minecraft:leather_boots",      "nbt": "{display:{color:4259584},Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" }
+  },
+  "phases": [
+
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        {
+          "type": "random_message",
+          "cooldownTicks": 140,
+          "params": {
+            "messages": [
+              "&5You shouldn't have come here...",
+              "&dThe void calls to you.",
+              "&5&lYour soul is mine.",
+              "&dI can smell your fear.",
+              "&5The darkness will swallow you whole."
+            ],
+            "radius": 48.0
+          }
+        },
+        {
+          "type": "flames",
+          "cooldownTicks": 90,
+          "params": {
+            "radius": 3.5,
+            "duration": 50,
+            "density": 7
+          }
+        },
+        {
+          "type": "ranged_projectile",
+          "cooldownTicks": 60,
+          "params": {
+            "projectile": "minecraft:small_fireball",
+            "count": 2,
+            "spread": 8.0,
+            "taunt": "&5Burn."
+          }
+        }
+      ],
+      "minions": []
+    },
+
+    {
+      "hpThresholdPercent": 0.60,
+      "speedMultiplier": 1.20,
+      "damageMultiplier": 1.25,
+      "abilities": [
+        {
+          "type": "freeze",
+          "cooldownTicks": 100,
+          "params": {
+            "duration": 90,
+            "intensity": 140,
+            "radius": 9.0,
+            "taunt": "&b&lTime... stops."
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldownTicks": 100,
+          "params": {
+            "messages": [
+              "&b&lFEEL THE COLD!",
+              "&3The frost will claim you.",
+              "&b&lYour warmth means nothing here.",
+              "&3Ice and void — that is all you are."
+            ],
+            "radius": 48.0
+          }
+        },
+        {
+          "type": "flames",
+          "cooldownTicks": 70,
+          "params": {
+            "radius": 4.0,
+            "duration": 60,
+            "density": 9
+          }
+        },
+        {
+          "type": "ranged_projectile",
+          "cooldownTicks": 45,
+          "params": {
+            "projectile": "minecraft:small_fireball",
+            "count": 3,
+            "spread": 12.0
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&5&lThe Void Witch weaves ice and shadow!",
+      "transitionSound": "minecraft:entity.elder_guardian.curse",
+      "transitionParticle": "minecraft:snowflake"
+    },
+
+    {
+      "hpThresholdPercent": 0.28,
+      "speedMultiplier": 1.45,
+      "damageMultiplier": 1.55,
+      "abilities": [
+        {
+          "type": "particle_tornado",
+          "cooldownTicks": 160,
+          "params": {
+            "maxRadius": 5.5,
+            "height": 8.0,
+            "duration": 120,
+            "rotationSpeed": 12.0,
+            "disks": 16,
+            "damage": 1.5,
+            "taunt": "&5&lVOID STORM!"
+          }
+        },
+        {
+          "type": "freeze",
+          "cooldownTicks": 70,
+          "params": {
+            "duration": 120,
+            "intensity": 140,
+            "radius": 11.0,
+            "taunt": "&b&lFROZEN SOLID!"
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldownTicks": 80,
+          "params": {
+            "messages": [
+              "&4&lYOU CANNOT KILL ME!",
+              "&5The void is endless — as is my power!",
+              "&d&lI AM BEYOND DEATH!",
+              "&4Your struggle amuses me.",
+              "&5&lYOU WILL ALL PERISH!"
+            ],
+            "radius": 64.0
+          }
+        },
+        {
+          "type": "flames",
+          "cooldownTicks": 50,
+          "params": {
+            "radius": 5.0,
+            "duration": 80,
+            "density": 12
+          }
+        },
+        {
+          "type": "ranged_projectile",
+          "cooldownTicks": 30,
+          "params": {
+            "projectile": "minecraft:small_fireball",
+            "count": 4,
+            "spread": 15.0,
+            "taunt": "&4&lEMBERS!"
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&4&l\u2605 THE VOID WITCH UNLEASHES HER TRUE POWER! \u2605",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:dragon_breath"
+    }
+
+  ],
+  "loot": [
+    {
+      "item": "minecraft:amethyst_shard",
+      "nbt": "{display:{Name:'{\"text\":\"Void Crystal\",\"color\":\"dark_purple\",\"bold\":true,\"italic\":false}'},Enchantments:[{id:\"minecraft:fortune\",lvl:3}]}",
+      "count": 1,
+      "chance": 0.20
+    },
+    { "item": "minecraft:amethyst_shard", "count": 10, "chance": 1.0  },
+    { "item": "minecraft:diamond",        "count": 3,  "chance": 0.6  },
+    { "item": "minecraft:ender_pearl",    "count": 4,  "chance": 0.7  },
+    { "item": "minecraft:golden_apple",   "count": 1,  "chance": 0.4  },
+    { "item": "minecraft:nether_star",    "count": 1,  "chance": 0.05 }
+  ]
+}
