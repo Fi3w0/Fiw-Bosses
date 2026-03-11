@@ -15,7 +15,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
-- **16 abilities** — melee, ranged, mobility, AoE, and utility, all configurable per phase
+- **21 abilities** — melee, ranged, mobility, AoE, utility, and crowd-control, all configurable per phase
 - **Custom skins** — any player skin or local PNG file
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
 - **Minion spawning** — spawn any mob with caps and radius control
@@ -43,7 +43,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop `fiw-bosses-1.0.0.jar` into your `mods/` folder
+3. Drop `fiw-bosses-1.0.1.jar` into your `mods/` folder
 4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
@@ -55,6 +55,8 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 /boss spawn <boss_id> <x> <y> <z>  — spawn at coordinates
 /boss list                          — list all loaded boss IDs
 /boss reload                        — reload all JSON configs (permission level 3)
+/boss kill <boss_id>                — kill all living bosses with that ID
+/boss kill all                      — kill every boss currently alive
 ```
 
 ---
@@ -79,6 +81,11 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 | `orbital` | Orbiting particle orbs that damage on contact |
 | `meteor` | Fireballs or wither skulls falling from above |
 | `pull` | Vortex that pulls all nearby players in |
+| `flames` | Sustained fire aura around the boss — boss keeps moving freely |
+| `freeze` | Holds nearby players in a configurable freeze for a set duration |
+| `random_message` | Sends a random taunt from a list to nearby players |
+| `particle_tornado` | Rising funnel tornado — narrow at base, wide at top, optional damage |
+| `swap` | Instantly swaps the boss and target positions to disorient players |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
@@ -86,7 +93,15 @@ Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
 ## Included Bosses
 
-Four ready-to-use bosses are included in `examples/` out of the box.
+Five ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
+
+| Boss | Style | Highlights |
+|---|---|---|
+| `blade_dancer` | Skirmisher | arc slash, dodge, slam, charge, teleport |
+| `storm_caller` | Ranged mage | chain lightning, orbital, beam, meteor |
+| `iron_warden` | Tank bruiser | shield, aoe smash, charge, slam + minion guards |
+| `shadow_stalker` | Assassin | dodge, arc slash, teleport, pull + slam counter |
+| `void_witch` | Caster | flames, freeze, particle tornado, swap, ranged projectile |
 
 ---
 
@@ -106,7 +121,6 @@ Output JAR in `build/libs/`.
 
 - Particle types are hardcoded — full particle customization not yet implemented
 - Player skins require an internet connection on server start (Mojang API lookup)
-- v1.0.0 — stable but may have occasional edge-case bugs
 
 ---
 

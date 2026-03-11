@@ -114,6 +114,10 @@ public class BossEntity extends HostileEntity {
         Identifier itemId = Identifier.tryParse(entry.item);
         if (itemId == null) return;
         var item = Registries.ITEM.get(itemId);
+        if (item == null) {
+            FiwBosses.LOGGER.warn("Unknown item ID in equipment slot {}: {}", slot, entry.item);
+            return;
+        }
         ItemStack stack = new ItemStack(item);
         if (entry.nbt != null && !entry.nbt.isEmpty()) {
             try {

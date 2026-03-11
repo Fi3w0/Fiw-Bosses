@@ -115,8 +115,9 @@ public class TeleportGoal extends Goal {
             // Taunt
             String msg = taunt != null ? taunt : "&5Behind you...";
             if (boss.getRandom().nextFloat() < 0.4f) {
+                var bossName = boss.getCustomName();
                 Text tauntText = Text.literal("[").formatted(Formatting.DARK_GRAY)
-                        .append(boss.getCustomName() != null ? boss.getCustomName().copy() : Text.literal("Boss"))
+                        .append(bossName != null ? bossName.copy() : Text.literal("Boss"))
                         .append(Text.literal("] ").formatted(Formatting.DARK_GRAY))
                         .append(TextUtil.parseColorCodes(msg));
                 for (var player : world.getPlayers()) {

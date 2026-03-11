@@ -10,6 +10,17 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 
 > **Hot reload:** `/boss reload` — picks up all changes instantly.
 
+**Commands:**
+
+| Command | Permission | Description |
+|---------|-----------|-------------|
+| `/boss spawn <id>` | level 2 | Spawn boss at your position |
+| `/boss spawn <id> <x> <y> <z>` | level 2 | Spawn at coordinates |
+| `/boss kill <id>` | level 2 | Kill all living bosses with that ID |
+| `/boss kill all` | level 2 | Kill every living boss in all worlds |
+| `/boss list` | level 2 | List all loaded boss IDs |
+| `/boss reload` | level 3 | Reload all JSON configs without restart |
+
 ---
 
 ## Table of Contents
@@ -37,6 +48,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [orbital](#orbital)
   - [meteor](#meteor)
   - [pull](#pull)
+  - [flames](#flames)
+  - [freeze](#freeze)
+  - [random_message](#random_message)
+  - [particle_tornado](#particle_tornado)
+  - [swap](#swap)
 - [Loot](#loot)
 - [Behavior Notes](#behavior-notes)
 
@@ -117,8 +133,20 @@ Use `&` prefix in `displayName`, `transitionMessage`, and `taunt` fields.
 
 | `type` | `value` | Notes |
 |--------|---------|-------|
-| `player` | Username or UUID | Fetches from Mojang API on server start — needs internet |
-| `file` | Filename (no extension) | Loads `config/fiw_bosses/skins/<name>.png` |
+| `player` | Username or UUID | Fetches skin from Mojang API on server start — requires internet |
+| `file` | Filename without extension | Loads `config/fiw_bosses/skins/<name>.png` from your server config folder |
+
+**Using a custom skin file:**
+
+1. Export your skin as a **64×64 PNG** (standard Minecraft skin format)
+2. Place it in `config/fiw_bosses/skins/` — e.g. `my_boss_skin.png`
+3. Reference it in your boss JSON:
+
+```json
+"skin": { "type": "file", "value": "my_boss_skin" }
+```
+
+> The file skin is loaded at server start and cached. Run `/boss reload` to pick up a new file without restarting.
 
 ---
 
@@ -554,6 +582,110 @@ Creates a vortex that pulls all nearby players toward the boss. Portal particles
   "params": { "radius": 12.0, "strength": 1.5, "duration": 30, "taunt": "&5&lCome here!" }
 }
 ```
+
+---
+
+### `flames`
+
+Spawns randomized flame particles around the boss — imitates the look of a mob spawner fire effect. Purely visual; the boss keeps moving and attacking freely.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 3.0 | Spread radius of the flames in blocks |
+| `duration` | 60 | Ticks the effect lasts |
+| `density` | 6 | Flame particles spawned per tick |
+
+```json
+{ "type": "flames", "cooldownTicks": 80, "params": { "radius": 3.5, "duration": 60, "density": 8 } }
+```
+
+---
+
+### `freeze`
+
+Freezes nearby players for a configurable duration. Re-applies frozen ticks every tick to hold the effect steady — players won't thaw until the duration expires.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `duration` | 60 | How long the freeze is held in ticks (20 = 1 second, 100 = 5 seconds) |
+| `intensity` | 140 | Frozen ticks value maintained each tick — `140` = full vignette overlay (player cap) |
+| `radius` | 8.0 | Range to freeze players |
+
+```json
+{ "type": "freeze", "cooldownTicks": 120, "params": { "duration": 80, "intensity": 140, "radius": 10.0, "taunt": "&b&lTime... stops." } }
+```
+
+> A glass-break sound plays 1 second before the freeze ends as a warning.
+
+---
+
+### `random_message`
+
+Picks a random message from a list and sends it to nearby players. Useful for taunts, lore, or boss voice lines. No movement lock — fires instantly.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `messages` | **required** | JSON array of message strings — supports `&` color codes |
+| `radius` | 32.0 | Broadcast radius in blocks |
+
+```json
+{
+  "type": "random_message",
+  "cooldownTicks": 200,
+  "params": {
+    "messages": ["&cYou will fall!", "&4&lNone survive!", "&6Fear me, mortal!"],
+    "radius": 40.0
+  }
+}
+```
+
+---
+
+### `particle_tornado`
+
+Summons a rising tornado of particles centered on the boss. Narrow at the base, wide at the top. Rotates every tick. Optional damage pulls players caught inside toward the center. Boss freezes in place while active.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `maxRadius` | 4.0 | Radius at the top of the tornado in blocks |
+| `height` | 6.0 | Total height of the tornado |
+| `duration` | 100 | Ticks the tornado lasts |
+| `rotationSpeed` | 8.0 | Degrees rotated per tick |
+| `disks` | 12 | Number of horizontal rings forming the funnel |
+| `damage` | 0.0 | Damage per 5 ticks to players inside (`0` = purely visual) |
+
+```json
+{
+  "type": "particle_tornado",
+  "cooldownTicks": 180,
+  "params": {
+    "maxRadius": 5.0,
+    "height": 7.0,
+    "duration": 120,
+    "rotationSpeed": 10.0,
+    "disks": 14,
+    "damage": 1.5,
+    "taunt": "&5&lThe vortex consumes you!"
+  }
+}
+```
+
+---
+
+### `swap`
+
+Instantly swaps the boss's position with the target's — teleporting the boss to where the player stood and the player to where the boss stood. Both locations get a burst of portal + reverse-portal particles and a pitch-shifted enderman teleport sound so players can read what happened.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `maxDistance` | 20.0 | Only activates if target is within this range |
+| `minDistance` | 3.0 | Won't activate if target is already this close (swap would be pointless) |
+
+```json
+{ "type": "swap", "cooldownTicks": 90, "params": { "maxDistance": 20.0, "minDistance": 4.0, "taunt": "&5&lSurprise!" } }
+```
+
+> Pairs well with `aoe_smash` or `arc_slash` — swap places the player at ground zero right before the attack lands.
 
 ---
 

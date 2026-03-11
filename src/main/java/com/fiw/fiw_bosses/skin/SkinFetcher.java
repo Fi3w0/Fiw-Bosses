@@ -72,11 +72,14 @@ public class SkinFetcher {
         conn.setConnectTimeout(5000);
         conn.setReadTimeout(5000);
 
-        if (conn.getResponseCode() != 200) return null;
-
-        try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            return json.get("id").getAsString();
+        try {
+            if (conn.getResponseCode() != 200) return null;
+            try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                return json.get("id").getAsString();
+            }
+        } finally {
+            conn.disconnect();
         }
     }
 
@@ -87,25 +90,29 @@ public class SkinFetcher {
         conn.setConnectTimeout(5000);
         conn.setReadTimeout(5000);
 
-        if (conn.getResponseCode() != 200) return null;
+        try {
+            if (conn.getResponseCode() != 200) return null;
 
-        try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            var properties = json.getAsJsonArray("properties");
-            for (var prop : properties) {
-                JsonObject propObj = prop.getAsJsonObject();
-                if ("textures".equals(propObj.get("name").getAsString())) {
-                    String base64 = propObj.get("value").getAsString();
-                    String decoded = new String(Base64.getDecoder().decode(base64));
-                    JsonObject textures = JsonParser.parseString(decoded).getAsJsonObject();
-                    JsonObject texturesMap = textures.getAsJsonObject("textures");
-                    if (texturesMap.has("SKIN")) {
-                        return texturesMap.getAsJsonObject("SKIN").get("url").getAsString();
+            try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+                var properties = json.getAsJsonArray("properties");
+                for (var prop : properties) {
+                    JsonObject propObj = prop.getAsJsonObject();
+                    if ("textures".equals(propObj.get("name").getAsString())) {
+                        String base64 = propObj.get("value").getAsString();
+                        String decoded = new String(Base64.getDecoder().decode(base64));
+                        JsonObject textures = JsonParser.parseString(decoded).getAsJsonObject();
+                        JsonObject texturesMap = textures.getAsJsonObject("textures");
+                        if (texturesMap.has("SKIN")) {
+                            return texturesMap.getAsJsonObject("SKIN").get("url").getAsString();
+                        }
                     }
                 }
             }
+            return null;
+        } finally {
+            conn.disconnect();
         }
-        return null;
     }
 
     private static byte[] downloadBytes(String urlStr) throws Exception {
@@ -115,8 +122,11 @@ public class SkinFetcher {
         conn.setConnectTimeout(5000);
         conn.setReadTimeout(5000);
 
-        if (conn.getResponseCode() != 200) return null;
-
-        return conn.getInputStream().readAllBytes();
+        try {
+            if (conn.getResponseCode() != 200) return null;
+            return conn.getInputStream().readAllBytes();
+        } finally {
+            conn.disconnect();
+        }
     }
 }

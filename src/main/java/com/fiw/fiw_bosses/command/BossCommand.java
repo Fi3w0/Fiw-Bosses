@@ -16,6 +16,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BossCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher,
@@ -35,6 +38,16 @@ public class BossCommand {
                                         .executes(ctx -> spawnBoss(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "boss_id"),
                                                 BlockPosArgumentType.getBlockPos(ctx, "pos"))))))
+                .then(CommandManager.literal("kill")
+                        .then(CommandManager.literal("all")
+                                .executes(ctx -> killAllBosses(ctx.getSource())))
+                        .then(CommandManager.argument("boss_id", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    BossConfigLoader.getDefinitions().keySet().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> killBoss(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "boss_id")))))
                 .then(CommandManager.literal("list")
                         .executes(ctx -> listBosses(ctx.getSource())))
                 .then(CommandManager.literal("reload")
@@ -95,6 +108,48 @@ public class BossCommand {
                             .formatted(Formatting.GRAY)), false);
         }
         return definitions.size();
+    }
+
+    private static int killBoss(ServerCommandSource source, String bossId) {
+        List<BossEntity> found = new ArrayList<>();
+        for (ServerWorld world : source.getServer().getWorlds()) {
+            for (BossEntity boss : world.getEntitiesByClass(BossEntity.class,
+                    new net.minecraft.util.math.Box(-30000000, -64, -30000000, 30000000, 320, 30000000),
+                    e -> bossId.equals(e.getBossId()))) {
+                found.add(boss);
+            }
+        }
+        if (found.isEmpty()) {
+            source.sendError(Text.literal("No living boss with id '" + bossId + "' found."));
+            return 0;
+        }
+        found.forEach(net.minecraft.entity.Entity::kill);
+        final int count = found.size();
+        source.sendFeedback(() -> Text.literal("Killed ")
+                .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))
+                .append(Text.literal(" boss(es) with id "))
+                .append(Text.literal(bossId).formatted(Formatting.GOLD))
+                .append(Text.literal(".")), true);
+        return count;
+    }
+
+    private static int killAllBosses(ServerCommandSource source) {
+        List<BossEntity> found = new ArrayList<>();
+        for (ServerWorld world : source.getServer().getWorlds()) {
+            found.addAll(world.getEntitiesByClass(BossEntity.class,
+                    new net.minecraft.util.math.Box(-30000000, -64, -30000000, 30000000, 320, 30000000),
+                    e -> true));
+        }
+        if (found.isEmpty()) {
+            source.sendFeedback(() -> Text.literal("No bosses alive.").formatted(Formatting.YELLOW), false);
+            return 0;
+        }
+        found.forEach(net.minecraft.entity.Entity::kill);
+        final int count = found.size();
+        source.sendFeedback(() -> Text.literal("Killed ")
+                .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))
+                .append(Text.literal(" boss(es).")), true);
+        return count;
     }
 
     private static int reloadConfigs(ServerCommandSource source) {

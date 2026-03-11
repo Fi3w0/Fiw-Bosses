@@ -133,8 +133,9 @@ public class SummonMinionsGoal extends Goal {
 
             // Taunt message to nearby players
             String msg = tauntMessage != null ? tauntMessage : "&5Rise, my servants!";
+            var bossName = boss.getCustomName();
             Text taunt = Text.literal("[").formatted(Formatting.DARK_GRAY)
-                    .append(boss.getCustomName() != null ? boss.getCustomName().copy() : Text.literal("Boss"))
+                    .append(bossName != null ? bossName.copy() : Text.literal("Boss"))
                     .append(Text.literal("] ").formatted(Formatting.DARK_GRAY))
                     .append(TextUtil.parseColorCodes(msg));
             for (var player : world.getPlayers()) {

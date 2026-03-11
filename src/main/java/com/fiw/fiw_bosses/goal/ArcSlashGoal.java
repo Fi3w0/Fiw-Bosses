@@ -291,8 +291,9 @@ public class ArcSlashGoal extends Goal {
     }
 
     private void sendTaunt(ServerWorld world, String message) {
+        var bossName = boss.getCustomName();
         Text text = Text.literal("[").formatted(Formatting.DARK_GRAY)
-                .append(boss.getCustomName() != null ? boss.getCustomName().copy() : Text.literal("Boss"))
+                .append(bossName != null ? bossName.copy() : Text.literal("Boss"))
                 .append(Text.literal("] ").formatted(Formatting.DARK_GRAY))
                 .append(TextUtil.parseColorCodes(message));
         for (var player : world.getPlayers()) {

@@ -30,6 +30,10 @@ public class BossLootHandler {
             }
 
             Item item = Registries.ITEM.get(itemId);
+            if (item == null) {
+                FiwBosses.LOGGER.warn("Unknown item ID in loot: {}", entry.item);
+                continue;
+            }
             ItemStack stack = new ItemStack(item, entry.count);
 
             // Apply NBT if present

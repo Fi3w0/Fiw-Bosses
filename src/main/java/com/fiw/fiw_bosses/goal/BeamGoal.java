@@ -68,8 +68,9 @@ public class BeamGoal extends Goal {
                     SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 1.5f, 1.0f);
 
             if (taunt != null) {
+                var bossName = boss.getCustomName();
                 Text tauntText = Text.literal("[").formatted(Formatting.DARK_GRAY)
-                        .append(boss.getCustomName() != null ? boss.getCustomName().copy() : Text.literal("Boss"))
+                        .append(bossName != null ? bossName.copy() : Text.literal("Boss"))
                         .append(Text.literal("] ").formatted(Formatting.DARK_GRAY))
                         .append(TextUtil.parseColorCodes(taunt));
                 for (var player : world.getPlayers()) {
