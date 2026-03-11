@@ -1,0 +1,160 @@
+{
+  "id": "storm_caller",
+  "displayName": "&9&lStorm Caller",
+  "health": 140.0,
+  "armor": 1.0,
+  "speed": 0.21,
+  "knockbackResistance": 0.3,
+  "attackDamage": 3.0,
+  "bossBar": { "color": "BLUE", "overlay": "NOTCHED_10" },
+  "skin": { "type": "player", "value": "Dinnerbone" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:trident", "nbt": "{Enchantments:[{id:\"minecraft:channeling\",lvl:1},{id:\"minecraft:riptide\",lvl:3}]}" },
+    "offHand":  { "item": "minecraft:totem_of_undying" },
+    "head":     { "item": "minecraft:chainmail_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "chest":    { "item": "minecraft:chainmail_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "legs":     { "item": "minecraft:chainmail_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "feet":     { "item": "minecraft:chainmail_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" }
+  },
+  "phases": [
+
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        {
+          "type": "chain_lightning",
+          "cooldownTicks": 70,
+          "params": {
+            "bounces": 3,
+            "damage": 8.0,
+            "radius": 10.0,
+            "taunt": "&9...feel the current."
+          }
+        },
+        {
+          "type": "orbital",
+          "cooldownTicks": 120,
+          "params": {
+            "count": 4,
+            "radius": 3.5,
+            "damage": 6.0,
+            "duration": 120,
+            "speed": 6.0,
+            "taunt": "&b&lOrbitals spinning!"
+          }
+        }
+      ],
+      "minions": []
+    },
+
+    {
+      "hpThresholdPercent": 0.60,
+      "speedMultiplier": 1.15,
+      "damageMultiplier": 1.25,
+      "abilities": [
+        {
+          "type": "beam",
+          "cooldownTicks": 80,
+          "params": {
+            "damage": 12.0,
+            "width": 1.5,
+            "duration": 40,
+            "taunt": "&9&lFocus beam — incoming!"
+          }
+        },
+        {
+          "type": "chain_lightning",
+          "cooldownTicks": 55,
+          "params": {
+            "bounces": 4,
+            "damage": 9.0,
+            "radius": 12.0
+          }
+        },
+        {
+          "type": "orbital",
+          "cooldownTicks": 100,
+          "params": {
+            "count": 5,
+            "radius": 3.5,
+            "damage": 7.0,
+            "duration": 140,
+            "speed": 7.0
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&9&lThe Storm Caller channels unstable energy!",
+      "transitionSound": "minecraft:entity.elder_guardian.curse",
+      "transitionParticle": "minecraft:electric_spark"
+    },
+
+    {
+      "hpThresholdPercent": 0.25,
+      "speedMultiplier": 1.35,
+      "damageMultiplier": 1.5,
+      "abilities": [
+        {
+          "type": "beam",
+          "cooldownTicks": 55,
+          "params": {
+            "damage": 14.0,
+            "width": 2.0,
+            "duration": 50,
+            "taunt": "&1&lSUPERCHARGED BEAM!"
+          }
+        },
+        {
+          "type": "chain_lightning",
+          "cooldownTicks": 40,
+          "params": {
+            "bounces": 6,
+            "damage": 10.0,
+            "radius": 14.0,
+            "taunt": "&b\u26a1 Chain!"
+          }
+        },
+        {
+          "type": "meteor",
+          "cooldownTicks": 140,
+          "params": {
+            "count": 4,
+            "height": 18,
+            "type": "fireball",
+            "taunt": "&9&lMeteor storm!"
+          }
+        },
+        {
+          "type": "orbital",
+          "cooldownTicks": 90,
+          "params": {
+            "count": 6,
+            "radius": 4.0,
+            "damage": 8.0,
+            "duration": 160,
+            "speed": 9.0
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&1&l\u26a1 THE STORM CALLER OVERLOADS! \u26a1",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:flash"
+    }
+
+  ],
+  "loot": [
+    {
+      "item": "minecraft:trident",
+      "nbt": "{display:{Name:'{\"text\":\"Tempest Fang\",\"color\":\"aqua\",\"bold\":true,\"italic\":false}'},Enchantments:[{id:\"minecraft:channeling\",lvl:1},{id:\"minecraft:riptide\",lvl:3},{id:\"minecraft:unbreaking\",lvl:3}]}",
+      "count": 1,
+      "chance": 0.20
+    },
+    { "item": "minecraft:lapis_lazuli",  "count": 16, "chance": 1.0 },
+    { "item": "minecraft:diamond",       "count": 3,  "chance": 0.6 },
+    { "item": "minecraft:ender_pearl",   "count": 4,  "chance": 0.7 },
+    { "item": "minecraft:nether_star",   "count": 1,  "chance": 0.05 }
+  ]
+}

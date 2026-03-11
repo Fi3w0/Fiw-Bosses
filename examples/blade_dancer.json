@@ -1,0 +1,161 @@
+{
+  "id": "blade_dancer",
+  "displayName": "&e&lBlade Dancer",
+  "health": 150.0,
+  "armor": 2.0,
+  "speed": 0.24,
+  "knockbackResistance": 0.5,
+  "attackDamage": 4.0,
+  "bossBar": { "color": "YELLOW", "overlay": "NOTCHED_10" },
+  "skin": { "type": "player", "value": "fi3w0" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:golden_sword", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:4}]}" },
+    "offHand":  { "item": "minecraft:golden_sword", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:4}]}" },
+    "head":     { "item": "minecraft:golden_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "chest":    { "item": "minecraft:golden_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "legs":     { "item": "minecraft:golden_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" },
+    "feet":     { "item": "minecraft:golden_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:2}]}" }
+  },
+  "phases": [
+
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 55,
+          "params": {
+            "arc": 170,
+            "radius": 4.5,
+            "damage": 10.0,
+            "duration": 9,
+            "points": 28,
+            "yOffset": 1.1,
+            "height": 0.9,
+            "roll": 12,
+            "hitRadius": 1.2,
+            "taunt": "&7...one strike."
+          }
+        }
+      ],
+      "minions": []
+    },
+
+    {
+      "hpThresholdPercent": 0.65,
+      "speedMultiplier": 1.25,
+      "damageMultiplier": 1.2,
+      "abilities": [
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 35,
+          "params": {
+            "arc": 130,
+            "radius": 5.0,
+            "damage": 9.0,
+            "duration": 6,
+            "points": 24,
+            "yOffset": 1.7,
+            "height": 0.5,
+            "roll": -40,
+            "hitRadius": 1.2,
+            "taunt": "&6&lTwo blades, one death."
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 55,
+          "params": {
+            "arc": 130,
+            "radius": 5.0,
+            "damage": 9.0,
+            "duration": 6,
+            "points": 24,
+            "yOffset": 0.6,
+            "height": 0.4,
+            "roll": 40,
+            "hitRadius": 1.2
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&e&lThe Blade Dancer draws a second sword!",
+      "transitionSound": "minecraft:entity.player.attack.sweep",
+      "transitionParticle": "minecraft:crit"
+    },
+
+    {
+      "hpThresholdPercent": 0.30,
+      "speedMultiplier": 1.55,
+      "damageMultiplier": 1.5,
+      "abilities": [
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 22,
+          "params": {
+            "arc": 200,
+            "radius": 5.5,
+            "damage": 11.0,
+            "duration": 7,
+            "points": 32,
+            "yOffset": 1.2,
+            "height": 1.6,
+            "roll": 20,
+            "hitRadius": 1.3,
+            "taunt": "&4&lFURY!"
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 35,
+          "params": {
+            "arc": 100,
+            "radius": 4.5,
+            "damage": 10.0,
+            "duration": 4,
+            "points": 20,
+            "yOffset": 0.5,
+            "height": 0.2,
+            "roll": -25,
+            "hitRadius": 1.3
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 50,
+          "params": {
+            "arc": 160,
+            "radius": 5.0,
+            "damage": 12.0,
+            "duration": 5,
+            "points": 28,
+            "yOffset": 1.5,
+            "height": 0.5,
+            "roll": 65,
+            "hitRadius": 1.3,
+            "taunt": "&4Diagonal finisher!"
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&4&l\u2605 THE BLADE DANCER ENTERS A DANCE OF DEATH! \u2605",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:enchanted_hit"
+    }
+
+  ],
+  "loot": [
+    {
+      "item": "minecraft:golden_sword",
+      "nbt": "{display:{Name:'{\"text\":\"Dancer's Edge\",\"color\":\"gold\",\"bold\":true,\"italic\":false}'},Enchantments:[{id:\"minecraft:sharpness\",lvl:5},{id:\"minecraft:sweeping\",lvl:3},{id:\"minecraft:unbreaking\",lvl:3}]}",
+      "count": 1,
+      "chance": 0.20
+    },
+    { "item": "minecraft:gold_ingot",    "count": 12, "chance": 1.0 },
+    { "item": "minecraft:diamond",       "count": 3,  "chance": 0.6 },
+    { "item": "minecraft:golden_apple",  "count": 2,  "chance": 0.5 },
+    { "item": "minecraft:nether_star",   "count": 1,  "chance": 0.05 }
+  ]
+}

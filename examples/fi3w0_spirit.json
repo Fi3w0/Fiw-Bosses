@@ -1,0 +1,187 @@
+{
+  "id": "fi3w0",
+  "displayName": "&5&lFi3w0",
+  "health": 420.0,
+  "armor": 4.0,
+  "speed": 0.25,
+  "knockbackResistance": 0.4,
+  "attackDamage": 5.0,
+  "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" },
+  "skin": { "type": "file", "value": "config/fiw_bosses/skins/fi3w0_spirit.png"},
+  "equipment": {
+    "mainHand": { "item": "minecraft:netherite_sword", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:4},{id:\"minecraft:looting\",lvl:3}]}" }
+
+  },
+  "phases": [
+
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        {
+          "type": "dodge",
+          "cooldownTicks": 30,
+          "params": {
+            "chance": 0.82,
+            "distance": 8.5,
+            "taunt": "&5&lMissed."
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 50,
+          "params": {
+            "arc": 150,
+            "radius": 4.0,
+            "damage": 9.0,
+            "duration": 7,
+            "points": 24,
+            "yOffset": 1.1,
+            "height": 0.7,
+            "roll": 20,
+            "hitRadius": 1.1,
+            "taunt": "&5...from the shadows."
+          }
+        }
+      ],
+      "minions": []
+    },
+
+    {
+      "hpThresholdPercent": 0.60,
+      "speedMultiplier": 1.30,
+      "damageMultiplier": 1.25,
+      "abilities": [
+        {
+          "type": "dodge",
+          "cooldownTicks": 22,
+          "params": {
+            "chance": 0.85,
+            "distance": 4.0
+          }
+        },
+        {
+          "type": "teleport",
+          "cooldownTicks": 55,
+          "params": {
+            "minDistance": 6.0,
+            "taunt": "&d&lYou blinked."
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 35,
+          "params": {
+            "arc": 160,
+            "radius": 4.5,
+            "damage": 10.0,
+            "duration": 6,
+            "points": 26,
+            "yOffset": 1.3,
+            "height": 0.8,
+            "roll": -30,
+            "hitRadius": 1.2
+          }
+        },
+        {
+          "type": "slam",
+          "cooldownTicks": 120,
+          "params": {
+            "radius": 4.5,
+            "damage": 14.0,
+            "knockback": 2.5,
+            "windupTicks": 10,
+            "teleportRange": 5.0,
+            "taunt": "&5&lNot so fast!"
+          }
+        }
+      ],
+      "minions": [],
+      "transitionMessage": "&5&lFi3w0 vanishes into darkness...",
+      "transitionSound": "minecraft:entity.enderman.teleport",
+      "transitionParticle": "minecraft:portal"
+    },
+
+    {
+      "hpThresholdPercent": 0.28,
+      "speedMultiplier": 1.60,
+      "damageMultiplier": 1.55,
+      "abilities": [
+        {
+          "type": "dodge",
+          "cooldownTicks": 15,
+          "params": {
+            "chance": 0.80,
+            "distance": 5.0,
+            "taunt": "&d&lCan't touch this."
+          }
+        },
+        {
+          "type": "teleport",
+          "cooldownTicks": 35,
+          "params": {
+            "minDistance": 5.0
+          }
+        },
+        {
+          "type": "pull",
+          "cooldownTicks": 70,
+          "params": {
+            "radius": 12.0,
+            "strength": 0.42,
+            "duration": 50,
+            "taunt": "&5&lCome here!"
+          }
+        },
+        {
+          "type": "arc_slash",
+          "cooldownTicks": 25,
+          "params": {
+            "arc": 190,
+            "radius": 5.0,
+            "damage": 12.0,
+            "duration": 5,
+            "points": 30,
+            "yOffset": 1.2,
+            "height": 1.2,
+            "roll": 45,
+            "hitRadius": 1.3,
+            "taunt": "&4&lDEATH SPIRAL!"
+          }
+        },
+        {
+          "type": "slam",
+          "cooldownTicks": 160,
+          "params": {
+            "radius": 5.5,
+            "damage": 18.0,
+            "knockback": 2.8,
+            "windupTicks": 8,
+            "teleportRange": 4.0,
+            "taunt": "&4\u2620 Slam!"
+          }
+        }
+      ],
+      "minions": [
+        { "entityType": "minecraft:pillager", "count": 2, "maxAlive": 4, "spawnRadius": 6.0 }
+      ],
+      "transitionMessage": "&4&l\u2605 FI3W0 UNLEASHES FULL POWER! \u2605",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:dragon_breath"
+    }
+
+  ],
+  "loot": [
+    {
+      "item": "minecraft:netherite_sword",
+      "nbt": "{display:{Name:'{\"text\":\"Shadowfang\",\"color\":\"dark_purple\",\"bold\":true,\"italic\":false}'},Enchantments:[{id:\"minecraft:sharpness\",lvl:5},{id:\"minecraft:looting\",lvl:3},{id:\"minecraft:unbreaking\",lvl:3}]}",
+      "count": 1,
+      "chance": 0.42
+    },
+    { "item": "minecraft:amethyst_shard", "count": 12, "chance": 1.0 },
+    { "item": "minecraft:diamond",        "count": 3,  "chance": 0.6 },
+    { "item": "minecraft:ender_pearl",    "count": 6,  "chance": 0.75 },
+    { "item": "minecraft:nether_star",    "count": 1,  "chance": 0.05 }
+  ]
+}

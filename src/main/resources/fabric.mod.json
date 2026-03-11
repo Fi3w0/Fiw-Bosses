@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "fiw_bosses",
+  "version": "${version}",
+  "name": "FIW Bosses",
+  "description": "Data-driven custom boss framework for SMP servers by FI3w0 and ClaudeAI. Define bosses via JSON configs with phases, abilities, custom skins, and loot.",
+  "authors": [
+    "FIW"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.fiw.fiw_bosses.FiwBosses"
+    ],
+    "client": [
+      "com.fiw.fiw_bosses.FiwBossesClient"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.15.11",
+    "fabric-api": ">=0.92.2",
+    "minecraft": "~1.20.1",
+    "java": ">=17"
+  }
+}

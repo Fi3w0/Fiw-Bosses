@@ -1,0 +1,165 @@
+{
+  "id": "iron_warden",
+  "displayName": "&7&lIron Warden",
+  "health": 220.0,
+  "armor": 2.0,
+  "speed": 0.19,
+  "knockbackResistance": 0.95,
+  "attackDamage": 8.0,
+  "bossBar": { "color": "WHITE", "overlay": "NOTCHED_20" },
+  "skin": { "type": "player", "value": "jeb_" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:iron_axe",       "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:1},{id:\"minecraft:knockback\",lvl:2}]}" },
+    "head":     { "item": "minecraft:iron_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+    "chest":    { "item": "minecraft:iron_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+    "legs":     { "item": "minecraft:iron_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+    "feet":     { "item": "minecraft:iron_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" }
+  },
+  "phases": [
+
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        {
+          "type": "shield",
+          "cooldownTicks": 90,
+          "params": {
+            "damageReduction": 0.55,
+            "durationTicks": 80,
+            "taunt": "&7Shields up."
+          }
+        },
+        {
+          "type": "aoe_smash",
+          "cooldownTicks": 80,
+          "params": {
+            "radius": 5.5,
+            "damage": 10.0,
+            "knockback": 2.0,
+            "taunt": "&7&lFeel the ground shake."
+          }
+        }
+      ],
+      "minions": []
+    },
+
+    {
+      "hpThresholdPercent": 0.60,
+      "speedMultiplier": 1.20,
+      "damageMultiplier": 1.3,
+      "equipment": {
+        "mainHand": { "item": "minecraft:iron_axe", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:5},{id:\"minecraft:knockback\",lvl:2}]}" },
+        "head":     { "item": "minecraft:iron_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:4}]}" },
+        "chest":    { "item": "minecraft:iron_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:4}]}" },
+        "legs":     { "item": "minecraft:iron_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:4}]}" },
+        "feet":     { "item": "minecraft:iron_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:4}]}" }
+      },
+      "abilities": [
+        {
+          "type": "charge",
+          "cooldownTicks": 70,
+          "params": {
+            "speed": 1.6,
+            "damage": 14.0,
+            "taunt": "&8&lCHARGE!"
+          }
+        },
+        {
+          "type": "slam",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 6.0,
+            "damage": 16.0,
+            "knockback": 3.0,
+            "windupTicks": 14,
+            "teleportRange": 7.0,
+            "taunt": "&7&lNowhere to run."
+          }
+        },
+        {
+          "type": "shield",
+          "cooldownTicks": 80,
+          "params": {
+            "damageReduction": 0.60,
+            "durationTicks": 70
+          }
+        }
+      ]
+    },
+
+    {
+      "hpThresholdPercent": 0.30,
+      "speedMultiplier": 1.45,
+      "damageMultiplier": 1.6,
+      "equipment": {
+        "mainHand": { "item": "minecraft:netherite_axe", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:1},{id:\"minecraft:knockback\",lvl:2}]}" },
+        "head":     { "item": "minecraft:netherite_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+        "chest":    { "item": "minecraft:netherite_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+        "legs":     { "item": "minecraft:netherite_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" },
+        "feet":     { "item": "minecraft:netherite_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:1}]}" }
+      },
+      "abilities": [
+        {
+          "type": "slam",
+          "cooldownTicks": 115,
+          "params": {
+            "radius": 7.0,
+            "damage": 20.0,
+            "knockback": 3.5,
+            "windupTicks": 12,
+            "teleportRange": 5.0,
+            "taunt": "&4&lFINAL JUDGEMENT!"
+          }
+        },
+        {
+          "type": "charge",
+          "cooldownTicks": 50,
+          "params": {
+            "speed": 2.0,
+            "damage": 16.0,
+            "taunt": "&c\u2620 CRUSH!"
+          }
+        },
+        {
+          "type": "aoe_smash",
+          "cooldownTicks": 60,
+          "params": {
+            "radius": 7.0,
+            "damage": 18.0,
+            "knockback": 3.0
+          }
+        },
+        {
+          "type": "shield",
+          "cooldownTicks": 70,
+          "params": {
+            "damageReduction": 0.65,
+            "durationTicks": 60
+          }
+        }
+      ],
+      "minions": [
+        { "entityType": "minecraft:vindicator", "count": 3, "maxAlive": 6, "spawnRadius": 6.0 },
+        { "entityType": "minecraft:pillager",   "count": 2, "maxAlive": 4, "spawnRadius": 8.0 }
+      ],
+      "transitionMessage": "&4&l\u2620 THE IRON WARDEN ENTERS BERSERKER MODE! \u2620",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:explosion"
+    }
+
+  ],
+  "loot": [
+    {
+      "item": "minecraft:netherite_chestplate",
+      "nbt": "{display:{Name:'{\"text\":\"Warden's Plate\",\"color\":\"gray\",\"bold\":true,\"italic\":false}'},Enchantments:[{id:\"minecraft:protection\",lvl:5},{id:\"minecraft:unbreaking\",lvl:3},{id:\"minecraft:mending\",lvl:1}]}",
+      "count": 1,
+      "chance": 1
+    },
+    { "item": "minecraft:iron_ingot",    "count": 20, "chance": 1.0 },
+    { "item": "minecraft:diamond",       "count": 4,  "chance": 0.6 },
+    { "item": "minecraft:emerald",       "count": 5,  "chance": 0.5 },
+    { "item": "minecraft:nether_star",   "count": 1,  "chance": 0.05 }
+  ]
+}
