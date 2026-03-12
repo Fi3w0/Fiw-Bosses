@@ -7,6 +7,10 @@
   "knockbackResistance": 0.35,
   "attackDamage": 4.0,
   "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" },
+  "idleTimeout": 4800,
+  "idleAction": "heal",
+  "idleHealAmount": 2.0,
+  "idleHealInterval": 40,
   "skin": { "type": "player", "value": "Lythael" },
   "equipment": {
     "mainHand": { "item": "minecraft:stick", "nbt": "{display:{Name:'{\"text\":\"Void Staff\",\"color\":\"dark_purple\",\"italic\":false}'},Enchantments:[{id:\"minecraft:knockback\",lvl:2}]}" },
@@ -73,6 +77,19 @@
             "intensity": 140,
             "radius": 9.0,
             "taunt": "&b&lTime... stops."
+          }
+        },
+        {
+          "type": "ice_crystal",
+          "cooldownTicks": 220,
+          "params": {
+            "radius": 10,
+            "centerRadius": 3.5,
+            "damage": 9.0,
+            "slowDuration": 70,
+            "freezeDuration": 35,
+            "windupTicks": 18,
+            "duration": 100
           }
         },
         {

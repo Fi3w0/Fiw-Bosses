@@ -16,4 +16,14 @@ public class BossDefinition {
     public EquipmentConfig equipment;
     public List<PhaseDefinition> phases = new ArrayList<>();
     public List<LootEntry> loot = new ArrayList<>();
+
+    // Idle despawn/heal system — triggers when no player is nearby for idleTimeout ticks.
+    // idleTimeout <= 0 disables the system entirely (default).
+    public int idleTimeout = -1;
+    // "despawn" removes the boss entity; "heal" gradually restores HP.
+    public String idleAction = "despawn";
+    // HP restored per heal interval (only used when idleAction = "heal")
+    public float idleHealAmount = 2.0f;
+    // Ticks between each heal tick (only used when idleAction = "heal")
+    public int idleHealInterval = 40;
 }

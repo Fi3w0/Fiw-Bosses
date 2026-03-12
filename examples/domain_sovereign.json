@@ -10,6 +10,8 @@
     "color": "PURPLE",
     "overlay": "PROGRESS"
   },
+  "idleTimeout": 6000,
+  "idleAction": "despawn",
   "skin": {
     "type": "username",
     "value": "Notch"
@@ -77,6 +79,17 @@
             "chargeTime": 40,
             "knockback": 2.0,
             "darkness": true
+          }
+        },
+        {
+          "type": "lightning_radial",
+          "cooldown": 240,
+          "params": {
+            "bladeCount": 20,
+            "bladeRange": 13,
+            "damage": 15.0,
+            "channelTime": 16,
+            "bladeSpeed": 1.6
           }
         },
         {

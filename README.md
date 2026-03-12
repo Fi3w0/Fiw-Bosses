@@ -15,7 +15,8 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
-- **25 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **30 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **Idle system** — configurable despawn or gradual heal when no players are nearby
 - **Custom skins** — any player skin or local PNG file
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
 - **Minion spawning** — spawn any mob with caps and radius control
@@ -43,7 +44,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop `fiw-bosses-1.0.3.jar` into your `mods/` folder
+3. Drop `fiw-bosses-1.0.4.jar` into your `mods/` folder
 4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
@@ -90,6 +91,11 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 | `slash_wave` | Fast forward-traveling blade of energy that follows a straight path |
 | `sonic_boom` | Warden-style charge-and-release — ignores armor, optional Darkness |
 | `domain` | **Ultimate** — multi-layered dark sphere anchored at cast position; boss and players sealed inside, custom attack pattern, custom speed, domain_break sound on collapse |
+| `ice_crystal` | Snowflake burst of ice crystals — outer ring Slowness IV, center near-freeze, crystals persist then shatter |
+| `fire_arrow` | Charged fire projectile fires at high speed and explodes on contact — no terrain damage |
+| `crimson_slash` | 3 consecutive energy claws along the ground, each larger than the last, converging in a dark-flame explosion |
+| `singularity_cannon` | Charging plasma ring → high-speed beam that drags players; nearby players slowed 30% during charge |
+| `lightning_radial` | Boss leaps into the air, channels energy, then radiates 16–24 electric blades 360° at ground level |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
@@ -97,7 +103,7 @@ Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
 ## Included Bosses
 
-Six ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
+Seven ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
 
 | Boss | Style | Highlights |
 |---|---|---|
@@ -107,6 +113,7 @@ Six ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of t
 | `shadow_stalker` | Assassin | dodge, arc slash, teleport, pull + slam counter |
 | `void_witch` | Caster | flames, freeze, particle tornado, swap, ranged projectile |
 | `domain_sovereign` | Ultimate | shockwave, slash wave, sonic boom, domain expansion |
+| `arcane_sovereign` | Elemental mage | ice crystal, fire arrow, crimson slash, singularity cannon, lightning radial |
 
 ---
 

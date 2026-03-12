@@ -7,6 +7,10 @@
   "knockbackResistance": 0.95,
   "attackDamage": 8.0,
   "bossBar": { "color": "WHITE", "overlay": "NOTCHED_20" },
+  "idleTimeout": 4800,
+  "idleAction": "heal",
+  "idleHealAmount": 5.0,
+  "idleHealInterval": 60,
   "skin": { "type": "player", "value": "jeb_" },
   "equipment": {
     "mainHand": { "item": "minecraft:iron_axe",       "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:1},{id:\"minecraft:knockback\",lvl:2}]}" },

@@ -161,6 +161,7 @@ public class BossEntity extends HostileEntity {
 
             tickAggroSwitch();
             tickStrafing();
+            tickIdleSystem();
         }
 
         if (phaseManager != null) {
@@ -243,6 +244,9 @@ public class BossEntity extends HostileEntity {
         }
 
         boolean result = super.damage(source, amount);
+
+        // Reset idle timer whenever the boss takes damage
+        if (result) idleTimer = 0;
 
         // Revenge aggro switch — if another player hits us, chance to switch
         if (result && attacker instanceof PlayerEntity playerAttacker) {
@@ -346,4 +350,39 @@ public class BossEntity extends HostileEntity {
     private float damageReduction = 0.0f;
     public void setDamageReduction(float reduction) { this.damageReduction = reduction; }
     public float getDamageReduction() { return damageReduction; }
+
+    // ---- Idle despawn / heal system ----
+    private int idleTimer = 0;
+    private int idleHealTimer = 0;
+
+    private void tickIdleSystem() {
+        if (definition == null || definition.idleTimeout <= 0) return;
+
+        boolean playerNearby = !getWorld().getEntitiesByClass(
+                PlayerEntity.class,
+                getBoundingBox().expand(64),
+                p -> p.isAlive() && !p.isSpectator() && !p.isCreative()
+        ).isEmpty();
+
+        if (playerNearby) {
+            idleTimer = 0;
+            idleHealTimer = 0;
+            return;
+        }
+
+        idleTimer++;
+        if (idleTimer < definition.idleTimeout) return;
+
+        if ("despawn".equals(definition.idleAction)) {
+            this.discard();
+        } else if ("heal".equals(definition.idleAction)) {
+            idleHealTimer++;
+            if (idleHealTimer >= definition.idleHealInterval) {
+                idleHealTimer = 0;
+                if (getHealth() < getMaxHealth()) {
+                    setHealth(Math.min(getHealth() + definition.idleHealAmount, getMaxHealth()));
+                }
+            }
+        }
+    }
 }

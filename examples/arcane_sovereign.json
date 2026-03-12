@@ -1,0 +1,226 @@
+{
+  "id": "arcane_sovereign",
+  "displayName": "&b&lArcane Sovereign",
+  "health": 200.0,
+  "armor": 3.0,
+  "speed": 0.23,
+  "knockbackResistance": 0.55,
+  "attackDamage": 6.0,
+  "bossBar": { "color": "BLUE", "overlay": "NOTCHED_10" },
+  "idleTimeout": 4800,
+  "idleAction": "heal",
+  "idleHealAmount": 3.0,
+  "idleHealInterval": 40,
+  "skin": { "type": "username", "value": "Notch" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:blaze_rod" },
+    "head":     { "item": "minecraft:diamond_helmet",     "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:3}]}" },
+    "chest":    { "item": "minecraft:diamond_chestplate", "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:3}]}" },
+    "legs":     { "item": "minecraft:diamond_leggings",   "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:3}]}" },
+    "feet":     { "item": "minecraft:diamond_boots",      "nbt": "{Enchantments:[{id:\"minecraft:protection\",lvl:3}]}" }
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "transitionMessage": "&b&lThe Arcane Sovereign stirs.",
+      "abilities": [
+        {
+          "type": "ice_crystal",
+          "cooldownTicks": 220,
+          "params": {
+            "radius": 11,
+            "centerRadius": 4.0,
+            "damage": 9.0,
+            "slowDuration": 65,
+            "freezeDuration": 32,
+            "windupTicks": 16,
+            "duration": 100
+          }
+        },
+        {
+          "type": "fire_arrow",
+          "cooldownTicks": 160,
+          "params": {
+            "chargeTime": 25,
+            "damage": 20.0,
+            "explosionRadius": 4.0,
+            "speed": 2.5,
+            "range": 22
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldownTicks": 260,
+          "params": {
+            "messages": [
+              "&b&lYour resistance is merely a formality.",
+              "&3Cold. Fire. Energy. All mine.",
+              "&b&lYou cannot comprehend what you face.",
+              "&3Feel the arcane."
+            ],
+            "radius": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.65,
+      "transitionMessage": "&b&l\u2605 The Sovereign channels deeper power! \u2605",
+      "transitionSound": "minecraft:entity.elder_guardian.curse",
+      "transitionParticle": "minecraft:electric_spark",
+      "speedMultiplier": 1.15,
+      "damageMultiplier": 1.2,
+      "abilities": [
+        {
+          "type": "singularity_cannon",
+          "cooldownTicks": 180,
+          "params": {
+            "chargeTime": 30,
+            "damage": 24.0,
+            "range": 20,
+            "beamWidth": 1.3,
+            "beamSpeed": 3.0
+          }
+        },
+        {
+          "type": "crimson_slash",
+          "cooldownTicks": 160,
+          "params": {
+            "damage": 13.0,
+            "range": 16,
+            "clawCount": 3,
+            "clawSpeed": 1.3,
+            "explosionRadius": 5.0,
+            "delayBetweenClaws": 12
+          }
+        },
+        {
+          "type": "ice_crystal",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 11,
+            "centerRadius": 4.0,
+            "damage": 10.0,
+            "slowDuration": 70,
+            "freezeDuration": 35,
+            "windupTicks": 15,
+            "duration": 110
+          }
+        },
+        {
+          "type": "fire_arrow",
+          "cooldownTicks": 130,
+          "params": {
+            "chargeTime": 22,
+            "damage": 22.0,
+            "explosionRadius": 4.0,
+            "speed": 2.8,
+            "range": 24
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldownTicks": 200,
+          "params": {
+            "messages": [
+              "&b&lDo you feel the singularity forming?",
+              "&3&lCrimson energy flows through me.",
+              "&b&lYou stand inside my domain of power.",
+              "&3Shatter. Reform. Shatter again."
+            ],
+            "radius": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.30,
+      "transitionMessage": "&b&k!!&r &b&lARCANE ASCENSION&r &b&k!!",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:flash",
+      "speedMultiplier": 1.3,
+      "damageMultiplier": 1.4,
+      "abilities": [
+        {
+          "type": "lightning_radial",
+          "cooldownTicks": 200,
+          "params": {
+            "bladeCount": 22,
+            "bladeRange": 13,
+            "damage": 17.0,
+            "channelTime": 18,
+            "bladeSpeed": 1.6
+          }
+        },
+        {
+          "type": "singularity_cannon",
+          "cooldownTicks": 140,
+          "params": {
+            "chargeTime": 25,
+            "damage": 28.0,
+            "range": 22,
+            "beamWidth": 1.4,
+            "beamSpeed": 3.5
+          }
+        },
+        {
+          "type": "crimson_slash",
+          "cooldownTicks": 130,
+          "params": {
+            "damage": 15.0,
+            "range": 18,
+            "clawCount": 3,
+            "clawSpeed": 1.5,
+            "explosionRadius": 5.5,
+            "delayBetweenClaws": 10
+          }
+        },
+        {
+          "type": "ice_crystal",
+          "cooldownTicks": 170,
+          "params": {
+            "radius": 12,
+            "centerRadius": 4.5,
+            "damage": 12.0,
+            "slowDuration": 80,
+            "freezeDuration": 40,
+            "windupTicks": 14,
+            "duration": 120
+          }
+        },
+        {
+          "type": "fire_arrow",
+          "cooldownTicks": 100,
+          "params": {
+            "chargeTime": 20,
+            "damage": 25.0,
+            "explosionRadius": 4.5,
+            "speed": 3.0,
+            "range": 26
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldownTicks": 150,
+          "params": {
+            "messages": [
+              "&b&k###&r &b&lARCANE ASCENSION COMPLETE&r &b&k###",
+              "&3&lYou are nothing before the Sovereign!",
+              "&b&lIce, fire, lightning — ALL OBEY ME!",
+              "&3Every element bends to my will.",
+              "&b&lThis is the end of your existence."
+            ],
+            "radius": 64.0
+          }
+        }
+      ]
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:nether_star",  "count": 1, "chance": 1.0 },
+    { "item": "minecraft:diamond",      "count": 8, "chance": 0.9 },
+    { "item": "minecraft:lapis_lazuli", "count": 16, "chance": 1.0 },
+    { "item": "minecraft:ender_pearl",  "count": 4, "chance": 0.8 },
+    { "item": "minecraft:echo_shard",   "count": 2, "chance": 0.5 }
+  ]
+}

@@ -40,6 +40,11 @@ public interface BossGoalFactory {
         register("slash_wave", SlashWaveGoal::new);
         register("sonic_boom", SonicBoomGoal::new);
         register("domain", DomainGoal::new);
+        register("singularity_cannon", SingularityCannonGoal::new);
+        register("lightning_radial", LightningRadialGoal::new);
+        register("ice_crystal", IceCrystalGoal::new);
+        register("fire_arrow", FireArrowGoal::new);
+        register("crimson_slash", CrimsonSlashGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {

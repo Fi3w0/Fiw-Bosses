@@ -6,6 +6,8 @@
   "speed": 0.24,
   "knockbackResistance": 0.5,
   "attackDamage": 4.0,
+  "idleTimeout": 6000,
+  "idleAction": "despawn",
   "bossBar": { "color": "YELLOW", "overlay": "NOTCHED_10" },
   "skin": { "type": "player", "value": "fi3w0" },
   "equipment": {
@@ -78,6 +80,17 @@
             "roll": 40,
             "hitRadius": 1.2
           }
+        },
+        {
+          "type": "fire_arrow",
+          "cooldownTicks": 160,
+          "params": {
+            "chargeTime": 20,
+            "damage": 14.0,
+            "explosionRadius": 3.5,
+            "speed": 2.8,
+            "range": 22
+          }
         }
       ],
       "minions": [],
@@ -136,6 +149,29 @@
             "roll": 65,
             "hitRadius": 1.3,
             "taunt": "&4Diagonal finisher!"
+          }
+        },
+        {
+          "type": "crimson_slash",
+          "cooldownTicks": 130,
+          "params": {
+            "damage": 11.0,
+            "range": 14,
+            "clawCount": 3,
+            "clawSpeed": 1.4,
+            "explosionRadius": 4.5,
+            "delayBetweenClaws": 10
+          }
+        },
+        {
+          "type": "fire_arrow",
+          "cooldownTicks": 100,
+          "params": {
+            "chargeTime": 18,
+            "damage": 18.0,
+            "explosionRadius": 4.0,
+            "speed": 3.0,
+            "range": 24
           }
         }
       ],

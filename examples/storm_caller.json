@@ -7,6 +7,10 @@
   "knockbackResistance": 0.3,
   "attackDamage": 3.0,
   "bossBar": { "color": "BLUE", "overlay": "NOTCHED_10" },
+  "idleTimeout": 3600,
+  "idleAction": "heal",
+  "idleHealAmount": 3.0,
+  "idleHealInterval": 40,
   "skin": { "type": "player", "value": "Dinnerbone" },
   "equipment": {
     "mainHand": { "item": "minecraft:trident", "nbt": "{Enchantments:[{id:\"minecraft:channeling\",lvl:1},{id:\"minecraft:riptide\",lvl:3}]}" },
@@ -43,6 +47,19 @@
             "duration": 120,
             "speed": 6.0,
             "taunt": "&b&lOrbitals spinning!"
+          }
+        },
+        {
+          "type": "ice_crystal",
+          "cooldownTicks": 240,
+          "params": {
+            "radius": 9,
+            "centerRadius": 3.5,
+            "damage": 7.0,
+            "slowDuration": 60,
+            "freezeDuration": 28,
+            "windupTicks": 15,
+            "duration": 90
           }
         }
       ],
@@ -82,6 +99,17 @@
             "damage": 7.0,
             "duration": 140,
             "speed": 7.0
+          }
+        },
+        {
+          "type": "singularity_cannon",
+          "cooldownTicks": 180,
+          "params": {
+            "chargeTime": 28,
+            "damage": 22.0,
+            "range": 18,
+            "beamWidth": 1.2,
+            "beamSpeed": 3.0
           }
         }
       ],
@@ -135,6 +163,17 @@
             "damage": 8.0,
             "duration": 160,
             "speed": 9.0
+          }
+        },
+        {
+          "type": "lightning_radial",
+          "cooldownTicks": 220,
+          "params": {
+            "bladeCount": 18,
+            "bladeRange": 12,
+            "damage": 14.0,
+            "channelTime": 16,
+            "bladeSpeed": 1.5
           }
         }
       ],

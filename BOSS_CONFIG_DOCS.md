@@ -57,6 +57,12 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [slash_wave](#slash_wave)
   - [sonic_boom](#sonic_boom)
   - [domain](#domain)
+  - [ice_crystal](#ice_crystal)
+  - [fire_arrow](#fire_arrow)
+  - [crimson_slash](#crimson_slash)
+  - [singularity_cannon](#singularity_cannon)
+  - [lightning_radial](#lightning_radial)
+- [Idle System](#idle-system)
 - [Loot](#loot)
 - [Behavior Notes](#behavior-notes)
 
@@ -95,6 +101,10 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `equipment` | object | null | Items and armor |
 | `phases` | array | [] | Phase definitions |
 | `loot` | array | [] | Death drops |
+| `idleTimeout` | int | -1 | Ticks with no nearby player before idle action triggers. `-1` disables (default) |
+| `idleAction` | string | `"despawn"` | What to do when idle: `"despawn"` removes the boss, `"heal"` gradually restores HP |
+| `idleHealAmount` | float | 2.0 | HP restored per heal tick (only when `idleAction = "heal"`) |
+| `idleHealInterval` | int | 40 | Ticks between each heal tick (only when `idleAction = "heal"`) |
 
 ---
 
@@ -830,6 +840,136 @@ The boss can run a completely separate set of attacks while the domain is active
 > **Sound file:** The domain collapse plays `domain_break` — place your sound file at `src/main/resources/assets/fiw_bosses/sounds/domain_break.ogg`. Minecraft requires **`.ogg` format** — convert `.mp3` files with Audacity or ffmpeg (`ffmpeg -i domain_break.mp3 domain_break.ogg`).
 
 > `attacks` entries use `"cooldown"` (not `"cooldownTicks"`) inside the domain attacks array.
+
+---
+
+### `ice_crystal`
+
+Summons a burst of giant ice crystals from the ground in a snowflake pattern. Enemies in the radius are slowed; enemies in the center are nearly frozen solid. Crystals persist for a short duration then shatter.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 10.0 | Full snowflake radius in blocks |
+| `centerRadius` | 4.0 | Inner radius that applies the hard freeze |
+| `damage` | 8.0 | Damage applied on activation |
+| `slowDuration` | 60 | Ticks of Slowness IV for outer ring players |
+| `freezeDuration` | 30 | Ticks of Slowness VIII + Mining Fatigue III for center players (near-freeze) |
+| `windupTicks` | 15 | Ticks of windup before crystals erupt |
+| `duration` | 100 | Ticks the crystal field persists |
+
+```json
+{ "type": "ice_crystal", "cooldownTicks": 220, "params": { "radius": 10, "centerRadius": 4, "damage": 9, "slowDuration": 65, "freezeDuration": 32 } }
+```
+
+---
+
+### `fire_arrow`
+
+Boss charges a blazing energy arrow for a short duration (tick sound at mid-charge), then fires it at high speed. The arrow explodes on player contact or when it reaches max range. No terrain damage.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `chargeTime` | 25 | Ticks to charge before firing |
+| `damage` | 20.0 | Max explosion damage (falls off with distance) |
+| `explosionRadius` | 4.0 | Blast radius |
+| `speed` | 2.5 | Blocks per tick |
+| `range` | 25.0 | Max travel distance before exploding |
+
+```json
+{ "type": "fire_arrow", "cooldownTicks": 160, "params": { "chargeTime": 25, "damage": 20, "explosionRadius": 4, "speed": 2.5, "range": 25 } }
+```
+
+---
+
+### `crimson_slash`
+
+Launches 3 consecutive energy claws along the ground toward the target. Each claw is larger than the last and leaves a glowing crimson trail. After all 3 claws converge, they explode in a rising dark-flame wave.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | 12.0 | Base claw damage (each successive claw deals +20%) |
+| `range` | 16.0 | Distance each claw travels |
+| `clawCount` | 3 | Number of consecutive claws |
+| `clawSpeed` | 1.2 | Blocks per tick |
+| `explosionRadius` | 5.0 | Final explosion radius |
+| `delayBetweenClaws` | 12 | Ticks between consecutive claw launches |
+
+```json
+{ "type": "crimson_slash", "cooldownTicks": 140, "params": { "damage": 12, "range": 16, "clawCount": 3, "explosionRadius": 5 } }
+```
+
+---
+
+### `singularity_cannon`
+
+Boss channels a rotating plasma ring in front of itself that grows and spins for the charge duration, with a chromatic aberration ring of rainbow dust. Nearby players are slowed 30% during the charge. Fires a high-speed particle beam that drags caught players forward.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `chargeTime` | 30 | Ticks to charge the ring |
+| `damage` | 25.0 | Beam damage per player hit |
+| `range` | 20.0 | Beam max travel distance |
+| `beamWidth` | 1.2 | Hit radius of the beam |
+| `beamSpeed` | 3.0 | Blocks per tick |
+
+```json
+{ "type": "singularity_cannon", "cooldownTicks": 180, "params": { "chargeTime": 30, "damage": 25, "range": 20, "beamWidth": 1.2 } }
+```
+
+---
+
+### `lightning_radial`
+
+Boss leaps 3 blocks into the air (immune during ascent), channels electric energy in a growing spiral, then fires 16–24 energy blades simultaneously in all directions at ground level. Each blade travels 12 blocks, and impact points scatter ash shrapnel.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `bladeCount` | 20 | Number of blades fired in 360° |
+| `bladeRange` | 12.0 | Distance each blade travels |
+| `damage` | 16.0 | Damage per blade hit |
+| `channelTime` | 16 | Ticks of channeling after landing |
+| `bladeSpeed` | 1.5 | Blocks per tick per blade |
+
+```json
+{ "type": "lightning_radial", "cooldownTicks": 220, "params": { "bladeCount": 20, "bladeRange": 12, "damage": 16, "channelTime": 16 } }
+```
+
+---
+
+## Idle System
+
+Bosses are persistent by default — they never despawn and never regen HP. The idle system lets you override this when no players are nearby.
+
+**Trigger condition:** no alive, non-spectator, non-creative player within 64 blocks for `idleTimeout` ticks.
+
+Idle timer is reset when:
+- A player comes within 64 blocks
+- The boss takes any damage
+
+```json
+{
+  "idleTimeout": 6000,
+  "idleAction": "despawn"
+}
+```
+
+```json
+{
+  "idleTimeout": 3600,
+  "idleAction": "heal",
+  "idleHealAmount": 3.0,
+  "idleHealInterval": 40
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `idleTimeout` | -1 | Ticks before idle action triggers. `-1` = disabled (default — no idle behavior) |
+| `idleAction` | `"despawn"` | `"despawn"` removes the entity; `"heal"` gradually restores HP |
+| `idleHealAmount` | 2.0 | HP healed per interval |
+| `idleHealInterval` | 40 | Ticks between each heal tick (40 = 2 s) |
+
+> Ticks reference: 20 ticks = 1 second · 600 ticks = 30 s · 1200 ticks = 1 min · 6000 ticks = 5 min
 
 ---
 
