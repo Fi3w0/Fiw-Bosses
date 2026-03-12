@@ -53,6 +53,10 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [random_message](#random_message)
   - [particle_tornado](#particle_tornado)
   - [swap](#swap)
+  - [shockwave](#shockwave)
+  - [slash_wave](#slash_wave)
+  - [sonic_boom](#sonic_boom)
+  - [domain](#domain)
 - [Loot](#loot)
 - [Behavior Notes](#behavior-notes)
 
@@ -686,6 +690,146 @@ Instantly swaps the boss's position with the target's — teleporting the boss t
 ```
 
 > Pairs well with `aoe_smash` or `arc_slash` — swap places the player at ground zero right before the attack lands.
+
+---
+
+### `shockwave`
+
+Boss slams the ground sending out expanding rings of energy. Players on the ground when a ring passes through them take damage — **jumping over a ring avoids it entirely**. Rings expand outward from the boss and are staggered in time.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | 8.0 | Damage per ring hit |
+| `waves` | 3 | Number of rings |
+| `maxRadius` | 14.0 | Max radius the rings travel |
+| `waveSpeed` | 0.55 | Blocks per tick each ring expands |
+| `knockback` | 0.5 | Horizontal knockback on hit |
+| `windupTicks` | 20 | Charge ticks before first ring fires |
+
+```json
+{
+  "type": "shockwave",
+  "cooldownTicks": 200,
+  "params": {
+    "damage": 10.0, "waves": 3, "maxRadius": 16.0,
+    "waveSpeed": 0.6, "windupTicks": 18,
+    "taunt": "&6&lDodge... if you can."
+  }
+}
+```
+
+> Players with upward velocity (jumping) are immune to each ring they are airborne over.
+
+---
+
+### `slash_wave`
+
+The boss charges and fires a fast-traveling blade of energy that advances in a straight line. Like `arc_slash` but the slash follows a path — players must dodge sideways. A brief windup tracks the target before locking direction.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | 14.0 | Damage on hit |
+| `speed` | 1.8 | Blocks per tick the slash advances |
+| `range` | 20.0 | Max distance it travels |
+| `width` | 1.4 | Half-width of the hitbox perpendicular to travel |
+| `chargeTime` | 10 | Windup ticks before firing |
+
+```json
+{
+  "type": "slash_wave",
+  "cooldownTicks": 160,
+  "params": {
+    "damage": 14.0, "speed": 2.0, "range": 22.0,
+    "width": 1.5, "chargeTime": 10,
+    "taunt": "&7&lNo escaping this."
+  }
+}
+```
+
+> Knockback is applied sideways (perpendicular to travel) for disorientation. High `speed` values make the slash very hard to outrun — keep `chargeTime` generous so players can react.
+
+---
+
+### `sonic_boom`
+
+Warden-style charge-and-release. The boss charges with rising vibration particles and a growing rumble, then fires a devastating sound pulse that **ignores armor** (magic damage). Players in the blast get knocked back and optionally receive Darkness.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | 30.0 | Damage on hit — bypasses armor |
+| `radius` | 15.0 | Max range |
+| `coneAngle` | 60.0 | Half-angle of the cone in degrees (`180` = full circle) |
+| `chargeTime` | 40 | Charge ticks before the boom fires |
+| `knockback` | 2.0 | Knockback strength |
+| `darkness` | true | Apply Darkness (4 seconds) to hit players |
+
+```json
+{
+  "type": "sonic_boom",
+  "cooldownTicks": 220,
+  "params": {
+    "damage": 28.0, "radius": 16.0, "coneAngle": 65.0,
+    "chargeTime": 45, "knockback": 2.5, "darkness": true,
+    "taunt": "&8&lBrace yourself."
+  }
+}
+```
+
+> The charge is clearly telegraphed with sculk particles and sound — players should retreat behind the boss's back or break line of sight. `coneAngle: 180` creates a full-area blast with no safe direction.
+
+---
+
+### `domain`
+
+**The boss's ultimate ability.** Seals a multi-layered dark particle sphere around nearby players. The sphere is **anchored to the activation position** — it does not move. Neither the boss nor trapped players can leave the sphere. Outsiders are pushed away on contact. When the domain collapses a custom `domain_break` sound fires. If all trapped players die, the domain ends early.
+
+The boss can run a completely separate set of attacks while the domain is active (`attacks` array). Its speed can also be overridden independently.
+
+**Sphere visuals** (6 layers):
+- Outer shell — 20 rotating latitude rings (PORTAL / WARPED_SPORE / REVERSE_PORTAL)
+- Inner shell — 12 counter-rotating rings at 72% radius (SCULK_CHARGE_POP)
+- Equatorial band — dense highlight ring at the equator (SOUL)
+- Ground ring — flat circle at the sphere floor with inner concentric ring
+- Polar caps — glow rings at top and bottom poles
+- Ambient fill — floating particles drifting inside the dome
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 15.0 | Sphere radius in blocks |
+| `duration` | 300 | Max duration in ticks (300 = 15 s) |
+| `domainSpeed` | 0.36 | Boss movement speed inside the domain |
+| `pushDamage` | 3.0 | Damage applied to outsiders trying to enter |
+| `pullDamage` | 3.0 | Damage applied to insiders trying to escape |
+| `darkness` | true | Apply Darkness to trapped players every second |
+| `blindness` | false | Apply Blindness to trapped players every second |
+| `taunt` | null | Message on activation |
+| `attacks` | [] | Domain-specific abilities (same format as phase abilities). If empty, the boss uses its current phase goals |
+
+```json
+{
+  "type": "domain",
+  "cooldownTicks": 600,
+  "params": {
+    "radius": 18,
+    "duration": 240,
+    "domainSpeed": 0.38,
+    "pushDamage": 4.0,
+    "pullDamage": 4.0,
+    "darkness": true,
+    "blindness": false,
+    "taunt": "&5&lDOMAIN EXPANSION",
+    "attacks": [
+      { "type": "sonic_boom",  "cooldown": 100, "params": { "damage": 20, "radius": 16, "coneAngle": 180, "chargeTime": 30 } },
+      { "type": "slash_wave",  "cooldown": 80,  "params": { "damage": 12, "speed": 2.0, "range": 16 } },
+      { "type": "shockwave",   "cooldown": 120, "params": { "damage": 9,  "waves": 3,   "maxRadius": 15 } }
+    ]
+  }
+}
+```
+
+> **Sound file:** The domain collapse plays `domain_break` — place your sound file at `src/main/resources/assets/fiw_bosses/sounds/domain_break.ogg`. Minecraft requires **`.ogg` format** — convert `.mp3` files with Audacity or ffmpeg (`ffmpeg -i domain_break.mp3 domain_break.ogg`).
+
+> `attacks` entries use `"cooldown"` (not `"cooldownTicks"`) inside the domain attacks array.
 
 ---
 

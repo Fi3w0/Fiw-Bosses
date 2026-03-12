@@ -15,7 +15,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
-- **21 abilities** — melee, ranged, mobility, AoE, utility, and crowd-control, all configurable per phase
+- **25 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
 - **Custom skins** — any player skin or local PNG file
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
 - **Minion spawning** — spawn any mob with caps and radius control
@@ -43,7 +43,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop `fiw-bosses-1.0.1.jar` into your `mods/` folder
+3. Drop `fiw-bosses-1.0.3.jar` into your `mods/` folder
 4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
@@ -86,6 +86,10 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 | `random_message` | Sends a random taunt from a list to nearby players |
 | `particle_tornado` | Rising funnel tornado — narrow at base, wide at top, optional damage |
 | `swap` | Instantly swaps the boss and target positions to disorient players |
+| `shockwave` | Ground slam sends expanding rings — players must jump over each one |
+| `slash_wave` | Fast forward-traveling blade of energy that follows a straight path |
+| `sonic_boom` | Warden-style charge-and-release — ignores armor, optional Darkness |
+| `domain` | **Ultimate** — multi-layered dark sphere anchored at cast position; boss and players sealed inside, custom attack pattern, custom speed, domain_break sound on collapse |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
@@ -93,7 +97,7 @@ Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
 ## Included Bosses
 
-Five ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
+Six ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
 
 | Boss | Style | Highlights |
 |---|---|---|
@@ -102,6 +106,7 @@ Five ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of 
 | `iron_warden` | Tank bruiser | shield, aoe smash, charge, slam + minion guards |
 | `shadow_stalker` | Assassin | dodge, arc slash, teleport, pull + slam counter |
 | `void_witch` | Caster | flames, freeze, particle tornado, swap, ranged projectile |
+| `domain_sovereign` | Ultimate | shockwave, slash wave, sonic boom, domain expansion |
 
 ---
 

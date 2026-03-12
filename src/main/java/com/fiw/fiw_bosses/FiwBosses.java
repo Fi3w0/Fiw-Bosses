@@ -21,6 +21,7 @@ public class FiwBosses implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("FIW Bosses initializing...");
 
+        ModSounds.init();
         BossGoalFactory.init();
         BossEntityRegistry.register();
         BossConfigLoader.loadAll();

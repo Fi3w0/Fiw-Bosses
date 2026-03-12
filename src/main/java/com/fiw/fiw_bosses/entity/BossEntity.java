@@ -137,6 +137,13 @@ public class BossEntity extends HostileEntity {
 
     @Override
     protected void mobTick() {
+        // Drain deferred actions first — runs before goalSelector.tick(), so goal-set
+        // modifications here are safe from ConcurrentModificationException.
+        Runnable action;
+        while ((action = pendingGoalActions.poll()) != null) {
+            action.run();
+        }
+
         super.mobTick();
 
         bossBar.setPercent(getHealth() / getMaxHealth());
@@ -326,6 +333,14 @@ public class BossEntity extends HostileEntity {
     public BossPhaseManager getPhaseManager() { return phaseManager; }
     public GoalSelector getGoalSelector() { return this.goalSelector; }
     public GoalSelector getTargetSelector() { return this.targetSelector; }
+
+    // ---- Deferred goal-selector actions ----
+    // Actions added here are run at the START of the next mobTick() — safely before goalSelector.tick().
+    private final java.util.Queue<Runnable> pendingGoalActions = new java.util.ArrayDeque<>();
+
+    public void scheduleGoalAction(Runnable action) {
+        pendingGoalActions.add(action);
+    }
 
     // ---- Shield damage reduction ----
     private float damageReduction = 0.0f;
