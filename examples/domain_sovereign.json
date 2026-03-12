@@ -1,0 +1,234 @@
+{
+  "id": "domain_sovereign",
+  "displayName": "&5&lDomain Sovereign",
+  "health": 180,
+  "armor": 4,
+  "speed": 0.25,
+  "knockbackResistance": 0.7,
+  "attackDamage": 8,
+  "bossBar": {
+    "color": "PURPLE",
+    "overlay": "PROGRESS"
+  },
+  "skin": {
+    "type": "username",
+    "value": "Notch"
+  },
+  "equipment": {
+    "mainHand": { "item": "minecraft:blaze_rod" },
+    "head":     { "item": "minecraft:netherite_helmet" },
+    "chest":    { "item": "minecraft:netherite_chestplate" },
+    "legs":     { "item": "minecraft:netherite_leggings" },
+    "feet":     { "item": "minecraft:netherite_boots" }
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "transitionMessage": "&5The Sovereign awakens.",
+      "abilities": [
+        {
+          "type": "slash_wave",
+          "cooldown": 180,
+          "params": {
+            "damage": 10,
+            "speed": 1.6,
+            "range": 18,
+            "width": 1.3,
+            "chargeTime": 12
+          }
+        },
+        {
+          "type": "shockwave",
+          "cooldown": 200,
+          "params": {
+            "damage": 7,
+            "waves": 2,
+            "maxRadius": 12,
+            "waveSpeed": 0.5,
+            "windupTicks": 20
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldown": 300,
+          "params": {
+            "messages": [
+              "&5You cannot escape what you cannot see.",
+              "&5The domain bends to my will.",
+              "&5Your world ends here."
+            ],
+            "radius": 40
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.65,
+      "transitionMessage": "&5&lThe veil thickens...",
+      "speedMultiplier": 1.15,
+      "abilities": [
+        {
+          "type": "sonic_boom",
+          "cooldown": 220,
+          "params": {
+            "damage": 22,
+            "radius": 14,
+            "coneAngle": 70,
+            "chargeTime": 40,
+            "knockback": 2.0,
+            "darkness": true
+          }
+        },
+        {
+          "type": "slash_wave",
+          "cooldown": 140,
+          "params": {
+            "damage": 12,
+            "speed": 2.0,
+            "range": 20,
+            "width": 1.4,
+            "chargeTime": 10
+          }
+        },
+        {
+          "type": "shockwave",
+          "cooldown": 180,
+          "params": {
+            "damage": 9,
+            "waves": 3,
+            "maxRadius": 14,
+            "waveSpeed": 0.55,
+            "windupTicks": 18
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldown": 250,
+          "params": {
+            "messages": [
+              "&5&lYour strength is meaningless inside my domain.",
+              "&5Run. It only makes it worse.",
+              "&5I have sealed your fate.",
+              "&5There is no outside here."
+            ],
+            "radius": 40
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.30,
+      "transitionMessage": "&5&k!!&r &5&lDOMAIN EXPANSION&r &5&k!!",
+      "transitionSound": "minecraft:entity.ender_dragon.growl",
+      "speedMultiplier": 1.25,
+      "damageMultiplier": 1.2,
+      "abilities": [
+        {
+          "type": "domain",
+          "cooldown": 600,
+          "params": {
+            "radius": 18,
+            "duration": 280,
+            "domainSpeed": 0.38,
+            "pushDamage": 4,
+            "pullDamage": 4,
+            "darkness": false,
+            "blindness": false,
+            "taunt": "&5&lDOMAIN EXPANSION — Void Sovereignty",
+            "attacks": [
+              {
+                "type": "sonic_boom",
+                "cooldown": 100,
+                "params": {
+                  "damage": 18,
+                  "radius": 16,
+                  "coneAngle": 180,
+                  "chargeTime": 30,
+                  "knockback": 1.5,
+                  "darkness": true
+                }
+              },
+              {
+                "type": "slash_wave",
+                "cooldown": 80,
+                "params": {
+                  "damage": 14,
+                  "speed": 2.2,
+                  "range": 17,
+                  "width": 1.5,
+                  "chargeTime": 8
+                }
+              },
+              {
+                "type": "shockwave",
+                "cooldown": 120,
+                "params": {
+                  "damage": 10,
+                  "waves": 4,
+                  "maxRadius": 16,
+                  "waveSpeed": 0.6,
+                  "windupTicks": 15
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "sonic_boom",
+          "cooldown": 200,
+          "params": {
+            "damage": 25,
+            "radius": 15,
+            "coneAngle": 65,
+            "chargeTime": 35,
+            "knockback": 2.5,
+            "darkness": true
+          }
+        },
+        {
+          "type": "slash_wave",
+          "cooldown": 100,
+          "params": {
+            "damage": 14,
+            "speed": 2.2,
+            "range": 22,
+            "width": 1.6,
+            "chargeTime": 8,
+            "taunt": "&5Nowhere to run."
+          }
+        },
+        {
+          "type": "shockwave",
+          "cooldown": 150,
+          "params": {
+            "damage": 11,
+            "waves": 4,
+            "maxRadius": 16,
+            "waveSpeed": 0.6,
+            "windupTicks": 15
+          }
+        },
+        {
+          "type": "random_message",
+          "cooldown": 180,
+          "params": {
+            "messages": [
+              "&5&lYou are inside my world now.",
+              "&5Every move you make feeds the domain.",
+              "&5&lThere is no escape from the Sovereign.",
+              "&5Feel the void close around you.",
+              "&5&kXXX&r &5My domain is absolute. &5&kXXX"
+            ],
+            "radius": 50
+          }
+        }
+      ]
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:nether_star",  "count": 1, "chance": 1.0 },
+    { "item": "minecraft:diamond",      "count": 6, "chance": 0.9 },
+    { "item": "minecraft:ender_pearl",  "count": 4, "chance": 0.8 },
+    { "item": "minecraft:echo_shard",   "count": 2, "chance": 0.6 }
+  ]
+}
