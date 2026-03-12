@@ -103,17 +103,23 @@ Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
 ## Included Bosses
 
-Seven ready-to-use bosses are included in `run/config/fiw_bosses/bosses/` out of the box.
+Seven pre-built bosses live in `examples/` — copy any into `config/fiw_bosses/bosses/` to use them.
 
 | Boss | Style | Highlights |
 |---|---|---|
-| `blade_dancer` | Skirmisher | arc slash, dodge, slam, charge, teleport |
-| `storm_caller` | Ranged mage | chain lightning, orbital, beam, meteor |
+| `blade_dancer` | Skirmisher | arc slash, dodge, slam, charge, fire arrow, crimson slash |
+| `storm_caller` | Ranged mage | chain lightning, orbital, beam, ice crystal, singularity cannon, lightning radial |
 | `iron_warden` | Tank bruiser | shield, aoe smash, charge, slam + minion guards |
-| `shadow_stalker` | Assassin | dodge, arc slash, teleport, pull + slam counter |
-| `void_witch` | Caster | flames, freeze, particle tornado, swap, ranged projectile |
-| `domain_sovereign` | Ultimate | shockwave, slash wave, sonic boom, domain expansion |
+| `void_witch` | Caster | flames, freeze, particle tornado, swap, ice crystal |
+| `domain_sovereign` | Ultimate | shockwave, slash wave, sonic boom, domain expansion, lightning radial |
 | `arcane_sovereign` | Elemental mage | ice crystal, fire arrow, crimson slash, singularity cannon, lightning radial |
+| `fi3w0_spirit` | Custom | personal boss with all-phase mechanics |
+
+A test boss ships in `run/config/fiw_bosses/bosses/` for quick in-game testing:
+
+| Boss | Purpose |
+|---|---|
+| `ability_tester` | Phase 1: ice_crystal + fire_arrow · Phase 2: crimson_slash + singularity_cannon · Phase 3: all 5 new abilities |
 
 ---
 
