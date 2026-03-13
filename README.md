@@ -15,7 +15,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
-- **30 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **36 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
 - **Idle system** — configurable despawn or gradual heal when no players are nearby
 - **Custom skins** — any player skin or local PNG file
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
@@ -96,6 +96,12 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 | `crimson_slash` | 3 consecutive energy claws along the ground, each larger than the last, converging in a dark-flame explosion |
 | `singularity_cannon` | Charging plasma ring → high-speed beam that drags players; nearby players slowed 30% during charge |
 | `lightning_radial` | Boss leaps into the air, channels energy, then radiates 16–24 electric blades 360° at ground level |
+| `orb_throw` | Green mystic orb orbits the boss with spinning rings, then launches forward with a knockback explosion |
+| `tracking_orb` | Passive purple orb follows the boss and fires homing projectiles — runs alongside other abilities |
+| `moving_tornado` | Tornado advances toward the target, absorbing and lifting players caught inside |
+| `ground_spike` | Boss marks an area, then FallingBlock spikes erupt from the ground launching players upward |
+| `arrow_rain` | Marks a circular area with a warning ring, then actual arrows fall from above across the zone |
+| `potion_field` | Throws a potion in an arc; on landing creates a persistent effect field that applies a configurable status effect |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 
@@ -119,7 +125,7 @@ A test boss ships in `run/config/fiw_bosses/bosses/` for quick in-game testing:
 
 | Boss | Purpose |
 |---|---|
-| `ability_tester` | Phase 1: ice_crystal + fire_arrow · Phase 2: crimson_slash + singularity_cannon · Phase 3: all 5 new abilities |
+| `ability_tester` | Phase 1: ice_crystal + fire_arrow · Phase 2: crimson_slash + singularity_cannon · Phase 3: all 11 new abilities |
 
 ---
 

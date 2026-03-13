@@ -936,6 +936,124 @@ Boss leaps 3 blocks into the air (immune during ascent), channels electric energ
 
 ---
 
+### `orb_throw`
+
+Summons a green mystic orb that orbits the boss with three spinning ring layers (END_ROD, ENCHANT, tilted yellow dust), then launches it at the target. On hit or reaching max range, it explodes with knockback.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `orbitTime` | 50 | Ticks spent orbiting before launch |
+| `speed` | 1.5 | Orb travel speed (blocks/tick) |
+| `range` | 22.0 | Max travel range before explosion |
+| `damage` | 12.0 | Explosion damage at center |
+| `knockback` | 3.5 | Knockback force |
+| `explosionRadius` | 6.0 | Explosion area radius |
+
+```json
+{ "type": "orb_throw", "cooldownTicks": 140, "params": { "orbitTime": 50, "speed": 1.5, "range": 22, "damage": 12, "knockback": 3.5, "explosionRadius": 6 } }
+```
+
+---
+
+### `tracking_orb`
+
+A passive purple orb that follows the boss in a figure-8 pattern and periodically fires homing projectiles at nearby players. Uses `EnumSet.noneOf` so the boss can move and use other abilities simultaneously.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `orbitRadius` | 2.5 | Radius of the figure-8 orbit around the boss |
+| `fireRate` | 30 | Ticks between projectile shots |
+| `projectileSpeed` | 0.8 | Speed of each fired projectile |
+| `projectileDamage` | 5.0 | Damage per projectile hit |
+| `duration` | 300 | Total ticks the orb stays active |
+
+```json
+{ "type": "tracking_orb", "cooldownTicks": 200, "params": { "orbitRadius": 2.5, "fireRate": 30, "projectileSpeed": 0.8, "projectileDamage": 5, "duration": 300 } }
+```
+
+---
+
+### `moving_tornado`
+
+A tornado appears in front of the boss and advances toward the target. Players inside the radius are pulled toward the center and lifted if in the inner vortex core.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 4.0 | Outer radius of the tornado |
+| `height` | 8.0 | Visual height of the funnel |
+| `speed` | 0.3 | Blocks/tick the tornado moves |
+| `range` | 24.0 | Max travel distance |
+| `pullForce` | 0.15 | Horizontal pull toward vortex center |
+| `liftForce` | 0.2 | Upward lift applied inside inner vortex |
+| `damage` | 4.0 | Damage dealt per hit tick |
+| `damageTick` | 15 | Ticks between damage applications |
+| `windupTicks` | 25 | Ticks of windup swirl before tornado moves |
+
+```json
+{ "type": "moving_tornado", "cooldownTicks": 160, "params": { "radius": 4, "height": 8, "speed": 0.3, "range": 24, "pullForce": 0.15, "liftForce": 0.2, "damage": 4, "damageTick": 15 } }
+```
+
+---
+
+### `ground_spike`
+
+Boss marks multiple positions with pulsing indicators, then FallingBlock columns erupt from the ground launching players upward. No permanent terrain modification.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 10.0 | Radius around target to distribute spikes |
+| `spikeCount` | 8 | Number of spike columns |
+| `damage` | 12.0 | Damage on spike eruption |
+| `knockback` | 2.5 | Upward knockback force |
+| `markTicks` | 40 | Duration of the warning phase |
+| `spikeTicks` | 20 | Duration of the spike phase |
+
+```json
+{ "type": "ground_spike", "cooldownTicks": 180, "params": { "radius": 10, "spikeCount": 8, "damage": 12, "knockback": 2.5, "markTicks": 40, "spikeTicks": 20 } }
+```
+
+---
+
+### `arrow_rain`
+
+Boss marks a circular area with an orange warning ring, then rains actual `ArrowEntity` projectiles from above. Arrows are non-pickup and deal configurable damage.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 8.0 | Radius of the rain zone |
+| `arrowCount` | 20 | Total arrows per volley |
+| `height` | 20.0 | Height above ground from which arrows fall |
+| `damage` | 8.0 | Arrow damage |
+| `warnTicks` | 40 | Duration of the warning ring phase |
+| `rainTicks` | 30 | Duration of the arrow rain phase |
+
+```json
+{ "type": "arrow_rain", "cooldownTicks": 150, "params": { "radius": 8, "arrowCount": 20, "height": 20, "damage": 8, "warnTicks": 40, "rainTicks": 30 } }
+```
+
+---
+
+### `potion_field`
+
+Boss throws a potion in an arc; on landing it creates a persistent ground field that applies a configurable status effect to players inside.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `effect` | `"minecraft:slowness"` | Status effect identifier (e.g. `"minecraft:poison"`, `"minecraft:weakness"`) |
+| `amplifier` | 1 | Effect level (0 = level I) |
+| `effectDuration` | 100 | Ticks of effect applied per interval |
+| `applyInterval` | 20 | Ticks between effect applications |
+| `fieldDuration` | 200 | Total ticks the field persists |
+| `fieldRadius` | 5.0 | Radius of the effect zone |
+| `damage` | 0.0 | Direct damage on landing (0 = none) |
+| `throwSpeed` | 0.6 | Initial projectile speed |
+
+```json
+{ "type": "potion_field", "cooldownTicks": 120, "params": { "effect": "minecraft:poison", "amplifier": 0, "effectDuration": 80, "applyInterval": 20, "fieldDuration": 200, "fieldRadius": 6, "damage": 3 } }
+```
+
+---
+
 ## Idle System
 
 Bosses are persistent by default — they never despawn and never regen HP. The idle system lets you override this when no players are nearby.
