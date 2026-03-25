@@ -265,9 +265,8 @@ public class JudgmentMarkGoal extends Goal {
     }
 
     private void broadcast(ServerWorld world, Text message) {
-        for (var p : world.getPlayers()) {
-            if (p instanceof ServerPlayerEntity sp
-                    && sp.squaredDistanceTo(boss) <= castRadius * castRadius) {
+        for (ServerPlayerEntity sp : world.getPlayers()) {
+            if (sp.squaredDistanceTo(boss) <= castRadius * castRadius) {
                 sp.sendMessage(message, false);
             }
         }
