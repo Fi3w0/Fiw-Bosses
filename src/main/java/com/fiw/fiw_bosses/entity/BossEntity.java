@@ -282,6 +282,9 @@ public class BossEntity extends HostileEntity {
                     definition != null ? definition.preDeathDialogue : List.of(),
                     definition != null ? definition.preDeathDialogueDelay : 40,
                     () -> {
+                        // Must set state to ACTIVE before kill() — our damage() override
+                        // blocks all damage while in PRE_DEATH, which would prevent death.
+                        bossState = BossState.ACTIVE;
                         setInvulnerable(false);
                         this.kill();
                     }
