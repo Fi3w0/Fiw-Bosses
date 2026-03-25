@@ -129,12 +129,6 @@ Seven pre-built bosses live in `examples/` — copy any into `config/fiw_bosses/
 | `arcane_sovereign` | Elemental mage | ice crystal, fire arrow, crimson slash, singularity cannon, lightning radial |
 | `fi3w0_spirit` | Custom | personal boss with all-phase mechanics |
 
-A test boss ships in `run/config/fiw_bosses/bosses/` for quick in-game testing:
-
-| Boss | Purpose |
-|---|---|
-| `ability_tester` | Phase 1: ice_crystal + fire_arrow · Phase 2: crimson_slash + singularity_cannon · Phase 3: all 11 new abilities |
-
 ---
 
 ## Building from Source
