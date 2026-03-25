@@ -51,6 +51,12 @@ public interface BossGoalFactory {
         register("ground_spike", GroundSpikeGoal::new);
         register("arrow_rain", ArrowRainGoal::new);
         register("potion_field", PotionFieldGoal::new);
+        register("detect_mark", DetectMarkGoal::new);
+        register("phantom_dash", PhantomDashGoal::new);
+        register("guardian_shield", GuardianShieldGoal::new);
+        register("essence_absorption", EssenceAbsorptionGoal::new);
+        register("judgment_mark", JudgmentMarkGoal::new);
+        register("divine_execution", DivineExecutionGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {

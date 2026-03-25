@@ -15,7 +15,9 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
-- **36 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **42 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **Pre-fight activation** — boss starts passive/immortal; player right-clicks to trigger dialogue and start the fight
+- **Pre-death dialogue** — boss held at 1 HP on lethal hit, speaks final words, then dies
 - **Idle system** — configurable despawn or gradual heal when no players are nearby
 - **Custom skins** — any player skin or local PNG file
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
@@ -44,7 +46,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop `fiw-bosses-1.0.4.jar` into your `mods/` folder
+3. Drop `fiw-bosses-1.0.6.jar` into your `mods/` folder
 4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
@@ -102,6 +104,12 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 | `ground_spike` | Boss marks an area, then FallingBlock spikes erupt from the ground launching players upward |
 | `arrow_rain` | Marks a circular area with a warning ring, then actual arrows fall from above across the zone |
 | `potion_field` | Throws a potion in an arc; on landing creates a persistent effect field that applies a configurable status effect |
+| `detect_mark` | Marks the player with the most HP — Glowing, boss deals bonus damage to them until the mark expires |
+| `phantom_dash` | 3 rapid zigzag lightning dashes — alternating left/right with random variance, hits players at each endpoint |
+| `guardian_shield` | Passive cyan shield — orbits the boss at all times, counterattacks with damage+knockback whenever the boss is hit |
+| `essence_absorption` | Slow vampiric soul projectile — steals HP and applies Weakness on hit; steers toward the nearest player if it misses |
+| `judgment_mark` | **Ultimate** — marks all nearby players simultaneously, detonates after a delay; dodge by running out of range or hiding behind blocks |
+| `divine_execution` | Seizes one player, lifts them in the air with a message, holds them for a duration, then hurls them away with damage |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
 

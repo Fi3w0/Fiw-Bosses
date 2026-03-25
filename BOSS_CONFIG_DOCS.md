@@ -1054,6 +1054,116 @@ Boss throws a potion in an arc; on landing it creates a persistent ground field 
 
 ---
 
+### `detect_mark`
+
+Marks the player with the most HP. The marked player receives Glowing and the boss deals bonus damage to them until the mark expires.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `castRange` | 20.0 | Max distance to cast the mark |
+| `markDuration` | 200 | Ticks the mark lasts |
+| `damageBonus` | 6.0 | Extra damage the boss deals to the marked player |
+
+```json
+{ "type": "detect_mark", "cooldownTicks": 300, "params": { "castRange": 20, "markDuration": 200, "damageBonus": 6 } }
+```
+
+---
+
+### `phantom_dash`
+
+3 rapid zigzag dashes toward the target. Each dash alternates left/right with a random angle variation for unpredictability. Yellow/white lightning particles trace the path.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `dashCount` | 3 | Number of dashes |
+| `dashDistance` | 4.0 | Blocks traveled per dash |
+| `damage` | 8.0 | Damage to players at the dash endpoint |
+| `delayBetweenDashes` | 8 | Ticks pause between each dash |
+| `dashHitRadius` | 1.5 | Hit detection radius at the endpoint |
+
+```json
+{ "type": "phantom_dash", "cooldownTicks": 120, "params": { "dashCount": 3, "dashDistance": 4, "damage": 8, "delayBetweenDashes": 8, "dashHitRadius": 1.5 } }
+```
+
+---
+
+### `guardian_shield`
+
+Passive reactive shield. Cyan particles orbit the boss at all times. Whenever the boss is hit, it instantly counterattacks the attacker with damage and knockback. Runs alongside other abilities — does not block movement.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `counterDamage` | 12.0 | Damage dealt to attacker |
+| `counterKnockback` | 2.0 | Knockback force away from boss |
+| `counterWindow` | 10 | Ticks after a hit during which counterattack fires |
+| `shieldRadius` | 1.5 | Visual orbit radius |
+| `duration` | 300 | Total active ticks before goal stops |
+
+```json
+{ "type": "guardian_shield", "cooldownTicks": 60, "params": { "counterDamage": 12, "counterKnockback": 2, "counterWindow": 10, "shieldRadius": 1.5, "duration": 300 } }
+```
+
+---
+
+### `essence_absorption`
+
+Slow vampiric soul projectile. Launches a SOUL particle orb at the target — on hit it steals HP from the player and applies Weakness II. If the initial shot misses, the projectile enters a homing phase and steers toward the nearest player.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `projectileSpeed` | 0.35 | Blocks/tick |
+| `healAmount` | 6.0 | HP the boss gains on hit |
+| `damage` | 8.0 | HP the player loses on hit |
+| `weaknessDuration` | 120 | Ticks of Weakness II applied to the victim |
+| `searchDuration` | 80 | Ticks the projectile homes before dissipating |
+| `range` | 20.0 | Max straight travel distance before entering search mode |
+
+```json
+{ "type": "essence_absorption", "cooldownTicks": 200, "params": { "projectileSpeed": 0.35, "healAmount": 6, "damage": 8, "weaknessDuration": 120, "searchDuration": 80, "range": 20 } }
+```
+
+---
+
+### `judgment_mark`
+
+**Ultimate.** Marks all nearby players simultaneously with Glowing, then detonates after a delay dealing heavy damage. Players can dodge by running beyond `dodgeRange` or hiding behind blocks (line-of-sight check).
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `castRadius` | 32.0 | Radius to find and mark players |
+| `castTime` | 60 | Ticks of cast animation before the delay starts (3 s) |
+| `detonationDelay` | 100 | Ticks after cast before detonation (5 s) |
+| `damage` | 30.0 | Damage to players who fail to dodge |
+| `dodgeRange` | 28.0 | Players beyond this distance auto-dodge |
+| `preCastMessage` | `""` | Message sent to nearby players at cast start; empty = skip |
+| `postHitMessage` | `""` | Message sent after detonation; empty = skip |
+
+```json
+{ "type": "judgment_mark", "cooldownTicks": 600, "params": { "castRadius": 32, "castTime": 60, "detonationDelay": 100, "damage": 30, "dodgeRange": 28, "preCastMessage": "&4&lJUDGMENT!", "postHitMessage": "&7The marks have detonated." } }
+```
+
+---
+
+### `divine_execution`
+
+Grabs one nearby player, lifts them 3 blocks above the boss, sends a configurable message, holds them for a duration, then hurls them away with heavy damage.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `grabRange` | 4.0 | Max distance to grab a player |
+| `approachRange` | 6.0 | Boss moves toward player within this range |
+| `liftDuration` | 60 | Ticks the player is held in the air (3 s) |
+| `throwDamage` | 20.0 | Magic damage on throw |
+| `throwPower` | 2.5 | Horizontal velocity magnitude |
+| `liftMessage` | `""` | Message broadcast to nearby players when the player is lifted; empty = skip |
+
+```json
+{ "type": "divine_execution", "cooldownTicks": 400, "params": { "grabRange": 4, "approachRange": 6, "liftDuration": 80, "throwDamage": 20, "throwPower": 2.5, "liftMessage": "&c&lYou will face divine judgment." } }
+```
+
+---
+
 ## Idle System
 
 Bosses are persistent by default — they never despawn and never regen HP. The idle system lets you override this when no players are nearby.
@@ -1112,6 +1222,55 @@ Idle timer is reset when:
 | `nbt` | null | SNBT string for enchantments, custom names, etc. |
 | `count` | 1 | Stack size |
 | `chance` | 1.0 | Drop chance (`1.0` = always, `0.05` = 5%) |
+
+---
+
+## Pre-Fight Activation & Dialogue
+
+Bosses can start **passive and immortal** — they do nothing until a player right-clicks them. Once triggered, the boss delivers a configurable pre-fight dialogue, then enters combat. A separate **pre-death dialogue** can hold the boss at 1 HP to deliver final words before dying. Both systems are optional.
+
+### Pre-fight dialogue
+
+```json
+{
+  "preFightDialogue": [
+    "&6You dare challenge me?",
+    "&ePrepare yourself, mortal.",
+    "&cDIE!"
+  ],
+  "dialogueLineDelay": 60
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `preFightDialogue` | `[]` | Lines sent to all nearby players in order. Empty = boss activates instantly on spawn (no right-click needed) |
+| `dialogueLineDelay` | 60 | Ticks between each line (60 = 3 s) |
+
+- While dialogue is playing the boss is **immortal and passive** (no attacks, no damage)
+- Combat starts automatically after the last line plays
+- If the list is empty the boss activates at spawn — no right-click required
+
+### Pre-death dialogue
+
+```json
+{
+  "preDeathDialogue": [
+    "&7...impossible.",
+    "&8I will... return..."
+  ],
+  "preDeathDialogueDelay": 40
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `preDeathDialogue` | `[]` | Lines sent when the boss would die. Empty = no pre-death sequence |
+| `preDeathDialogueDelay` | 40 | Ticks between each line (40 = 2 s) |
+
+- On what would be a lethal hit the boss is held at **1 HP**, becomes invulnerable, and stops attacking
+- Lines play in order; the boss actually dies after the last one
+- If the list is empty the boss dies normally with no interruption
 
 ---
 

@@ -17,13 +17,27 @@ public class BossDefinition {
     public List<PhaseDefinition> phases = new ArrayList<>();
     public List<LootEntry> loot = new ArrayList<>();
 
-    // Idle despawn/heal system — triggers when no player is nearby for idleTimeout ticks.
-    // idleTimeout <= 0 disables the system entirely (default).
+    // ── Idle system ──────────────────────────────────────────────────────────
+    // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.
     public int idleTimeout = -1;
-    // "despawn" removes the boss entity; "heal" gradually restores HP.
-    public String idleAction = "despawn";
-    // HP restored per heal interval (only used when idleAction = "heal")
+    public String idleAction = "despawn";  // "despawn" or "heal"
     public float idleHealAmount = 2.0f;
-    // Ticks between each heal tick (only used when idleAction = "heal")
     public int idleHealInterval = 40;
+
+    // ── Pre-fight activation & dialogue ─────────────────────────────────────
+    // When non-empty the boss starts INACTIVE (passive, immortal, no boss bar).
+    // A player right-clicks the boss to activate it; the boss speaks each line
+    // with dialogueLineDelay ticks between them, then the fight begins.
+    // When empty (default) the boss starts fighting immediately on spawn.
+    public List<String> preFightDialogue = new ArrayList<>();
+    // Ticks between each dialogue line (60 = 3 s).
+    public int dialogueLineDelay = 60;
+
+    // ── Pre-death dialogue ───────────────────────────────────────────────────
+    // When non-empty the boss is held at 1 HP on what would be a lethal hit,
+    // becomes invulnerable, speaks each line, then actually dies.
+    // When empty (default) the boss dies normally.
+    public List<String> preDeathDialogue = new ArrayList<>();
+    // Ticks between each pre-death dialogue line (40 = 2 s).
+    public int preDeathDialogueDelay = 40;
 }
