@@ -206,10 +206,15 @@ public class BossEntity extends HostileEntity {
             return;
         }
         bossBar.setPercent(getHealth() / getMaxHealth());
-        for (var player : getWorld().getPlayers()) {
-            if (player instanceof ServerPlayerEntity sp) {
-                if (sp.squaredDistanceTo(this) <= 64 * 64) bossBar.addPlayer(sp);
-                else bossBar.removePlayer(sp);
+        // Rebuild the player set every tick: clear first to automatically evict
+        // dead / spectator / out-of-range players (including respawned entities).
+        bossBar.clearPlayers();
+        if (getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+            for (ServerPlayerEntity sp : sw.getPlayers()) {
+                if (sp.isAlive() && !sp.isSpectator()
+                        && sp.squaredDistanceTo(this) <= 64 * 64) {
+                    bossBar.addPlayer(sp);
+                }
             }
         }
     }
@@ -408,7 +413,7 @@ public class BossEntity extends HostileEntity {
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
+        super.readCustomDataFromNbt(nbt); // Restores vanilla fields (Health, etc.)
         if (!nbt.contains("BossId")) return;
 
         this.bossId = nbt.getString("BossId");
@@ -419,15 +424,23 @@ public class BossEntity extends HostileEntity {
             return;
         }
 
+        // Capture real HP before applyDefinition resets it to the definition's max.
+        float savedHealth = getHealth();
+
         applyDefinition(def);
 
-        // Restore saved phase
-        if (nbt.contains("BossPhase") && phaseManager != null) {
-            int savedPhase = nbt.getInt("BossPhase");
-            if (savedPhase > 0) phaseManager.transitionToPhase(savedPhase);
+        // Restore the actual saved HP — applyDefinition calls setHealth(def.health).
+        if (savedHealth > 0 && savedHealth <= getMaxHealth()) {
+            setHealth(savedHealth);
         }
 
-        // Restore boss state (overrides what applyDefinition set)
+        // Restore saved phase silently (no transition messages or effects).
+        if (nbt.contains("BossPhase") && phaseManager != null) {
+            int savedPhase = nbt.getInt("BossPhase");
+            if (savedPhase > 0) phaseManager.restoreToPhase(savedPhase);
+        }
+
+        // Restore boss state (overrides what applyDefinition set).
         if (nbt.contains("BossState")) {
             BossState savedState;
             try { savedState = BossState.valueOf(nbt.getString("BossState")); }
@@ -443,7 +456,7 @@ public class BossEntity extends HostileEntity {
         if (nbt.contains("PreDeathTriggered"))
             this.preDeathTriggered = nbt.getBoolean("PreDeathTriggered");
 
-        // Ensure goals are cleared if boss reloaded in INACTIVE state
+        // Ensure goals are cleared if boss reloaded in INACTIVE state.
         if (this.bossState == BossState.INACTIVE) clearGoalsForInactive();
     }
 

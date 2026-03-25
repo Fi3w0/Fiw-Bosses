@@ -38,6 +38,9 @@ public class BossPhaseManager {
 
     public void tick() {
         if (phases.isEmpty()) return;
+        // Only advance phases during active combat — never during dialogues or death.
+        if (!boss.isActive() || !boss.isAlive()) return;
+
         float hpPercent = boss.getHealth() / boss.getMaxHealth();
 
         int targetIndex = 0;
@@ -47,8 +50,23 @@ public class BossPhaseManager {
             }
         }
 
-        if (targetIndex != currentPhaseIndex) {
+        // Phases only advance forward — never go back to an earlier phase.
+        if (targetIndex > currentPhaseIndex || currentPhaseIndex < 0) {
             transitionToPhase(targetIndex);
+        }
+    }
+
+    /**
+     * Silently restores a phase on world reload — no transition messages or effects.
+     * Always call this instead of {@link #transitionToPhase} when loading from NBT.
+     */
+    public void restoreToPhase(int newIndex) {
+        if (newIndex < 0 || newIndex >= phases.size()) return;
+        currentPhaseIndex = newIndex;
+        rebuildGoals(phases.get(newIndex));
+        applyStatModifiers(phases.get(newIndex));
+        if (phases.get(newIndex).equipment != null) {
+            boss.applyEquipment(phases.get(newIndex).equipment);
         }
     }
 
