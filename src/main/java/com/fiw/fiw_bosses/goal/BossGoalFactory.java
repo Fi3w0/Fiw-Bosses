@@ -24,6 +24,10 @@ public interface BossGoalFactory {
         register("teleport", TeleportGoal::new);
         register("shield", ShieldGoal::new);
         register("heal", HealGoal::new);
+        register("charge", ChargeGoal::new);
+        register("pull", PullGoal::new);
+        register("swap", SwapGoal::new);
+        register("summon_minions", SummonMinionsGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {
