@@ -1,41 +1,26 @@
 package com.fiw.fiw_bosses;
 
-import com.fiw.fiw_bosses.command.BossCommand;
-import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.entity.BossEntityRegistry;
-import com.fiw.fiw_bosses.goal.BossGoalFactory;
-import com.fiw.fiw_bosses.network.NetworkHandler;
-import com.fiw.fiw_bosses.skin.SkinCache;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FiwBosses implements ModInitializer {
-
+@Mod(FiwBosses.MOD_ID)
+public class FiwBosses {
     public static final String MOD_ID = "fiw_bosses";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    @Override
-    public void onInitialize() {
-        LOGGER.info("FIW Bosses initializing...");
+    public FiwBosses(IEventBus modBus, ModContainer container) {
+        BossEntityRegistry.ENTITIES.register(modBus);
+        modBus.addListener(this::registerAttributes);
+        LOGGER.info("FIW Bosses (NeoForge port) initializing");
+    }
 
-        ModSounds.init();
-        BossGoalFactory.init();
-        BossEntityRegistry.register();
-        BossConfigLoader.loadAll();
-        SkinCache.fetchAll();
-        NetworkHandler.registerServerPackets();
-
-        CommandRegistrationCallback.EVENT.register(BossCommand::register);
-
-        EntityTrackingEvents.START_TRACKING.register((entity, player) -> {
-            if (entity instanceof com.fiw.fiw_bosses.entity.BossEntity bossEntity) {
-                NetworkHandler.sendSkinToPlayer(player, bossEntity);
-            }
-        });
-
-        LOGGER.info("FIW Bosses initialized!");
+    private void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(BossEntityRegistry.BOSS.get(), BossEntity.createBossAttributes().build());
     }
 }
