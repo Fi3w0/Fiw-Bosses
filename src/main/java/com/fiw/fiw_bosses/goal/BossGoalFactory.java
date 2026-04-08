@@ -20,6 +20,10 @@ public interface BossGoalFactory {
         register("dodge", DodgeGoal::new);
         register("flames", FlamesGoal::new);
         register("random_message", RandomMessageGoal::new);
+        register("aoe_smash", AoeSmashAttackGoal::new);
+        register("teleport", TeleportGoal::new);
+        register("shield", ShieldGoal::new);
+        register("heal", HealGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {
