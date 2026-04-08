@@ -3,7 +3,7 @@ package com.fiw.fiw_bosses.config;
 import com.fiw.fiw_bosses.FiwBosses;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.File;
 import java.io.FileReader;
@@ -20,7 +20,7 @@ public class BossConfigLoader {
     private static final Map<String, BossDefinition> definitions = new HashMap<>();
 
     public static Path getConfigDir() {
-        return FabricLoader.getInstance().getConfigDir().resolve("fiw_bosses");
+        return FMLPaths.CONFIGDIR.get().resolve("fiw_bosses");
     }
 
     public static Path getBossesDir() {
