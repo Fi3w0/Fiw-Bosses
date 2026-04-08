@@ -16,6 +16,7 @@ public class FiwBosses {
 
     public FiwBosses(IEventBus modBus, ModContainer container) {
         BossEntityRegistry.ENTITIES.register(modBus);
+        ModSounds.register(modBus);
         modBus.addListener(this::registerAttributes);
         LOGGER.info("FIW Bosses (NeoForge port) initializing");
     }
