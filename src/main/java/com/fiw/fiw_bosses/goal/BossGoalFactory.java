@@ -28,6 +28,10 @@ public interface BossGoalFactory {
         register("pull", PullGoal::new);
         register("swap", SwapGoal::new);
         register("summon_minions", SummonMinionsGoal::new);
+        register("ranged_projectile", RangedProjectileAttackGoal::new);
+        register("meteor", MeteorGoal::new);
+        register("slam", SlamGoal::new);
+        register("shockwave", ShockwaveGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {
