@@ -5,18 +5,36 @@ import com.google.gson.JsonObject;
 import net.minecraft.world.entity.ai.goal.Goal;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Stub — real implementation is ported in Batch E.
- * For now every ability yields a no-op goal so BossPhaseManager can reference it.
- */
-public final class BossGoalFactory {
-    private BossGoalFactory() {}
+@FunctionalInterface
+public interface BossGoalFactory {
 
-    public static Goal create(String type, BossEntity boss, int cooldownTicks, JsonObject params) {
-        return new Goal() {
-            { setFlags(EnumSet.noneOf(Flag.class)); }
-            @Override public boolean canUse() { return false; }
-        };
+    Goal create(BossEntity boss, int cooldownTicks, JsonObject params);
+
+    Map<String, BossGoalFactory> REGISTRY = new HashMap<>();
+
+    static void init() {
+        register("melee_slash", MeleeSlashAttackGoal::new);
+        register("dodge", DodgeGoal::new);
+        register("flames", FlamesGoal::new);
+        register("random_message", RandomMessageGoal::new);
+    }
+
+    static void register(String key, BossGoalFactory factory) {
+        REGISTRY.put(key, factory);
+    }
+
+    static Goal create(String type, BossEntity boss, int cooldownTicks, JsonObject params) {
+        BossGoalFactory factory = REGISTRY.get(type);
+        if (factory == null) {
+            // Unknown ability type — return no-op goal until ported.
+            return new Goal() {
+                { setFlags(EnumSet.noneOf(Flag.class)); }
+                @Override public boolean canUse() { return false; }
+            };
+        }
+        return factory.create(boss, cooldownTicks, params);
     }
 }
