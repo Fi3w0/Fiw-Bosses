@@ -11,6 +11,11 @@ public class BossEntity extends Monster {
         super(type, level);
     }
 
+    /** Stub — real implementation comes in Batch D. */
+    public String getBossId() {
+        return null;
+    }
+
     public static AttributeSupplier.Builder createBossAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 200.0)
