@@ -5,27 +5,36 @@ import com.fiw.fiw_bosses.config.AbilityEntry;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.util.TextUtil;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class BossPhaseManager {
 
-    private static final UUID SPEED_MODIFIER_UUID = UUID.fromString("b3f40c00-cafe-4b49-9a6a-e1f1c5d1e7a1");
-    private static final UUID DAMAGE_MODIFIER_UUID = UUID.fromString("b3f40c00-cafe-4b49-9a6a-e1f1c5d1e7a2");
+    private static final ResourceLocation SPEED_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath(FiwBosses.MOD_ID, "phase_speed");
+    private static final ResourceLocation DAMAGE_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath(FiwBosses.MOD_ID, "phase_damage");
 
     private final BossEntity boss;
     private final List<PhaseDefinition> phases;
@@ -38,7 +47,6 @@ public class BossPhaseManager {
 
     public void tick() {
         if (phases.isEmpty()) return;
-        // Only advance phases during active combat — never during dialogues or death.
         if (!boss.isActive() || !boss.isAlive()) return;
 
         float hpPercent = boss.getHealth() / boss.getMaxHealth();
@@ -50,16 +58,12 @@ public class BossPhaseManager {
             }
         }
 
-        // Phases only advance forward — never go back to an earlier phase.
         if (targetIndex > currentPhaseIndex || currentPhaseIndex < 0) {
             transitionToPhase(targetIndex);
         }
     }
 
-    /**
-     * Silently restores a phase on world reload — no transition messages or effects.
-     * Always call this instead of {@link #transitionToPhase} when loading from NBT.
-     */
+    /** Silently restores a phase on world reload — no transition messages or effects. */
     public void restoreToPhase(int newIndex) {
         if (newIndex < 0 || newIndex >= phases.size()) return;
         currentPhaseIndex = newIndex;
@@ -77,7 +81,7 @@ public class BossPhaseManager {
         boolean isInitial = currentPhaseIndex == -1;
         currentPhaseIndex = newIndex;
 
-        if (!isInitial && !boss.getWorld().isClient) {
+        if (!isInitial && !boss.level().isClientSide) {
             playTransitionEffects(phase);
         }
 
@@ -92,36 +96,35 @@ public class BossPhaseManager {
     }
 
     private void rebuildGoals(PhaseDefinition phase) {
-        // Clear all existing goals
-        var goals = boss.getGoalSelector().getGoals().stream()
-                .map(PrioritizedGoal::getGoal)
+        var goals = boss.getGoalSelector().getAvailableGoals().stream()
+                .map(WrappedGoal::getGoal)
                 .collect(Collectors.toList());
-        goals.forEach(boss.getGoalSelector()::remove);
+        goals.forEach(boss.getGoalSelector()::removeGoal);
 
-        var targets = boss.getTargetSelector().getGoals().stream()
-                .map(PrioritizedGoal::getGoal)
+        var targets = boss.getTargetSelector().getAvailableGoals().stream()
+                .map(WrappedGoal::getGoal)
                 .collect(Collectors.toList());
-        targets.forEach(boss.getTargetSelector()::remove);
+        targets.forEach(boss.getTargetSelector()::removeGoal);
 
         // === BASE MOVEMENT ===
-        boss.getGoalSelector().add(0, new SwimGoal(boss));
+        boss.getGoalSelector().addGoal(0, new FloatGoal(boss));
         // Ability goals (priority 1-5) run BEFORE MeleeAttackGoal (priority 6)
         // so a casting boss won't have its animation interrupted by basic melee.
-        boss.getGoalSelector().add(6, new MeleeAttackGoal(boss, 1.2, false));
-        boss.getGoalSelector().add(8, new WanderAroundFarGoal(boss, 1.0));
-        boss.getGoalSelector().add(9, new LookAtEntityGoal(boss, PlayerEntity.class, 48.0f));
-        boss.getGoalSelector().add(10, new LookAroundGoal(boss));
+        boss.getGoalSelector().addGoal(6, new MeleeAttackGoal(boss, 1.2, false));
+        boss.getGoalSelector().addGoal(8, new WaterAvoidingRandomStrollGoal(boss, 1.0));
+        boss.getGoalSelector().addGoal(9, new LookAtPlayerGoal(boss, Player.class, 48.0f));
+        boss.getGoalSelector().addGoal(10, new RandomLookAroundGoal(boss));
 
         // === TARGETING ===
-        boss.getTargetSelector().add(1, new RevengeGoal(boss));
-        boss.getTargetSelector().add(2, new ActiveTargetGoal<>(boss, PlayerEntity.class, true));
+        boss.getTargetSelector().addGoal(1, new HurtByTargetGoal(boss));
+        boss.getTargetSelector().addGoal(2, new NearestAttackableTargetGoal<>(boss, Player.class, true));
 
-        // === ABILITY GOALS (priority 1-5, higher than melee so abilities are never interrupted) ===
+        // === ABILITY GOALS ===
         int priority = 1;
         for (AbilityEntry ability : phase.abilities) {
             try {
                 Goal goal = BossGoalFactory.create(ability.type, boss, ability.cooldownTicks, ability.params);
-                boss.getGoalSelector().add(priority, goal);
+                boss.getGoalSelector().addGoal(priority, goal);
                 priority++;
                 if (priority > 5) priority = 5;
             } catch (Exception e) {
@@ -132,53 +135,55 @@ public class BossPhaseManager {
     }
 
     private void applyStatModifiers(PhaseDefinition phase) {
-        var speedAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        var damageAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        var speedAttr = boss.getAttribute(Attributes.MOVEMENT_SPEED);
+        var damageAttr = boss.getAttribute(Attributes.ATTACK_DAMAGE);
 
         if (speedAttr != null) {
-            speedAttr.removeModifier(SPEED_MODIFIER_UUID);
+            speedAttr.removeModifier(SPEED_MODIFIER_ID);
             if (phase.speedMultiplier != 1.0f) {
-                speedAttr.addTemporaryModifier(new EntityAttributeModifier(
-                        SPEED_MODIFIER_UUID, "boss_phase_speed",
-                        phase.speedMultiplier - 1.0, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+                speedAttr.addTransientModifier(new AttributeModifier(
+                        SPEED_MODIFIER_ID,
+                        phase.speedMultiplier - 1.0,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
         }
 
         if (damageAttr != null) {
-            damageAttr.removeModifier(DAMAGE_MODIFIER_UUID);
+            damageAttr.removeModifier(DAMAGE_MODIFIER_ID);
             if (phase.damageMultiplier != 1.0f) {
-                damageAttr.addTemporaryModifier(new EntityAttributeModifier(
-                        DAMAGE_MODIFIER_UUID, "boss_phase_damage",
-                        phase.damageMultiplier - 1.0, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+                damageAttr.addTransientModifier(new AttributeModifier(
+                        DAMAGE_MODIFIER_ID,
+                        phase.damageMultiplier - 1.0,
+                        AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
         }
     }
 
     private void playTransitionEffects(PhaseDefinition phase) {
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerLevel level = (ServerLevel) boss.level();
 
         if (phase.transitionMessage != null && !phase.transitionMessage.isEmpty()) {
-            Text message = TextUtil.parseColorCodes(phase.transitionMessage);
-            for (var player : world.getPlayers()) {
-                if (player.squaredDistanceTo(boss) <= 64 * 64) {
-                    player.sendMessage(message, false);
+            Component message = TextUtil.parseColorCodes(phase.transitionMessage);
+            for (var player : level.players()) {
+                if (player.distanceToSqr(boss) <= 64 * 64) {
+                    player.sendSystemMessage(message);
                 }
             }
         }
 
         if (phase.transitionSound != null && !phase.transitionSound.isEmpty()) {
-            Identifier soundId = Identifier.tryParse(phase.transitionSound);
+            ResourceLocation soundId = ResourceLocation.tryParse(phase.transitionSound);
             if (soundId != null) {
-                SoundEvent sound = Registries.SOUND_EVENT.get(soundId);
+                SoundEvent sound = BuiltInRegistries.SOUND_EVENT.get(soundId);
                 if (sound != null) {
-                    world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
-                            sound, SoundCategory.HOSTILE, 2.0f, 1.0f);
+                    level.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
+                            sound, SoundSource.HOSTILE, 2.0f, 1.0f);
                 }
             }
         }
 
         if (phase.transitionParticle != null && !phase.transitionParticle.isEmpty()) {
-            world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
+            level.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                     boss.getX(), boss.getY() + 1.0, boss.getZ(),
                     3, 0.5, 0.5, 0.5, 0.1);
         }
