@@ -1,14 +1,23 @@
 # FIW Bosses
 
-> Custom Boss Framework · NeoForge 1.21.1 · JSON-Driven · Server-Side Only
+> Custom Boss Framework · NeoForge 1.21.1 & Fabric 1.20.1 · JSON-Driven · Server-Side Only
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A)](https://minecraft.net)
-[![NeoForge](https://img.shields.io/badge/Mod_Loader-NeoForge-F16436)](https://neoforged.net)
+[![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1_|_1.20.1-62B47A)](https://minecraft.net)
+[![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-F16436)](https://neoforged.net)
+[![Fabric](https://img.shields.io/badge/Fabric-1.20.1-DBB591)](https://fabricmc.net)
 [![License](https://img.shields.io/badge/License-GPL--v3-blue)](LICENSE)
 
-A data-driven boss framework for NeoForge — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/fiwboss reload`, and your boss is live.
+A data-driven boss framework — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/fiwboss reload` (NeoForge) or `/boss reload` (Fabric), and your boss is live.
 
-> **Note:** This is the NeoForge 1.21.1 port of [fiw-bosses](https://modrinth.com/mod/fiw-bosses) (originally Fabric 1.20.1). All 42 abilities and subsystems are feature-ported.
+## Supported versions
+
+| Loader | Minecraft | Status | Branch |
+|---|---|---|---|
+| **NeoForge** | **1.21.1** | **Active** — primary development target | [`main`](https://github.com/Fi3w0/fiw-bosses) |
+| Fabric | 1.20.1 | Legacy — may still receive occasional updates, but not guaranteed | [`legacy-fabric-1.20.1`](https://github.com/Fi3w0/fiw-bosses/tree/legacy-fabric-1.20.1) |
+
+Both loaders share the **same JSON schema, same 42 abilities, same feature set**. A boss config written for one works on the other. Development focus is on NeoForge 1.21.1 going forward; Fabric 1.20.1 is no longer the active branch but may still get ports of fixes and new abilities when practical.
 
 ---
 
@@ -26,12 +35,14 @@ A data-driven boss framework for NeoForge — inspired by MythicMobs, built from
 - **Dynamic aggro** — aggro switching, revenge targeting, multiplayer-friendly
 - **Strafing AI** — bosses circle and strafe at close range
 - **Custom loot tables** — per-item drop chances with full NBT support
-- **Hot reload** — `/fiwboss reload` reloads all configs without a server restart
+- **Hot reload** — reload all configs in-game without a server restart
 - **Phase persistence** — boss phase survives server restarts via NBT
 
 ---
 
 ## Requirements
+
+### NeoForge 1.21.1 (active)
 
 | Dependency | Version |
 |---|---|
@@ -40,17 +51,36 @@ A data-driven boss framework for NeoForge — inspired by MythicMobs, built from
 | Java | 21 |
 | Client-side required | No |
 
+### Fabric 1.20.1 (legacy)
+
+| Dependency | Version |
+|---|---|
+| Minecraft | 1.20.1 |
+| Fabric Loader | latest |
+| Fabric API | 0.92.2+1.20.1 or newer |
+| Java | 21 |
+| Client-side required | No |
+
 ---
 
 ## Installation
 
+**NeoForge 1.21.1:**
 1. Install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1
-2. Drop `fiw-bosses-1.0.7.jar` into your `mods/` folder
+2. Drop the NeoForge jar (`fiw-bosses-<version>-neoforge-1.21.1.jar`) into your `mods/` folder
 3. Start the server — boss JSON files live in `config/fiw_bosses/bosses/`
+
+**Fabric 1.20.1 (legacy):**
+1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
+2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
+3. Drop the Fabric jar (`fiw-bosses-<version>-fabric-1.20.1.jar`) into your `mods/` folder
+4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
 
 ## Commands
+
+### NeoForge 1.21.1
 
 ```
 /fiwboss spawn <boss_id>    — spawn a boss at your position
@@ -59,6 +89,19 @@ A data-driven boss framework for NeoForge — inspired by MythicMobs, built from
 /fiwboss kill <boss_id>     — kill all living bosses with that ID
 /fiwboss kill all           — kill every boss currently alive
 ```
+
+### Fabric 1.20.1
+
+```
+/boss spawn <boss_id>               — spawn at your location
+/boss spawn <boss_id> <x> <y> <z>   — spawn at coordinates
+/boss list                          — list all loaded boss IDs
+/boss reload                        — reload all JSON configs (permission level 3)
+/boss kill <boss_id>                — kill all living bosses with that ID
+/boss kill all                      — kill every boss currently alive
+```
+
+> The command root differs between loaders (`/fiwboss` on NeoForge, `/boss` on Fabric) to avoid collisions with other mods. Subcommands are otherwise identical in behavior.
 
 ---
 
@@ -131,8 +174,16 @@ Seven pre-built bosses live in `examples/` — copy any into `config/fiw_bosses/
 
 ## Building from Source
 
+**NeoForge 1.21.1 (default branch):**
 ```bash
 git clone https://github.com/Fi3w0/fiw-bosses
+cd fiw-bosses
+./gradlew build
+```
+
+**Fabric 1.20.1 (legacy branch):**
+```bash
+git clone -b legacy-fabric-1.20.1 https://github.com/Fi3w0/fiw-bosses
 cd fiw-bosses
 ./gradlew build
 ```
