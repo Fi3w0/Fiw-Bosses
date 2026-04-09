@@ -1,13 +1,14 @@
 # FIW Bosses
 
-> Custom Boss Framework · Fabric 1.20.1 · JSON-Driven · Server-Side Only
+> Custom Boss Framework · NeoForge 1.21.1 · JSON-Driven · Server-Side Only
 
-[![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-62B47A)](https://minecraft.net)
-[![Fabric](https://img.shields.io/badge/Mod_Loader-Fabric-DBB591)](https://fabricmc.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A)](https://minecraft.net)
+[![NeoForge](https://img.shields.io/badge/Mod_Loader-NeoForge-F16436)](https://neoforged.net)
 [![License](https://img.shields.io/badge/License-GPL--v3-blue)](LICENSE)
 
-A data-driven boss framework for Fabric — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/boss reload`, and your boss is live.
+A data-driven boss framework for NeoForge — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/fiwboss reload`, and your boss is live.
+
+> **Note:** This is the NeoForge 1.21.1 port of [fiw-bosses](https://modrinth.com/mod/fiw-bosses) (originally Fabric 1.20.1). All 42 abilities and subsystems are feature-ported.
 
 ---
 
@@ -25,7 +26,7 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 - **Dynamic aggro** — aggro switching, revenge targeting, multiplayer-friendly
 - **Strafing AI** — bosses circle and strafe at close range
 - **Custom loot tables** — per-item drop chances with full NBT support
-- **Hot reload** — `/boss reload` reloads all configs without a server restart
+- **Hot reload** — `/fiwboss reload` reloads all configs without a server restart
 - **Phase persistence** — boss phase survives server restarts via NBT
 
 ---
@@ -34,9 +35,8 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 | Dependency | Version |
 |---|---|
-| Minecraft | 1.20.1 |
-| Fabric Loader | latest |
-| Fabric API | 0.92.2+1.20.1 or newer |
+| Minecraft | 1.21.1 |
+| NeoForge | 21.1.x |
 | Java | 21 |
 | Client-side required | No |
 
@@ -44,22 +44,20 @@ A data-driven boss framework for Fabric — inspired by MythicMobs, built from s
 
 ## Installation
 
-1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
-2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop `fiw-bosses-1.0.6.jar` into your `mods/` folder
-4. Start the server — configs generate automatically in `config/fiw_bosses/`
+1. Install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1
+2. Drop `fiw-bosses-1.0.7.jar` into your `mods/` folder
+3. Start the server — boss JSON files live in `config/fiw_bosses/bosses/`
 
 ---
 
 ## Commands
 
 ```
-/boss spawn <boss_id>               — spawn at your location
-/boss spawn <boss_id> <x> <y> <z>  — spawn at coordinates
-/boss list                          — list all loaded boss IDs
-/boss reload                        — reload all JSON configs (permission level 3)
-/boss kill <boss_id>                — kill all living bosses with that ID
-/boss kill all                      — kill every boss currently alive
+/fiwboss spawn <boss_id>    — spawn a boss at your position
+/fiwboss list               — list all loaded boss IDs
+/fiwboss reload             — reload all JSON configs
+/fiwboss kill <boss_id>     — kill all living bosses with that ID
+/fiwboss kill all           — kill every boss currently alive
 ```
 
 ---

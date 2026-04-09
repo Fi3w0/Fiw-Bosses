@@ -48,6 +48,16 @@ public interface BossGoalFactory {
         register("crimson_slash", CrimsonSlashGoal::new);
         register("orb_throw", OrbThrowGoal::new);
         register("tracking_orb", TrackingOrbGoal::new);
+        register("detect_mark", DetectMarkGoal::new);
+        register("judgment_mark", JudgmentMarkGoal::new);
+        register("divine_execution", DivineExecutionGoal::new);
+        register("essence_absorption", EssenceAbsorptionGoal::new);
+        register("guardian_shield", GuardianShieldGoal::new);
+        register("moving_tornado", MovingTornadoGoal::new);
+        register("phantom_dash", PhantomDashGoal::new);
+        register("potion_field", PotionFieldGoal::new);
+        register("singularity_cannon", SingularityCannonGoal::new);
+        register("domain", DomainGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {
