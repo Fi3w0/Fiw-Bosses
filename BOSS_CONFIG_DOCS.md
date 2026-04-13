@@ -5,10 +5,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | Path | Purpose |
 |------|---------|
 | `config/fiw_bosses/bosses/` | Active boss definitions |
+| `config/fiw_bosses/minions/` | Custom minion definitions |
 | `config/fiw_bosses/skins/` | Custom skin `.png` files |
 | `examples/` | Pre-built bosses ready to copy |
 
-> **Hot reload:** `/boss reload` — picks up all changes instantly.
+> **Hot reload:** `/boss reload` — picks up all boss + minion changes instantly.
 
 **Commands:**
 
@@ -19,7 +20,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `/boss kill <id>` | level 2 | Kill all living bosses with that ID |
 | `/boss kill all` | level 2 | Kill every living boss in all worlds |
 | `/boss list` | level 2 | List all loaded boss IDs |
-| `/boss reload` | level 3 | Reload all JSON configs without restart |
+| `/boss reload` | level 2 | Reload all boss + minion configs without restart |
+| `/boss minion list` | level 2 | List all loaded minion definitions |
+| `/boss minion spawn <id>` | level 2 | Spawn a custom minion at your position |
+| `/boss minion kill <id>` | level 2 | Kill all living minions with that ID |
+| `/boss minion kill all` | level 2 | Kill every living minion in all worlds |
 
 ---
 
@@ -62,6 +67,10 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [crimson_slash](#crimson_slash)
   - [singularity_cannon](#singularity_cannon)
   - [lightning_radial](#lightning_radial)
+- [Minion System](#minion-system)
+  - [Minion Definition Fields](#minion-definition-fields)
+  - [Movement Modes](#movement-modes)
+  - [Referencing Minions in Boss Phases](#referencing-minions-in-boss-phases)
 - [Idle System](#idle-system)
 - [Loot](#loot)
 - [Behavior Notes](#behavior-notes)
@@ -479,21 +488,33 @@ Spawns mobs from the **phase's `minions` array**. Minions never attack the boss,
 }
 ```
 
-Minions are defined on the **phase**, not inside the ability:
+Minions are defined on the **phase**, not inside the ability. Two formats are supported:
+
+**New system — custom minion definition (recommended):**
 
 ```json
 "minions": [
-  { "entityType": "minecraft:skeleton", "count": 3, "maxAlive": 6, "spawnRadius": 5.0 },
-  { "entityType": "minecraft:pillager",  "count": 2, "maxAlive": 4, "spawnRadius": 8.0 }
+  { "minionId": "shadow_guard", "count": 2, "maxAlive": 4, "spawnRadius": 5.0 }
+]
+```
+
+**Legacy — plain vanilla entity type:**
+
+```json
+"minions": [
+  { "entityType": "minecraft:skeleton", "count": 3, "maxAlive": 6, "spawnRadius": 5.0 }
 ]
 ```
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `entityType` | **required** | Registry ID — works with modded mobs |
+| `minionId` | — | References a minion definition from `config/fiw_bosses/minions/`. Takes priority over `entityType` |
+| `entityType` | — | Legacy: registry ID of a vanilla/modded mob. Used when `minionId` is absent |
 | `count` | 1 | Spawned per summon cast |
 | `maxAlive` | 4 | Cap on alive minions of this type |
 | `spawnRadius` | 5.0 | Spawn radius around the boss |
+
+> See [Minion System](#minion-system) below for full minion definition docs.
 
 ---
 
@@ -1161,6 +1182,111 @@ Grabs one nearby player, lifts them 3 blocks above the boss, sends a configurabl
 ```json
 { "type": "divine_execution", "cooldownTicks": 400, "params": { "grabRange": 4, "approachRange": 6, "liftDuration": 80, "throwDamage": 20, "throwPower": 2.5, "liftMessage": "&c&lYou will face divine judgment." } }
 ```
+
+---
+
+## Minion System
+
+Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can have their own stats, skins, equipment, abilities, loot, and AI behavior. Bosses reference minions by `minionId` in their phase's `minions` array.
+
+### Minion Definition Fields
+
+```json
+{
+  "id": "shadow_guard",
+  "displayName": "&8Shadow Guard",
+  "baseEntity": "custom",
+  "health": 40.0,
+  "armor": 4.0,
+  "speed": 0.28,
+  "attackDamage": 6.0,
+  "knockbackResistance": 0.0,
+  "movement": "normal",
+  "skin": { "type": "player", "value": "Herobrine" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:stone_sword" },
+    "chest": { "item": "minecraft:chainmail_chestplate" }
+  },
+  "abilities": [
+    { "type": "melee_slash", "cooldownTicks": 60, "params": { "damage": 5, "range": 3 } }
+  ],
+  "loot": [
+    { "item": "minecraft:iron_nugget", "count": 3, "chance": 0.5 }
+  ]
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | string | **required** | Unique ID — used in boss phase `minionId` and `/boss minion spawn <id>` |
+| `displayName` | string | id | Name shown above the minion. Supports `&` color codes |
+| `baseEntity` | string | `"custom"` | `"custom"` = player model with skin + abilities. Any registry ID (e.g. `"minecraft:zombie"`) = vanilla mob with stat/equipment overrides |
+| `health` | float | 40.0 | Max HP |
+| `armor` | float | 0.0 | Armor points |
+| `speed` | float | 0.3 | Move speed |
+| `attackDamage` | float | 6.0 | Base melee damage |
+| `knockbackResistance` | float | 0.0 | `0.0` = full knockback · `1.0` = immune |
+| `movement` | string | `"normal"` | AI mode — see below |
+| `skin` | object | Steve | Player skin. Only used when `baseEntity` is `"custom"` |
+| `equipment` | object | none | Slots: `mainHand`, `offHand`, `head`, `chest`, `legs`, `feet` |
+| `abilities` | array | [] | Same ability format as boss phases. Only used when `baseEntity` is `"custom"` |
+| `loot` | array | [] | Drops on death. Same format as boss loot |
+
+### Movement Modes
+
+| Mode | Behavior |
+|------|----------|
+| `"normal"` | Standard AI — chases the boss's current target |
+| `"follow_boss"` | Escorts the boss, attacks if enemies get close |
+| `"static"` | Stays in place — only uses abilities (good for turrets/sentries) |
+
+### Referencing Minions in Boss Phases
+
+In any boss phase, add a `minions` array with `minionId` references:
+
+```json
+"phases": [
+  {
+    "hpThresholdPercent": 0.5,
+    "abilities": [
+      { "type": "summon_minions", "cooldownTicks": 200, "params": { "taunt": "&5Come, my guards!" } }
+    ],
+    "minions": [
+      { "minionId": "shadow_guard", "count": 3, "maxAlive": 3, "spawnRadius": 5.0 }
+    ]
+  }
+]
+```
+
+**Vanilla base minion** — uses a real mob (zombie, skeleton, etc.) but overrides stats, name, equipment, and loot:
+
+```json
+{
+  "id": "armored_zombie",
+  "displayName": "&2Armored Zombie",
+  "baseEntity": "minecraft:zombie",
+  "health": 60,
+  "armor": 10,
+  "attackDamage": 8,
+  "equipment": {
+    "mainHand": { "item": "minecraft:iron_axe" },
+    "head": { "item": "minecraft:iron_helmet" }
+  },
+  "loot": [
+    { "item": "minecraft:iron_ingot", "count": 1, "chance": 0.3 }
+  ]
+}
+```
+
+> **Note:** Vanilla base minions keep their native AI (zombies still break doors, skeletons still shoot arrows). Custom abilities only work with `baseEntity: "custom"`.
+
+### Minion Behavior
+
+- Minions **never attack their owner boss** or sibling minions from the same boss
+- Minions **don't have a boss bar**
+- Minions **don't auto-despawn** but can be killed with `/boss minion kill`
+- Minions **drop their own loot** (not the boss's loot table)
+- Minions **persist across server restarts** via NBT
 
 ---
 
