@@ -89,6 +89,8 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 /boss kill all                      — kill every boss currently alive
 /boss minion list                   — list all loaded minion definitions
 /boss minion spawn <minion_id>      — spawn a custom minion at your position
+/boss minion kill <minion_id>       — kill all living minions with that ID
+/boss minion kill all               — kill every minion currently alive
 ```
 
 ---
