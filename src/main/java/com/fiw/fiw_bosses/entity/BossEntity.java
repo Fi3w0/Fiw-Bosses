@@ -198,7 +198,13 @@ public class BossEntity extends HostileEntity {
         }
     }
 
+    protected boolean showBossBar() { return true; }
+
     private void tickBossBar() {
+        if (!showBossBar()) {
+            bossBar.clearPlayers();
+            return;
+        }
         // Boss bar is only visible while the boss is actively fighting or dying.
         if (bossState == BossState.INACTIVE || bossState == BossState.PRE_FIGHT) {
             bossBar.clearPlayers();

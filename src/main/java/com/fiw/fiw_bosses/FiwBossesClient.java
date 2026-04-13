@@ -1,6 +1,7 @@
 package com.fiw.fiw_bosses;
 
 import com.fiw.fiw_bosses.client.renderer.BossEntityRenderer;
+import com.fiw.fiw_bosses.client.renderer.MinionEntityRenderer;
 import com.fiw.fiw_bosses.entity.BossEntityRegistry;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import net.fabricmc.api.ClientModInitializer;
@@ -14,6 +15,7 @@ public class FiwBossesClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         EntityRendererRegistry.register(BossEntityRegistry.BOSS_TYPE, BossEntityRenderer::new);
+        EntityRendererRegistry.register(BossEntityRegistry.MINION_TYPE, MinionEntityRenderer::new);
         NetworkHandler.registerClientReceivers();
     }
 }

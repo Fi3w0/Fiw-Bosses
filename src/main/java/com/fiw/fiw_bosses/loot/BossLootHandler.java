@@ -5,6 +5,7 @@ import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.LootEntry;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -12,31 +13,37 @@ import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
-public class BossLootHandler {
+import java.util.List;
+
+public final class BossLootHandler {
+    private BossLootHandler() {}
 
     public static void dropLoot(BossEntity boss, BossDefinition definition) {
-        if (definition.loot == null) return;
+        if (definition.loot == null || definition.loot.isEmpty()) return;
+        dropLootEntries(boss, definition.loot);
+    }
 
-        for (LootEntry entry : definition.loot) {
+    public static void dropLootEntries(LivingEntity entity, List<LootEntry> lootEntries) {
+        if (lootEntries == null) return;
+
+        for (LootEntry entry : lootEntries) {
             if (entry.item == null) continue;
-
-            // Roll chance
-            if (boss.getRandom().nextFloat() > entry.chance) continue;
+            if (entity.getRandom().nextFloat() > entry.chance) continue;
 
             Identifier itemId = Identifier.tryParse(entry.item);
             if (itemId == null) {
-                FiwBosses.LOGGER.warn("Invalid item ID in loot: {}", entry.item);
+                FiwBosses.LOGGER.warn("Invalid item id in loot: {}", entry.item);
                 continue;
             }
 
             Item item = Registries.ITEM.get(itemId);
             if (item == null) {
-                FiwBosses.LOGGER.warn("Unknown item ID in loot: {}", entry.item);
+                FiwBosses.LOGGER.warn("Unknown item in loot: {}", entry.item);
                 continue;
             }
-            ItemStack stack = new ItemStack(item, entry.count);
 
-            // Apply NBT if present
+            ItemStack stack = new ItemStack(item, Math.max(1, entry.count));
+
             if (entry.nbt != null && !entry.nbt.isEmpty()) {
                 try {
                     NbtCompound nbt = StringNbtReader.parse(entry.nbt);
@@ -46,20 +53,19 @@ public class BossLootHandler {
                 }
             }
 
-            // Spawn item entity
             ItemEntity itemEntity = new ItemEntity(
-                    boss.getWorld(),
-                    boss.getX(),
-                    boss.getY() + 0.5,
-                    boss.getZ(),
+                    entity.getWorld(),
+                    entity.getX(),
+                    entity.getY() + 0.5,
+                    entity.getZ(),
                     stack
             );
             itemEntity.setVelocity(
-                    (boss.getRandom().nextDouble() - 0.5) * 0.3,
+                    (entity.getRandom().nextDouble() - 0.5) * 0.3,
                     0.3,
-                    (boss.getRandom().nextDouble() - 0.5) * 0.3
+                    (entity.getRandom().nextDouble() - 0.5) * 0.3
             );
-            boss.getWorld().spawnEntity(itemEntity);
+            entity.getWorld().spawnEntity(itemEntity);
         }
     }
 }

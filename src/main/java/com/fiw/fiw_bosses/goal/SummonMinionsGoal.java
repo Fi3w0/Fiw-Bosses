@@ -1,18 +1,26 @@
 package com.fiw.fiw_bosses.goal;
 
-import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
+import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.config.MinionEntry;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.entity.BossEntityRegistry;
+import com.fiw.fiw_bosses.entity.MinionEntity;
 import com.fiw.fiw_bosses.util.TextUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -21,7 +29,12 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 public class SummonMinionsGoal extends Goal {
 
@@ -67,7 +80,6 @@ public class SummonMinionsGoal extends Goal {
         PhaseDefinition phase = boss.getPhaseManager().getCurrentPhase();
         if (phase == null || phase.minions == null) return;
 
-        // Clean up dead minions
         trackedMinions.removeIf(uuid -> {
             Entity e = world.getEntity(uuid);
             return e == null || !e.isAlive();
@@ -84,12 +96,6 @@ public class SummonMinionsGoal extends Goal {
 
             if (aliveCount >= minionDef.maxAlive) continue;
 
-            Identifier typeId = Identifier.tryParse(minionDef.entityType);
-            if (typeId == null) continue;
-
-            Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOrEmpty(typeId);
-            if (entityTypeOpt.isEmpty()) continue;
-
             int toSpawn = Math.min(minionDef.count, minionDef.maxAlive - (int) aliveCount);
 
             for (int i = 0; i < toSpawn; i++) {
@@ -99,25 +105,22 @@ public class SummonMinionsGoal extends Goal {
                 double z = boss.getZ() + Math.sin(angle) * dist;
                 double y = boss.getY();
 
-                Entity entity = entityTypeOpt.get().create(world);
+                Entity entity;
+
+                if (minionDef.usesDefinition()) {
+                    // New system: spawn a custom MinionEntity from minion definition
+                    entity = spawnCustomMinion(world, minionDef, x, y, z);
+                } else {
+                    // Legacy: spawn a vanilla mob by entityType
+                    entity = spawnVanillaMinion(world, minionDef, x, y, z);
+                }
+
                 if (entity != null) {
-                    entity.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
-                    if (entity instanceof MobEntity mob) {
-                        mob.initialize(world, world.getLocalDifficulty(new BlockPos((int) x, (int) y, (int) z)),
-                                SpawnReason.MOB_SUMMONED, null, null);
-                        mob.setPersistent();
-                        // Set the minion to target the boss's target (a player)
-                        if (boss.getTarget() != null) {
-                            mob.setTarget(boss.getTarget());
-                        }
-                    }
                     world.spawnEntity(entity);
                     trackedMinions.add(entity.getUuid());
-                    // Register minion with boss so boss won't be targeted by it
                     boss.registerMinion(entity.getUuid());
                     didSummon = true;
 
-                    // Summon particles — dark smoke + soul fire
                     world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME,
                             x, y + 0.5, z, 8, 0.3, 0.5, 0.3, 0.05);
                     world.spawnParticles(ParticleTypes.LARGE_SMOKE,
@@ -127,11 +130,9 @@ public class SummonMinionsGoal extends Goal {
         }
 
         if (didSummon) {
-            // Sound
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON, SoundCategory.HOSTILE, 2.0f, 0.8f);
 
-            // Taunt message to nearby players
             String msg = tauntMessage != null ? tauntMessage : "&5Rise, my servants!";
             var bossName = boss.getCustomName();
             Text taunt = Text.literal("[").formatted(Formatting.DARK_GRAY)
@@ -144,5 +145,123 @@ public class SummonMinionsGoal extends Goal {
                 }
             }
         }
+    }
+
+    private Entity spawnCustomMinion(ServerWorld world, MinionEntry minionEntry, double x, double y, double z) {
+        MinionDefinition def = MinionConfigLoader.getDefinition(minionEntry.minionId);
+        if (def == null) return null;
+
+        if (def.isCustom()) {
+            // Custom skin minion — use MinionEntity
+            MinionEntity minion = BossEntityRegistry.MINION_TYPE.create(world);
+            if (minion == null) return null;
+            minion.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+            minion.applyMinionDefinition(def, boss);
+            minion.setPersistent();
+            if (boss.getTarget() != null) {
+                minion.setTarget(boss.getTarget());
+            }
+            return minion;
+        } else {
+            // Vanilla base entity with stat/equipment overrides from definition
+            return spawnVanillaWithOverrides(world, def, x, y, z);
+        }
+    }
+
+    private Entity spawnVanillaWithOverrides(ServerWorld world, MinionDefinition def, double x, double y, double z) {
+        Identifier typeId = Identifier.tryParse(def.baseEntity);
+        if (typeId == null) return null;
+
+        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOrEmpty(typeId);
+        if (entityTypeOpt.isEmpty()) return null;
+
+        Entity entity = entityTypeOpt.get().create(world);
+        if (entity == null) return null;
+
+        entity.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+        if (entity instanceof MobEntity mob) {
+            mob.initialize(world,
+                    world.getLocalDifficulty(BlockPos.ofFloored(x, y, z)),
+                    SpawnReason.MOB_SUMMONED, null, null);
+            mob.setPersistent();
+
+            // Override stats
+            var healthAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            if (healthAttr != null) { healthAttr.setBaseValue(def.health); mob.setHealth(def.health); }
+            var armorAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
+            if (armorAttr != null) armorAttr.setBaseValue(def.armor);
+            var speedAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            if (speedAttr != null) speedAttr.setBaseValue(def.speed);
+            var dmgAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            if (dmgAttr != null) dmgAttr.setBaseValue(def.attackDamage);
+            var kbAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+            if (kbAttr != null) kbAttr.setBaseValue(def.knockbackResistance);
+
+            // Custom name
+            if (def.displayName != null) {
+                mob.setCustomName(TextUtil.parseColorCodes(def.displayName));
+                mob.setCustomNameVisible(true);
+            }
+
+            // Equipment
+            if (def.equipment != null) {
+                applyEquipmentToMob(mob, def);
+            }
+
+            if (boss.getTarget() != null) {
+                mob.setTarget(boss.getTarget());
+            }
+        }
+        return entity;
+    }
+
+    private void applyEquipmentToMob(MobEntity mob, MinionDefinition def) {
+        if (def.equipment == null) return;
+        setSlot(mob, EquipmentSlot.MAINHAND, def.equipment.mainHand);
+        setSlot(mob, EquipmentSlot.OFFHAND, def.equipment.offHand);
+        setSlot(mob, EquipmentSlot.HEAD, def.equipment.head);
+        setSlot(mob, EquipmentSlot.CHEST, def.equipment.chest);
+        setSlot(mob, EquipmentSlot.LEGS, def.equipment.legs);
+        setSlot(mob, EquipmentSlot.FEET, def.equipment.feet);
+    }
+
+    private void setSlot(MobEntity mob, EquipmentSlot slot,
+                         com.fiw.fiw_bosses.config.EquipmentEntry entry) {
+        if (entry == null || entry.item == null) return;
+        Identifier itemId = Identifier.tryParse(entry.item);
+        if (itemId == null) return;
+        var item = Registries.ITEM.get(itemId);
+        if (item == null) return;
+        ItemStack stack = new ItemStack(item);
+        if (entry.nbt != null && !entry.nbt.isEmpty()) {
+            try {
+                NbtCompound tag = StringNbtReader.parse(entry.nbt);
+                stack.setNbt(tag);
+            } catch (Exception ignored) {}
+        }
+        mob.equipStack(slot, stack);
+    }
+
+    private Entity spawnVanillaMinion(ServerWorld world, MinionEntry minionDef, double x, double y, double z) {
+        Identifier typeId = Identifier.tryParse(minionDef.entityType);
+        if (typeId == null) return null;
+
+        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOrEmpty(typeId);
+        if (entityTypeOpt.isEmpty()) return null;
+
+        Entity entity = entityTypeOpt.get().create(world);
+        if (entity == null) return null;
+
+        entity.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+        if (entity instanceof MobEntity mob) {
+            mob.initialize(world,
+                    world.getLocalDifficulty(BlockPos.ofFloored(x, y, z)),
+                    SpawnReason.MOB_SUMMONED, null, null);
+            mob.setPersistent();
+            if (boss.getTarget() != null) {
+                mob.setTarget(boss.getTarget());
+            }
+        }
+        return entity;
     }
 }

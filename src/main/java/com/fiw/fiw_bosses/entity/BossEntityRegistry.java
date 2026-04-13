@@ -22,7 +22,18 @@ public class BossEntityRegistry {
                     .build()
     );
 
+    public static final EntityType<MinionEntity> MINION_TYPE = Registry.register(
+            Registries.ENTITY_TYPE,
+            new Identifier(FiwBosses.MOD_ID, "minion"),
+            FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, MinionEntity::new)
+                    .dimensions(EntityDimensions.fixed(0.6f, 1.95f))
+                    .trackRangeBlocks(128)
+                    .trackedUpdateRate(2)
+                    .build()
+    );
+
     public static void register() {
         FabricDefaultAttributeRegistry.register(BOSS_TYPE, BossEntity.createBossAttributes());
+        FabricDefaultAttributeRegistry.register(MINION_TYPE, BossEntity.createBossAttributes());
     }
 }
