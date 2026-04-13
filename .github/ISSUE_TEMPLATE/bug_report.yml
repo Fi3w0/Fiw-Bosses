@@ -1,0 +1,62 @@
+name: Bug Report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Mod Loader
+      options:
+        - NeoForge 1.21.1
+        - Fabric 1.20.1
+    validations:
+      required: true
+
+  - type: input
+    id: mod-version
+    attributes:
+      label: Mod Version
+      placeholder: "e.g. 1.0.8"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Describe the bug clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Load boss config...
+        2. Run /boss spawn...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Crash log / server log
+      description: Paste relevant logs here. Use a pastebin link if too long.
+      render: text
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Boss/Minion JSON (if relevant)
+      description: Paste the JSON config that triggers the bug.
+      render: json

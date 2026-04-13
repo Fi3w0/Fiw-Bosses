@@ -1,0 +1,44 @@
+name: Feature Request
+description: Suggest a new ability, feature, or improvement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - New ability
+        - New feature
+        - Improvement to existing feature
+        - Minion system
+        - Config / JSON schema
+        - Commands
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Which loader does this apply to?
+      options:
+        - Both (NeoForge + Fabric)
+        - NeoForge 1.21.1 only
+        - Fabric 1.20.1 only
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Describe what you'd like to see added or changed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example usage (optional)
+      description: How would this look in a boss/minion JSON or in-game?
+      render: json

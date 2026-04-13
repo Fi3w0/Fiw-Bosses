@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/Fi3w0/Fiw-Bosses/blob/main/BOSS_CONFIG_DOCS.md
+    about: Full configuration reference with all fields, abilities, and minion system docs
