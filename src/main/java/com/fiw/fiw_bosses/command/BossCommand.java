@@ -66,6 +66,16 @@ public final class BossCommand {
                                             return builder.buildFuture();
                                         })
                                         .executes(ctx -> spawnMinion(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "minion_id")))))
+                        .then(Commands.literal("kill")
+                                .then(Commands.literal("all")
+                                        .executes(ctx -> killAllMinions(ctx.getSource())))
+                                .then(Commands.argument("minion_id", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            MinionConfigLoader.getDefinitions().keySet().forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> killMinion(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "minion_id")))))));
     }
 
@@ -225,6 +235,46 @@ public final class BossCommand {
                 .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(" at " + (int) x + ", " + (int) y + ", " + (int) z)), true);
         return 1;
+    }
+
+    private static int killMinion(CommandSourceStack source, String minionId) {
+        List<MinionEntity> found = new ArrayList<>();
+        AABB worldBox = new AABB(-30000000, -64, -30000000, 30000000, 320, 30000000);
+        for (ServerLevel level : source.getServer().getAllLevels()) {
+            found.addAll(level.getEntitiesOfClass(MinionEntity.class, worldBox,
+                    e -> minionId.equals(e.getMinionId())));
+        }
+        if (found.isEmpty()) {
+            source.sendFailure(Component.literal("No living minion with id '" + minionId + "' found."));
+            return 0;
+        }
+        found.forEach(MinionEntity::kill);
+        final int count = found.size();
+        source.sendSuccess(() -> Component.literal("Killed ")
+                .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
+                .append(Component.literal(" minion(s) with id "))
+                .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(".")), true);
+        return count;
+    }
+
+    private static int killAllMinions(CommandSourceStack source) {
+        List<MinionEntity> found = new ArrayList<>();
+        AABB worldBox = new AABB(-30000000, -64, -30000000, 30000000, 320, 30000000);
+        for (ServerLevel level : source.getServer().getAllLevels()) {
+            found.addAll(level.getEntitiesOfClass(MinionEntity.class, worldBox, e -> true));
+        }
+        if (found.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No minions alive.")
+                    .withStyle(ChatFormatting.YELLOW), false);
+            return 0;
+        }
+        found.forEach(MinionEntity::kill);
+        final int count = found.size();
+        source.sendSuccess(() -> Component.literal("Killed ")
+                .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
+                .append(Component.literal(" minion(s).")), true);
+        return count;
     }
 
     // ── Reload (bosses + minions) ────────────────────────────────────────────
