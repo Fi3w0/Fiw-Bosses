@@ -2,8 +2,11 @@ package com.fiw.fiw_bosses.command;
 
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
+import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.entity.BossEntityRegistry;
+import com.fiw.fiw_bosses.entity.MinionEntity;
 import com.fiw.fiw_bosses.skin.SkinCache;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -52,9 +55,21 @@ public final class BossCommand {
                 .then(Commands.literal("list")
                         .executes(ctx -> listBosses(ctx.getSource())))
                 .then(Commands.literal("reload")
-                        .requires(src -> src.hasPermission(3))
-                        .executes(ctx -> reloadConfigs(ctx.getSource()))));
+                        .executes(ctx -> reloadConfigs(ctx.getSource())))
+                .then(Commands.literal("minion")
+                        .then(Commands.literal("list")
+                                .executes(ctx -> listMinions(ctx.getSource())))
+                        .then(Commands.literal("spawn")
+                                .then(Commands.argument("minion_id", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            MinionConfigLoader.getDefinitions().keySet().forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> spawnMinion(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "minion_id")))))));
     }
+
+    // ── Boss commands ────────────────────────────────────────────────────────
 
     private static int spawnBoss(CommandSourceStack source, String bossId, BlockPos pos) {
         BossDefinition def = BossConfigLoader.getDefinition(bossId);
@@ -119,7 +134,7 @@ public final class BossCommand {
         AABB worldBox = new AABB(-30000000, -64, -30000000, 30000000, 320, 30000000);
         for (ServerLevel level : source.getServer().getAllLevels()) {
             found.addAll(level.getEntitiesOfClass(BossEntity.class, worldBox,
-                    e -> bossId.equals(e.getBossId())));
+                    e -> !(e instanceof MinionEntity) && bossId.equals(e.getBossId())));
         }
         if (found.isEmpty()) {
             source.sendFailure(Component.literal("No living boss with id '" + bossId + "' found."));
@@ -139,7 +154,8 @@ public final class BossCommand {
         List<BossEntity> found = new ArrayList<>();
         AABB worldBox = new AABB(-30000000, -64, -30000000, 30000000, 320, 30000000);
         for (ServerLevel level : source.getServer().getAllLevels()) {
-            found.addAll(level.getEntitiesOfClass(BossEntity.class, worldBox, e -> true));
+            found.addAll(level.getEntitiesOfClass(BossEntity.class, worldBox,
+                    e -> !(e instanceof MinionEntity)));
         }
         if (found.isEmpty()) {
             source.sendSuccess(() -> Component.literal("No bosses alive.")
@@ -154,11 +170,71 @@ public final class BossCommand {
         return count;
     }
 
+    // ── Minion commands ──────────────────────────────────────────────────────
+
+    private static int listMinions(CommandSourceStack source) {
+        var definitions = MinionConfigLoader.getDefinitions();
+        if (definitions.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No minion definitions loaded.")
+                    .withStyle(ChatFormatting.YELLOW), false);
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("Loaded minions (" + definitions.size() + "):")
+                .withStyle(ChatFormatting.GREEN), false);
+        for (var entry : definitions.entrySet()) {
+            MinionDefinition def = entry.getValue();
+            source.sendSuccess(() -> Component.literal("  - ")
+                    .append(Component.literal(entry.getKey()).withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(" (HP: " + (int) def.health + ", Base: " + def.baseEntity + ")")
+                            .withStyle(ChatFormatting.GRAY)), false);
+        }
+        return definitions.size();
+    }
+
+    private static int spawnMinion(CommandSourceStack source, String minionId) {
+        MinionDefinition def = MinionConfigLoader.getDefinition(minionId);
+        if (def == null) {
+            source.sendFailure(Component.literal("Unknown minion: " + minionId));
+            return 0;
+        }
+
+        if (!def.isCustom()) {
+            source.sendFailure(Component.literal("Minion '" + minionId + "' uses a vanilla base entity — spawn it via a boss with summon_minions."));
+            return 0;
+        }
+
+        ServerLevel level = source.getLevel();
+        double x = source.getPosition().x;
+        double y = source.getPosition().y;
+        double z = source.getPosition().z;
+
+        MinionEntity minion = BossEntityRegistry.MINION.get().create(level);
+        if (minion == null) {
+            source.sendFailure(Component.literal("Failed to create minion entity"));
+            return 0;
+        }
+
+        minion.moveTo(x, y, z, 0, 0);
+        minion.applyMinionDefinition(def, null);
+        minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
+                MobSpawnType.COMMAND, null);
+        level.addFreshEntity(minion);
+
+        source.sendSuccess(() -> Component.literal("Spawned minion ")
+                .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(" at " + (int) x + ", " + (int) y + ", " + (int) z)), true);
+        return 1;
+    }
+
+    // ── Reload (bosses + minions) ────────────────────────────────────────────
+
     private static int reloadConfigs(CommandSourceStack source) {
-        int loaded = BossConfigLoader.reload();
+        int bosses = BossConfigLoader.reload();
+        int minions = MinionConfigLoader.reload();
         SkinCache.fetchAll();
-        source.sendSuccess(() -> Component.literal("Reloaded " + loaded + " boss definitions.")
+        source.sendSuccess(() -> Component.literal("Reloaded " + bosses + " boss + " + minions + " minion definitions.")
                 .withStyle(ChatFormatting.GREEN), true);
-        return loaded;
+        return bosses + minions;
     }
 }

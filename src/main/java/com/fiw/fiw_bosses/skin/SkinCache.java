@@ -3,6 +3,8 @@ package com.fiw.fiw_bosses.skin;
 import com.fiw.fiw_bosses.FiwBosses;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
+import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.config.SkinDefinition;
 
 import java.util.Map;
@@ -19,26 +21,34 @@ public class SkinCache {
         pending.clear();
 
         for (Map.Entry<String, BossDefinition> entry : BossConfigLoader.getDefinitions().entrySet()) {
-            String bossId = entry.getKey();
-            SkinDefinition skin = entry.getValue().skin;
-            if (skin == null) continue;
-
-            CompletableFuture<SkinData> future;
-            if ("file".equalsIgnoreCase(skin.type)) {
-                future = SkinFetcher.fetchLocalSkin(skin.value, skin.slim);
-            } else {
-                future = SkinFetcher.fetchPlayerSkin(skin.value);
-            }
-
-            pending.put(bossId, future);
-            future.thenAccept(data -> {
-                if (data != null) {
-                    cache.put(bossId, data);
-                    FiwBosses.LOGGER.info("Cached skin for boss: {} (slim={})", bossId, data.slim);
-                }
-                pending.remove(bossId);
-            });
+            fetchSkin(entry.getKey(), entry.getValue().skin);
         }
+
+        for (Map.Entry<String, MinionDefinition> entry : MinionConfigLoader.getDefinitions().entrySet()) {
+            if (entry.getValue().isCustom()) {
+                fetchSkin("minion_" + entry.getKey(), entry.getValue().skin);
+            }
+        }
+    }
+
+    private static void fetchSkin(String id, SkinDefinition skin) {
+        if (skin == null) return;
+
+        CompletableFuture<SkinData> future;
+        if ("file".equalsIgnoreCase(skin.type)) {
+            future = SkinFetcher.fetchLocalSkin(skin.value, skin.slim);
+        } else {
+            future = SkinFetcher.fetchPlayerSkin(skin.value);
+        }
+
+        pending.put(id, future);
+        future.thenAccept(data -> {
+            if (data != null) {
+                cache.put(id, data);
+                FiwBosses.LOGGER.info("Cached skin for: {} (slim={})", id, data.slim);
+            }
+            pending.remove(id);
+        });
     }
 
     public static SkinData getSkin(String bossId) {

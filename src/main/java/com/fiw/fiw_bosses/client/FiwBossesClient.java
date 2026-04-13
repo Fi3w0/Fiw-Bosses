@@ -13,5 +13,6 @@ public class FiwBossesClient {
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(BossEntityRegistry.BOSS.get(), BossEntityRenderer::new);
+        event.registerEntityRenderer(BossEntityRegistry.MINION.get(), MinionEntityRenderer::new);
     }
 }

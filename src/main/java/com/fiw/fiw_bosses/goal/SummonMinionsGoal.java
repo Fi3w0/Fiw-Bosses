@@ -1,8 +1,12 @@
 package com.fiw.fiw_bosses.goal;
 
-import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
+import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.config.MinionEntry;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.entity.BossEntityRegistry;
+import com.fiw.fiw_bosses.entity.MinionEntity;
 import com.fiw.fiw_bosses.util.TextUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.ChatFormatting;
@@ -87,12 +91,6 @@ public class SummonMinionsGoal extends Goal {
 
             if (aliveCount >= minionDef.maxAlive) continue;
 
-            ResourceLocation typeId = ResourceLocation.tryParse(minionDef.entityType);
-            if (typeId == null) continue;
-
-            Optional<EntityType<?>> entityTypeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(typeId);
-            if (entityTypeOpt.isEmpty()) continue;
-
             int toSpawn = Math.min(minionDef.count, minionDef.maxAlive - (int) aliveCount);
 
             for (int i = 0; i < toSpawn; i++) {
@@ -102,18 +100,17 @@ public class SummonMinionsGoal extends Goal {
                 double z = boss.getZ() + Math.sin(angle) * dist;
                 double y = boss.getY();
 
-                Entity entity = entityTypeOpt.get().create(level);
+                Entity entity;
+
+                if (minionDef.usesDefinition()) {
+                    // New system: spawn a custom MinionEntity from minion definition
+                    entity = spawnCustomMinion(level, minionDef, x, y, z);
+                } else {
+                    // Legacy: spawn a vanilla mob by entityType
+                    entity = spawnVanillaMinion(level, minionDef, x, y, z);
+                }
+
                 if (entity != null) {
-                    entity.moveTo(x, y, z, boss.getRandom().nextFloat() * 360, 0);
-                    if (entity instanceof Mob mob) {
-                        mob.finalizeSpawn(level,
-                                level.getCurrentDifficultyAt(BlockPos.containing(x, y, z)),
-                                MobSpawnType.MOB_SUMMONED, null);
-                        mob.setPersistenceRequired();
-                        if (boss.getTarget() != null) {
-                            mob.setTarget(boss.getTarget());
-                        }
-                    }
                     level.addFreshEntity(entity);
                     trackedMinions.add(entity.getUUID());
                     boss.registerMinion(entity.getUUID());
@@ -143,5 +140,126 @@ public class SummonMinionsGoal extends Goal {
                 }
             }
         }
+    }
+
+    private Entity spawnCustomMinion(ServerLevel level, MinionEntry minionEntry, double x, double y, double z) {
+        MinionDefinition def = MinionConfigLoader.getDefinition(minionEntry.minionId);
+        if (def == null) return null;
+
+        if (def.isCustom()) {
+            // Custom skin minion — use MinionEntity
+            MinionEntity minion = BossEntityRegistry.MINION.get().create(level);
+            if (minion == null) return null;
+            minion.moveTo(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+            minion.applyMinionDefinition(def, boss);
+            minion.setPersistenceRequired();
+            if (boss.getTarget() != null) {
+                minion.setTarget(boss.getTarget());
+            }
+            return minion;
+        } else {
+            // Vanilla base entity with stat/equipment overrides from definition
+            return spawnVanillaWithOverrides(level, def, x, y, z);
+        }
+    }
+
+    private Entity spawnVanillaWithOverrides(ServerLevel level, MinionDefinition def, double x, double y, double z) {
+        ResourceLocation typeId = ResourceLocation.tryParse(def.baseEntity);
+        if (typeId == null) return null;
+
+        Optional<EntityType<?>> entityTypeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(typeId);
+        if (entityTypeOpt.isEmpty()) return null;
+
+        Entity entity = entityTypeOpt.get().create(level);
+        if (entity == null) return null;
+
+        entity.moveTo(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+        if (entity instanceof Mob mob) {
+            mob.finalizeSpawn(level,
+                    level.getCurrentDifficultyAt(BlockPos.containing(x, y, z)),
+                    MobSpawnType.MOB_SUMMONED, null);
+            mob.setPersistenceRequired();
+
+            // Override stats
+            var healthAttr = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            if (healthAttr != null) { healthAttr.setBaseValue(def.health); mob.setHealth(def.health); }
+            var armorAttr = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR);
+            if (armorAttr != null) armorAttr.setBaseValue(def.armor);
+            var speedAttr = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+            if (speedAttr != null) speedAttr.setBaseValue(def.speed);
+            var dmgAttr = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+            if (dmgAttr != null) dmgAttr.setBaseValue(def.attackDamage);
+            var kbAttr = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
+            if (kbAttr != null) kbAttr.setBaseValue(def.knockbackResistance);
+
+            // Custom name
+            if (def.displayName != null) {
+                mob.setCustomName(TextUtil.parseColorCodes(def.displayName));
+                mob.setCustomNameVisible(true);
+            }
+
+            // Equipment (reuse BossEntity's static helper pattern)
+            if (def.equipment != null) {
+                // Use a temporary BossEntity to apply equipment, then copy slots
+                // Actually just apply directly — Mob supports setItemSlot
+                applyEquipmentToMob(mob, def);
+            }
+
+            if (boss.getTarget() != null) {
+                mob.setTarget(boss.getTarget());
+            }
+        }
+        return entity;
+    }
+
+    private void applyEquipmentToMob(Mob mob, MinionDefinition def) {
+        if (def.equipment == null) return;
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.MAINHAND, def.equipment.mainHand);
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.OFFHAND, def.equipment.offHand);
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.HEAD, def.equipment.head);
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.CHEST, def.equipment.chest);
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.LEGS, def.equipment.legs);
+        setSlot(mob, net.minecraft.world.entity.EquipmentSlot.FEET, def.equipment.feet);
+    }
+
+    private void setSlot(Mob mob, net.minecraft.world.entity.EquipmentSlot slot,
+                         com.fiw.fiw_bosses.config.EquipmentEntry entry) {
+        if (entry == null || entry.item == null) return;
+        ResourceLocation itemId = ResourceLocation.tryParse(entry.item);
+        if (itemId == null) return;
+        var item = BuiltInRegistries.ITEM.getOptional(itemId);
+        if (item.isEmpty()) return;
+        net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item.get());
+        if (entry.nbt != null && !entry.nbt.isEmpty()) {
+            try {
+                net.minecraft.nbt.CompoundTag tag = net.minecraft.nbt.TagParser.parseTag(entry.nbt);
+                stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                        net.minecraft.world.item.component.CustomData.of(tag));
+            } catch (Exception ignored) {}
+        }
+        mob.setItemSlot(slot, stack);
+    }
+
+    private Entity spawnVanillaMinion(ServerLevel level, MinionEntry minionDef, double x, double y, double z) {
+        ResourceLocation typeId = ResourceLocation.tryParse(minionDef.entityType);
+        if (typeId == null) return null;
+
+        Optional<EntityType<?>> entityTypeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(typeId);
+        if (entityTypeOpt.isEmpty()) return null;
+
+        Entity entity = entityTypeOpt.get().create(level);
+        if (entity == null) return null;
+
+        entity.moveTo(x, y, z, boss.getRandom().nextFloat() * 360, 0);
+        if (entity instanceof Mob mob) {
+            mob.finalizeSpawn(level,
+                    level.getCurrentDifficultyAt(BlockPos.containing(x, y, z)),
+                    MobSpawnType.MOB_SUMMONED, null);
+            mob.setPersistenceRequired();
+            if (boss.getTarget() != null) {
+                mob.setTarget(boss.getTarget());
+            }
+        }
+        return entity;
     }
 }

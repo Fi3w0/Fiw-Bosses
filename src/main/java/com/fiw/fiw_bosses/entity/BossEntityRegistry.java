@@ -17,4 +17,11 @@ public class BossEntityRegistry {
                     .sized(0.6f, 1.95f)
                     .clientTrackingRange(10)
                     .build("boss"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<MinionEntity>> MINION =
+            ENTITIES.register("minion", () -> EntityType.Builder
+                    .of(MinionEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(10)
+                    .build("minion"));
 }

@@ -219,7 +219,13 @@ public class BossEntity extends Monster {
         }
     }
 
+    protected boolean showBossBar() { return true; }
+
     private void tickBossBar() {
+        if (!showBossBar()) {
+            bossBar.removeAllPlayers();
+            return;
+        }
         if (bossState == BossState.INACTIVE || bossState == BossState.PRE_FIGHT) {
             bossBar.removeAllPlayers();
             setTarget(null);

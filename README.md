@@ -8,7 +8,7 @@
 [![Fabric](https://img.shields.io/badge/Fabric-1.20.1-DBB591)](https://fabricmc.net)
 [![License](https://img.shields.io/badge/License-GPL--v3-blue)](LICENSE)
 
-A data-driven boss framework — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/fiwboss reload` (NeoForge) or `/boss reload` (Fabric), and your boss is live.
+A data-driven boss framework — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/boss reload`, and your boss is live.
 
 ## Supported versions
 
@@ -26,16 +26,16 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 - **JSON-driven** — create any boss without touching a single line of code
 - **Multi-phase system** — HP thresholds trigger phase transitions with new abilities, speeds, equipment, sounds, and particles
 - **42 abilities** — melee, ranged, mobility, AoE, utility, crowd-control, and ultimates — all configurable per phase
+- **Custom minion system** — define custom minions via JSON with their own stats, skins, equipment, abilities, loot, and AI modes (normal, follow_boss, static) — or use vanilla mobs with stat overrides
 - **Pre-fight activation** — boss starts passive/immortal; player right-clicks to trigger dialogue and start the fight
 - **Pre-death dialogue** — boss held at 1 HP on lethal hit, speaks final words, then dies
 - **Idle system** — configurable despawn or gradual heal when no players are nearby
-- **Custom skins** — any player skin or local PNG file
+- **Custom skins** — any player skin or local PNG file (bosses and minions)
 - **Custom equipment** — full item + NBT support per slot, changeable per phase
-- **Minion spawning** — spawn any mob with caps and radius control
 - **Dynamic aggro** — aggro switching, revenge targeting, multiplayer-friendly
 - **Strafing AI** — bosses circle and strafe at close range
-- **Custom loot tables** — per-item drop chances with full NBT support
-- **Hot reload** — reload all configs in-game without a server restart
+- **Custom loot tables** — per-item drop chances with full NBT support (bosses and minions)
+- **Hot reload** — `/boss reload` reloads all configs without a server restart
 - **Phase persistence** — boss phase survives server restarts via NBT
 
 ---
@@ -68,7 +68,7 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 **NeoForge 1.21.1:**
 1. Install [NeoForge](https://neoforged.net/) for Minecraft 1.21.1
 2. Drop the NeoForge jar (`fiw-bosses-<version>-neoforge-1.21.1.jar`) into your `mods/` folder
-3. Start the server — boss JSON files live in `config/fiw_bosses/bosses/`
+3. Start the server — boss JSON files live in `config/fiw_bosses/bosses/`, minion JSONs in `config/fiw_bosses/minions/`
 
 **Fabric 1.20.1 (legacy):**
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
@@ -80,28 +80,16 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 
 ## Commands
 
-### NeoForge 1.21.1
-
-```
-/fiwboss spawn <boss_id>    — spawn a boss at your position
-/fiwboss list               — list all loaded boss IDs
-/fiwboss reload             — reload all JSON configs
-/fiwboss kill <boss_id>     — kill all living bosses with that ID
-/fiwboss kill all           — kill every boss currently alive
-```
-
-### Fabric 1.20.1
-
 ```
 /boss spawn <boss_id>               — spawn at your location
 /boss spawn <boss_id> <x> <y> <z>   — spawn at coordinates
 /boss list                          — list all loaded boss IDs
-/boss reload                        — reload all JSON configs (permission level 3)
+/boss reload                        — reload all boss + minion configs
 /boss kill <boss_id>                — kill all living bosses with that ID
 /boss kill all                      — kill every boss currently alive
+/boss minion list                   — list all loaded minion definitions
+/boss minion spawn <minion_id>      — spawn a custom minion at your position
 ```
-
-> The command root differs between loaders (`/fiwboss` on NeoForge, `/boss` on Fabric) to avoid collisions with other mods. Subcommands are otherwise identical in behavior.
 
 ---
 
@@ -153,6 +141,78 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 | `divine_execution` | Seizes one player, lifts them in the air with a message, holds them for a duration, then hurls them away with damage |
 
 Full parameter reference: [BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)
+
+---
+
+## Minion System
+
+Minions are defined in `config/fiw_bosses/minions/*.json` and referenced from boss phases via `"minionId"`.
+
+### Custom minion example (`config/fiw_bosses/minions/shadow_guard.json`):
+
+```json
+{
+  "id": "shadow_guard",
+  "displayName": "&8Shadow Guard",
+  "baseEntity": "custom",
+  "health": 40,
+  "armor": 4,
+  "speed": 0.28,
+  "attackDamage": 6,
+  "knockbackResistance": 0.0,
+  "movement": "normal",
+  "skin": { "type": "player", "value": "Herobrine" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:stone_sword" },
+    "chest": { "item": "minecraft:chainmail_chestplate" }
+  },
+  "abilities": [
+    { "type": "melee_slash", "cooldownTicks": 60, "params": { "damage": 5, "range": 3 } }
+  ],
+  "loot": [
+    { "item": "minecraft:iron_nugget", "count": 3, "chance": 0.5 }
+  ]
+}
+```
+
+### Vanilla base minion example:
+
+```json
+{
+  "id": "armored_zombie",
+  "displayName": "&2Armored Zombie",
+  "baseEntity": "minecraft:zombie",
+  "health": 60,
+  "armor": 10,
+  "attackDamage": 8,
+  "movement": "normal",
+  "equipment": {
+    "mainHand": { "item": "minecraft:iron_axe" },
+    "head": { "item": "minecraft:iron_helmet" }
+  },
+  "loot": [
+    { "item": "minecraft:iron_ingot", "count": 1, "chance": 0.3 }
+  ]
+}
+```
+
+### Referencing minions in a boss phase:
+
+```json
+"minions": [
+  { "minionId": "shadow_guard", "count": 2, "maxAlive": 4, "spawnRadius": 5.0 }
+]
+```
+
+Legacy format (`"entityType": "minecraft:zombie"`) still works for backward compatibility.
+
+### Movement modes
+
+| Mode | Behavior |
+|---|---|
+| `"normal"` | Standard AI — chases the boss's target |
+| `"follow_boss"` | Escorts the boss, attacks if enemies get close |
+| `"static"` | Stays in place, uses ranged abilities only |
 
 ---
 

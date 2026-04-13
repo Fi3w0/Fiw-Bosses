@@ -2,6 +2,7 @@ package com.fiw.fiw_bosses;
 
 import com.fiw.fiw_bosses.command.BossCommand;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.entity.BossEntityRegistry;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
@@ -36,11 +37,13 @@ public class FiwBosses {
 
     private void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(BossEntityRegistry.BOSS.get(), BossEntity.createBossAttributes().build());
+        event.put(BossEntityRegistry.MINION.get(), BossEntity.createBossAttributes().build());
     }
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         BossConfigLoader.loadAll();
+        MinionConfigLoader.loadAll();
         SkinCache.fetchAll();
     }
 
