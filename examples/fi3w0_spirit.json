@@ -7,7 +7,7 @@
   "knockbackResistance": 0.4,
   "attackDamage": 5.0,
   "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" },
-  "skin": { "type": "file", "value": "config/fiw_bosses/skins/fi3w0_spirit.png"},
+  "skin": { "type": "file", "value": "fi3w0_spirit.png"},
   "equipment": {
     "mainHand": { "item": "minecraft:netherite_sword", "nbt": "{Enchantments:[{id:\"minecraft:sharpness\",lvl:4},{id:\"minecraft:looting\",lvl:3}]}" }
 
