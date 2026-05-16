@@ -166,7 +166,7 @@ Use `&` prefix in `displayName`, `transitionMessage`, and `taunt` fields.
 3. Reference it in your boss JSON:
 
 ```json
-"skin": { "type": "file", "value": "my_boss_skin" }
+"skin": { "type": "file", "value": "my_boss_skin.png" }
 ```
 
 > The file skin is loaded at server start and cached. Run `/boss reload` to pick up a new file without restarting.
