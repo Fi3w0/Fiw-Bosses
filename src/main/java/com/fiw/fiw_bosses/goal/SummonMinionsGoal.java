@@ -228,18 +228,36 @@ public class SummonMinionsGoal extends Goal {
 
     private void setSlot(MobEntity mob, EquipmentSlot slot,
                          com.fiw.fiw_bosses.config.EquipmentEntry entry) {
-        if (entry == null || entry.item == null) return;
-        Identifier itemId = Identifier.tryParse(entry.item);
-        if (itemId == null) return;
-        var item = Registries.ITEM.get(itemId);
-        if (item == null) return;
-        ItemStack stack = new ItemStack(item);
-        if (entry.nbt != null && !entry.nbt.isEmpty()) {
-            try {
-                NbtCompound tag = StringNbtReader.readCompound(entry.nbt);
-                LegacyNbtToComponents.apply(stack, tag, mob.getRegistryManager());
-            } catch (Exception ignored) {}
+        if (entry == null) return;
+
+        ItemStack stack;
+
+        // Fiw Tools integration: toolId takes precedence over item/nbt.
+        if (entry.toolId != null && !entry.toolId.isEmpty()) {
+            var server = (mob.getEntityWorld() instanceof ServerWorld sw) ? sw.getServer() : null;
+            stack = com.fiw.fiw_bosses.integration.FiwToolsBridge.getItemStack(entry.toolId, server, 1);
+            if (stack == null || stack.isEmpty()) {
+                if (com.fiw.fiw_bosses.integration.FiwToolsBridge.isPresent()) {
+                    com.fiw.fiw_bosses.FiwBosses.LOGGER.warn(
+                            "Unknown Fiw Tools item id in minion equipment slot {}: {}", slot, entry.toolId);
+                }
+                return;
+            }
+        } else {
+            if (entry.item == null) return;
+            Identifier itemId = Identifier.tryParse(entry.item);
+            if (itemId == null) return;
+            var item = Registries.ITEM.get(itemId);
+            if (item == null) return;
+            stack = new ItemStack(item);
+            if (entry.nbt != null && !entry.nbt.isEmpty()) {
+                try {
+                    NbtCompound tag = StringNbtReader.readCompound(entry.nbt);
+                    LegacyNbtToComponents.apply(stack, tag, mob.getRegistryManager());
+                } catch (Exception ignored) {}
+            }
         }
+
         mob.equipStack(slot, stack);
     }
 

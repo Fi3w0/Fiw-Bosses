@@ -153,23 +153,40 @@ public class BossEntity extends HostileEntity {
     }
 
     private void setEquipmentSlot(EquipmentSlot slot, EquipmentEntry entry) {
-        if (entry == null || entry.item == null) return;
-        Identifier itemId = Identifier.tryParse(entry.item);
-        if (itemId == null) return;
-        var item = Registries.ITEM.get(itemId);
-        if (item == null) {
-            FiwBosses.LOGGER.warn("Unknown item ID in equipment slot {}: {}", slot, entry.item);
-            return;
-        }
-        ItemStack stack = new ItemStack(item);
-        if (entry.nbt != null && !entry.nbt.isEmpty()) {
-            try {
-                NbtCompound parsed = StringNbtReader.readCompound(entry.nbt);
-                LegacyNbtToComponents.apply(stack, parsed, this.getRegistryManager());
-            } catch (Exception e) {
-                FiwBosses.LOGGER.warn("Failed to parse NBT for equipment slot {}: {}", slot, e.getMessage());
+        if (entry == null) return;
+
+        ItemStack stack;
+
+        // Fiw Tools integration: toolId takes precedence over item/nbt.
+        if (entry.toolId != null && !entry.toolId.isEmpty()) {
+            var server = (this.getEntityWorld() instanceof net.minecraft.server.world.ServerWorld sw) ? sw.getServer() : null;
+            stack = com.fiw.fiw_bosses.integration.FiwToolsBridge.getItemStack(entry.toolId, server, 1);
+            if (stack == null || stack.isEmpty()) {
+                if (com.fiw.fiw_bosses.integration.FiwToolsBridge.isPresent()) {
+                    FiwBosses.LOGGER.warn("Unknown Fiw Tools item id in equipment slot {}: {}", slot, entry.toolId);
+                }
+                return;
+            }
+        } else {
+            if (entry.item == null) return;
+            Identifier itemId = Identifier.tryParse(entry.item);
+            if (itemId == null) return;
+            var item = Registries.ITEM.get(itemId);
+            if (item == null) {
+                FiwBosses.LOGGER.warn("Unknown item ID in equipment slot {}: {}", slot, entry.item);
+                return;
+            }
+            stack = new ItemStack(item);
+            if (entry.nbt != null && !entry.nbt.isEmpty()) {
+                try {
+                    NbtCompound parsed = StringNbtReader.readCompound(entry.nbt);
+                    LegacyNbtToComponents.apply(stack, parsed, this.getRegistryManager());
+                } catch (Exception e) {
+                    FiwBosses.LOGGER.warn("Failed to parse NBT for equipment slot {}: {}", slot, e.getMessage());
+                }
             }
         }
+
         this.equipStack(slot, stack);
     }
 

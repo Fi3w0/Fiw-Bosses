@@ -4,6 +4,7 @@ import com.fiw.fiw_bosses.FiwBosses;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.LootEntry;
 import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.util.LegacyNbtToComponents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
@@ -28,29 +29,46 @@ public final class BossLootHandler {
         if (lootEntries == null) return;
 
         for (LootEntry entry : lootEntries) {
-            if (entry.item == null) continue;
             if (entity.getRandom().nextFloat() > entry.chance) continue;
 
-            Identifier itemId = Identifier.tryParse(entry.item);
-            if (itemId == null) {
-                FiwBosses.LOGGER.warn("Invalid item id in loot: {}", entry.item);
-                continue;
-            }
+            int count = Math.max(1, entry.count);
+            ItemStack stack;
 
-            Item item = Registries.ITEM.get(itemId);
-            if (item == null) {
-                FiwBosses.LOGGER.warn("Unknown item in loot: {}", entry.item);
-                continue;
-            }
+            // Fiw Tools integration: toolId takes precedence over item/nbt.
+            // If Fiw Tools isn't installed or doesn't know the id, the entry is silently skipped.
+            if (entry.toolId != null && !entry.toolId.isEmpty()) {
+                var server = (entity.getEntityWorld() instanceof net.minecraft.server.world.ServerWorld sw) ? sw.getServer() : null;
+                stack = FiwToolsBridge.getItemStack(entry.toolId, server, count);
+                if (stack == null || stack.isEmpty()) {
+                    if (FiwToolsBridge.isPresent()) {
+                        FiwBosses.LOGGER.warn("Unknown Fiw Tools item id in loot: {}", entry.toolId);
+                    }
+                    continue;
+                }
+            } else {
+                if (entry.item == null) continue;
 
-            ItemStack stack = new ItemStack(item, Math.max(1, entry.count));
+                Identifier itemId = Identifier.tryParse(entry.item);
+                if (itemId == null) {
+                    FiwBosses.LOGGER.warn("Invalid item id in loot: {}", entry.item);
+                    continue;
+                }
 
-            if (entry.nbt != null && !entry.nbt.isEmpty()) {
-                try {
-                    NbtCompound nbt = StringNbtReader.readCompound(entry.nbt);
-                    LegacyNbtToComponents.apply(stack, nbt, entity.getRegistryManager());
-                } catch (Exception e) {
-                    FiwBosses.LOGGER.warn("Failed to parse loot NBT for {}: {}", entry.item, e.getMessage());
+                Item item = Registries.ITEM.get(itemId);
+                if (item == null) {
+                    FiwBosses.LOGGER.warn("Unknown item in loot: {}", entry.item);
+                    continue;
+                }
+
+                stack = new ItemStack(item, count);
+
+                if (entry.nbt != null && !entry.nbt.isEmpty()) {
+                    try {
+                        NbtCompound nbt = StringNbtReader.readCompound(entry.nbt);
+                        LegacyNbtToComponents.apply(stack, nbt, entity.getRegistryManager());
+                    } catch (Exception e) {
+                        FiwBosses.LOGGER.warn("Failed to parse loot NBT for {}: {}", entry.item, e.getMessage());
+                    }
                 }
             }
 
