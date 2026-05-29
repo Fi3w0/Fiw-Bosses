@@ -22,8 +22,9 @@ body:
     attributes:
       label: Which loader does this apply to?
       options:
-        - Both (NeoForge + Fabric)
+        - All loaders (NeoForge + both Fabric)
         - NeoForge 1.21.1 only
+        - Fabric 1.21.11 only
         - Fabric 1.20.1 only
     validations:
       required: true

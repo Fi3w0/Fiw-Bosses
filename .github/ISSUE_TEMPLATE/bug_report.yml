@@ -8,6 +8,7 @@ body:
       label: Mod Loader
       options:
         - NeoForge 1.21.1
+        - Fabric 1.21.11
         - Fabric 1.20.1
     validations:
       required: true
