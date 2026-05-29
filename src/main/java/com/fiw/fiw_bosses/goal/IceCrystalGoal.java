@@ -87,8 +87,8 @@ public class IceCrystalGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         if (state == STATE_WINDUP) {
             LivingEntity target = boss.getTarget();
@@ -256,7 +256,7 @@ public class IceCrystalGoal extends Goal {
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative());
 
         for (PlayerEntity player : players) {
-            player.damage(boss.getDamageSources().magic(), damage);
+            player.damage(world, boss.getDamageSources().magic(), damage);
 
             double dist = player.distanceTo(boss);
             if (dist <= centerRadius) {
@@ -267,7 +267,7 @@ public class IceCrystalGoal extends Goal {
 
                 Vec3d vel = player.getVelocity();
                 player.setVelocity(0.0, vel.y > 0 ? vel.y : 0.0, 0.0);
-                player.velocityModified = true;
+                player.velocityDirty = true;
             } else {
                 player.addStatusEffect(new StatusEffectInstance(
                         StatusEffects.SLOWNESS, slowDuration, 3, false, true));

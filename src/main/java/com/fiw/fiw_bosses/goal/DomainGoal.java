@@ -18,13 +18,13 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Domain Expansion — the boss's ultimate ability.
@@ -51,7 +51,7 @@ import java.util.UUID;
  */
 public class DomainGoal extends Goal {
 
-    private static final UUID DOMAIN_SPEED_UUID = UUID.fromString("d0a10000-cafe-4b49-9a6a-e1f1c5d10001");
+    private static final Identifier DOMAIN_SPEED_ID = Identifier.of("fiw_bosses", "domain_speed");
 
     private final BossEntity boss;
     private final float radius;
@@ -113,19 +113,19 @@ public class DomainGoal extends Goal {
         domainGoals.clear();
 
         // Anchor the sphere here — never moves again
-        domainCenter = boss.getPos().add(0, 1.0, 0);
+        domainCenter = boss.getEntityPos().add(0, 1.0, 0);
 
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Save and override boss speed
-        var speedAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        var speedAttr = boss.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
         if (speedAttr != null) {
             originalBaseSpeed = speedAttr.getBaseValue();
-            speedAttr.removeModifier(DOMAIN_SPEED_UUID);
+            speedAttr.removeModifier(DOMAIN_SPEED_ID);
             speedAttr.addTemporaryModifier(new EntityAttributeModifier(
-                    DOMAIN_SPEED_UUID, "domain_speed",
-                    domainSpeed - originalBaseSpeed, EntityAttributeModifier.Operation.ADDITION));
+                    DOMAIN_SPEED_ID,
+                    domainSpeed - originalBaseSpeed, EntityAttributeModifier.Operation.ADD_VALUE));
         }
 
         // Collect players inside sphere at activation (use domainCenter for distance)
@@ -198,8 +198,8 @@ public class DomainGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         rotation = (rotation + 2.5) % 360.0;
 
@@ -208,11 +208,11 @@ public class DomainGoal extends Goal {
 
         // ── BOSS CONTAINMENT ─────────────────────────────────────────────────
         // Boss must stay inside the domain — push it back toward center if it drifts
-        double bossDist = boss.getPos().distanceTo(new Vec3d(domainCenter.x, boss.getY(), domainCenter.z));
+        double bossDist = boss.getEntityPos().distanceTo(new Vec3d(domainCenter.x, boss.getY(), domainCenter.z));
         if (bossDist > radius * 0.85) {
             Vec3d toCenter = new Vec3d(domainCenter.x - boss.getX(), 0, domainCenter.z - boss.getZ()).normalize();
             boss.addVelocity(toCenter.x * 0.6, 0, toCenter.z * 0.6);
-            boss.velocityModified = true;
+            boss.velocityDirty = true;
         }
 
         // ── PLAYER CONTAINMENT ────────────────────────────────────────────────
@@ -244,8 +244,8 @@ public class DomainGoal extends Goal {
                             domainCenter.y - player.getY(),
                             domainCenter.z - player.getZ()).normalize();
                     player.addVelocity(toCenter.x * 1.4, toCenter.y * 0.4 + 0.3, toCenter.z * 1.4);
-                    player.velocityModified = true;
-                    player.damage(boss.getDamageSources().magic(), pullDamage);
+                    player.velocityDirty = true;
+                    player.damage(world, boss.getDamageSources().magic(), pullDamage);
                     // Visual warning
                     world.spawnParticles(ParticleTypes.REVERSE_PORTAL,
                             player.getX(), player.getY() + 1, player.getZ(),
@@ -259,9 +259,9 @@ public class DomainGoal extends Goal {
                             0,
                             player.getZ() - domainCenter.z).normalize();
                     player.addVelocity(awayFromCenter.x * 1.6, 0.5, awayFromCenter.z * 1.6);
-                    player.velocityModified = true;
+                    player.velocityDirty = true;
                     if (dist < pushThreshold - 1.0 && tick % 5 == 0) {
-                        player.damage(boss.getDamageSources().magic(), pushDamage);
+                        player.damage(world, boss.getDamageSources().magic(), pushDamage);
                         world.spawnParticles(ParticleTypes.PORTAL,
                                 player.getX(), player.getY() + 1, player.getZ(),
                                 6, 0.3, 0.5, 0.3, 0.1);
@@ -285,10 +285,10 @@ public class DomainGoal extends Goal {
     @Override
     public void stop() {
         cooldownTimer = cooldown;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
-        Vec3d center = domainCenter != null ? domainCenter : boss.getPos().add(0, 1.0, 0);
+        Vec3d center = domainCenter != null ? domainCenter : boss.getEntityPos().add(0, 1.0, 0);
 
         // Stop any running domain attack goals
         for (DomainGoalEntry entry : domainGoals) {
@@ -296,8 +296,8 @@ public class DomainGoal extends Goal {
         }
 
         // Restore boss speed
-        var speedAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (speedAttr != null) speedAttr.removeModifier(DOMAIN_SPEED_UUID);
+        var speedAttr = boss.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+        if (speedAttr != null) speedAttr.removeModifier(DOMAIN_SPEED_ID);
 
         // Restore phase goals
         if (hasCustomAttacks && boss.getPhaseManager() != null) {
@@ -530,7 +530,7 @@ public class DomainGoal extends Goal {
         }
 
         void tick(BossEntity boss) {
-            if (boss.getWorld().isClient) return;
+            if (boss.getEntityWorld().isClient()) return;
 
             if (running) {
                 if (goal.shouldContinue()) {

@@ -14,7 +14,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -94,8 +93,8 @@ public class SingularityCannonGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_CHARGE -> tickCharge(world);
@@ -118,7 +117,7 @@ public class SingularityCannonGoal extends Goal {
         Vec3d right   = facing.crossProduct(up).normalize();
         Vec3d realUp  = right.crossProduct(facing).normalize();
 
-        Vec3d ringCenter = boss.getPos().add(0, 1.2, 0).add(facing.multiply(2.0));
+        Vec3d ringCenter = boss.getEntityPos().add(0, 1.2, 0).add(facing.multiply(2.0));
 
         // Outer ring
         int ringPoints = Math.max(12, (int)(ringRadius * 10));
@@ -161,8 +160,10 @@ public class SingularityCannonGoal extends Goal {
             Vec3d point = ringCenter
                     .add(right.multiply(chromaRadius * Math.cos(angle)))
                     .add(realUp.multiply(chromaRadius * Math.sin(angle)));
-            DustParticleEffect dust = new DustParticleEffect(
-                    new Vector3f(colors[i][0], colors[i][1], colors[i][2]), 1.0f);
+            int packedColor = ((int) (colors[i][0] * 255) << 16)
+                            | ((int) (colors[i][1] * 255) << 8)
+                            |  (int) (colors[i][2] * 255);
+            DustParticleEffect dust = new DustParticleEffect(packedColor, 1.0f);
             world.spawnParticles(dust, point.x, point.y, point.z, 1, 0, 0, 0, 0);
         }
 
@@ -187,13 +188,13 @@ public class SingularityCannonGoal extends Goal {
         // Transition to beam state
         if (tick >= chargeTime) {
             if (target != null && target.isAlive()) {
-                lockedFacing = target.getPos().add(0, 1, 0)
-                        .subtract(boss.getPos().add(0, 1.2, 0))
+                lockedFacing = target.getEntityPos().add(0, 1, 0)
+                        .subtract(boss.getEntityPos().add(0, 1.2, 0))
                         .normalize();
             } else {
                 lockedFacing = boss.getRotationVector().normalize();
             }
-            beamPos      = boss.getPos().add(0, 1.2, 0);
+            beamPos      = boss.getEntityPos().add(0, 1.2, 0);
             beamDir      = lockedFacing;
             beamTraveled = 0.0;
             hitPlayers.clear();
@@ -233,10 +234,10 @@ public class SingularityCannonGoal extends Goal {
             for (PlayerEntity player : victims) {
                 if (hitPlayers.contains(player.getUuid())) continue;
                 hitPlayers.add(player.getUuid());
-                player.damage(boss.getDamageSources().magic(), damage);
+                player.damage(world, boss.getDamageSources().magic(), damage);
                 Vec3d drag = beamDir.multiply(2.0);
                 player.addVelocity(drag.x, drag.y * 0.3, drag.z);
-                player.velocityModified = true;
+                player.velocityDirty = true;
             }
 
             // End of beam range — explosion

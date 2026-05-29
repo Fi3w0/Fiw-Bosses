@@ -24,9 +24,9 @@ public class ClientSkinManager {
             removeSkin(entityId);
 
             NativeImage image = NativeImage.read(new ByteArrayInputStream(pngData));
-            NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
+            Identifier texId = Identifier.of(FiwBosses.MOD_ID, "skin/entity_" + entityId);
+            NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> "fiw_bosses skin " + entityId, image);
 
-            Identifier texId = new Identifier(FiwBosses.MOD_ID, "skin/entity_" + entityId);
             MinecraftClient.getInstance().getTextureManager().registerTexture(texId, texture);
 
             skinTextures.put(entityId, texId);

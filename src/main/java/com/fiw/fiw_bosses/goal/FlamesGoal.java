@@ -50,8 +50,8 @@ public class FlamesGoal extends Goal {
     @Override
     public void start() {
         tick = 0;
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.HOSTILE, 1.0f, 0.8f);
         }
@@ -65,8 +65,8 @@ public class FlamesGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         for (int i = 0; i < density; i++) {
             double rx = (boss.getRandom().nextDouble() * 2 - 1) * radius;

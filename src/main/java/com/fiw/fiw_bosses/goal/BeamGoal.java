@@ -61,8 +61,8 @@ public class BeamGoal extends Goal {
         LivingEntity target = boss.getTarget();
         if (target != null) boss.getLookControl().lookAt(target, 360, 90);
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Charging-up sound
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 1.5f, 1.0f);
@@ -93,12 +93,12 @@ public class BeamGoal extends Goal {
 
         // Freeze boss in place during windup and beam
         boss.setVelocity(0, boss.getVelocity().y, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
 
         LivingEntity target = boss.getTarget();
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
         Vec3d origin = new Vec3d(boss.getX(), boss.getEyeY() - 0.2, boss.getZ());
 
         // ── WINDUP ──────────────────────────────────────────────────────────
@@ -159,7 +159,7 @@ public class BeamGoal extends Goal {
         }
 
         // Muzzle flash at beam origin
-        world.spawnParticles(ParticleTypes.FLASH, origin.x, origin.y, origin.z, 1, 0, 0, 0, 0);
+        world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF), origin.x, origin.y, origin.z, 1, 0, 0, 0, 0);
 
         // Impact burst at destination
         world.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
@@ -180,7 +180,7 @@ public class BeamGoal extends Goal {
                         origin, dir, beamLen));
 
         for (PlayerEntity victim : victims) {
-            victim.damage(boss.getDamageSources().magic(), damage);
+            victim.damage(world, boss.getDamageSources().magic(), damage);
             world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
                     victim.getX(), victim.getY() + 1.0, victim.getZ(),
                     4, 0.2, 0.2, 0.2, 0.05);
@@ -197,8 +197,8 @@ public class BeamGoal extends Goal {
     public void stop() {
         cooldownTimer = cooldown;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Beam shutdown burst
             world.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
                     boss.getX(), boss.getEyeY() - 0.2, boss.getZ(),

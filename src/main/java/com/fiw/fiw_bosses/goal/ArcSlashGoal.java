@@ -98,8 +98,8 @@ public class ArcSlashGoal extends Goal {
 
         snapOrientation();
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Low pitch "charge" sound during windup
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.HOSTILE, 1.2f, 0.35f);
@@ -120,10 +120,10 @@ public class ArcSlashGoal extends Goal {
         slashTick++;
         // Boss stands still for the full animation
         boss.setVelocity(0, boss.getVelocity().y, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
 
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // ── WINDUP ──────────────────────────────────────────────────────────
         if (slashTick <= 0) {
@@ -198,7 +198,7 @@ public class ArcSlashGoal extends Goal {
 
             // 5. FLASH at the midpoint of the arc (halfway through the swing)
             if (pi == points / 2) {
-                world.spawnParticles(ParticleTypes.FLASH,
+                world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                         pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
             }
 
@@ -212,13 +212,13 @@ public class ArcSlashGoal extends Goal {
                             && !alreadyHit.contains(e.getUuid()));
 
             for (LivingEntity victim : victims) {
-                victim.damage(boss.getDamageSources().mobAttack(boss), damage);
+                victim.damage(world, boss.getDamageSources().mobAttack(boss), damage);
                 alreadyHit.add(victim.getUuid());
 
                 // Knockback away from boss
-                Vec3d knock = victim.getPos().subtract(boss.getPos()).normalize();
+                Vec3d knock = victim.getEntityPos().subtract(boss.getEntityPos()).normalize();
                 victim.addVelocity(knock.x * 0.8, 0.4, knock.z * 0.8);
-                victim.velocityModified = true;
+                victim.velocityDirty = true;
 
                 // Impact burst at hit entity
                 world.spawnParticles(ParticleTypes.CRIT,
@@ -238,7 +238,7 @@ public class ArcSlashGoal extends Goal {
         // End-of-swing flash and high-pitch crack
         if (slashTick == duration) {
             Vec3d endPos = arcPoint(arc / 2.0, 1.0);
-            world.spawnParticles(ParticleTypes.FLASH, endPos.x, endPos.y, endPos.z, 1, 0, 0, 0, 0);
+            world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF), endPos.x, endPos.y, endPos.z, 1, 0, 0, 0, 0);
             world.spawnParticles(ParticleTypes.CRIT,
                     endPos.x, endPos.y, endPos.z, 8, 0.3, 0.3, 0.3, 0.3);
             world.playSound(null, slashOrigin.x, slashOrigin.y, slashOrigin.z,
@@ -287,7 +287,7 @@ public class ArcSlashGoal extends Goal {
         Vec3d fwd = boss.getRotationVec(1.0f);
         slashForward = new Vec3d(fwd.x, 0, fwd.z).normalize();
         slashRight   = new Vec3d(-slashForward.z, 0, slashForward.x);
-        slashOrigin  = boss.getPos();
+        slashOrigin  = boss.getEntityPos();
     }
 
     private void sendTaunt(ServerWorld world, String message) {

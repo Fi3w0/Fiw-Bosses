@@ -51,8 +51,8 @@ public class PullGoal extends Goal {
     public void start() {
         pullTick = 0;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 1.5f, 0.8f);
 
@@ -80,9 +80,9 @@ public class PullGoal extends Goal {
     public void tick() {
         pullTick++;
 
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Spiraling portal vortex particles converging on boss
         for (int i = 0; i < 8; i++) {
@@ -95,18 +95,18 @@ public class PullGoal extends Goal {
         }
 
         // Pull all players within radius toward the boss
-        Box area = Box.of(boss.getPos(), radius * 2, radius * 2, radius * 2);
+        Box area = Box.of(boss.getEntityPos(), radius * 2, radius * 2, radius * 2);
         List<PlayerEntity> targets = world.getEntitiesByClass(PlayerEntity.class, area,
                 p -> p.isAlive() && p.squaredDistanceTo(boss) <= radius * radius);
 
-        Vec3d bossCenter = boss.getPos().add(0, 1.0, 0);
+        Vec3d bossCenter = boss.getEntityPos().add(0, 1.0, 0);
         for (PlayerEntity player : targets) {
             double dist = player.distanceTo(boss);
             if (dist < 1.5) continue; // don't pull if already touching
-            Vec3d toward = bossCenter.subtract(player.getPos()).normalize();
+            Vec3d toward = bossCenter.subtract(player.getEntityPos()).normalize();
             double pull = strength * (dist / radius);
             player.addVelocity(toward.x * pull, toward.y * pull * 0.3, toward.z * pull);
-            player.velocityModified = true;
+            player.velocityDirty = true;
         }
 
         // Periodic sound
@@ -120,8 +120,8 @@ public class PullGoal extends Goal {
     public void stop() {
         cooldownTimer = cooldown;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Vortex implosion at end
             world.spawnParticles(ParticleTypes.PORTAL,
                     boss.getX(), boss.getY() + 1.0, boss.getZ(),

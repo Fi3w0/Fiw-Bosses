@@ -67,8 +67,8 @@ public class RandomMessageGoal extends Goal {
 
     @Override
     public void start() {
-        if (boss.getWorld().isClient || messages.isEmpty()) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient() || messages.isEmpty()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         String picked = messages.get(boss.getRandom().nextInt(messages.size()));
         var bossName = boss.getCustomName();

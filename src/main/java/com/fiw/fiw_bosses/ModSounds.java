@@ -10,7 +10,7 @@ public class ModSounds {
     public static final SoundEvent DOMAIN_BREAK = register("domain_break");
 
     private static SoundEvent register(String name) {
-        Identifier id = new Identifier(FiwBosses.MOD_ID, name);
+        Identifier id = Identifier.of(FiwBosses.MOD_ID, name);
         return Registry.register(Registries.SOUND_EVENT, id, SoundEvent.of(id));
     }
 

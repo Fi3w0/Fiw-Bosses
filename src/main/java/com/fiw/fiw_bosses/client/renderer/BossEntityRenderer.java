@@ -5,59 +5,77 @@ import com.fiw.fiw_bosses.client.skin.ClientSkinManager;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.model.Dilation;
+import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.BipedEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
-import net.minecraft.client.render.entity.model.ArmorEntityModel;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
+/**
+ * Renders {@link BossEntity} with the vanilla player skeleton + a server-supplied
+ * skin texture looked up by entity id from {@link ClientSkinManager}.
+ *
+ * <p>1.21.11 uses a state-pattern renderer: per-frame data is captured into
+ * {@link BossEntityRenderState} inside {@link #updateRenderState}, and the actual
+ * draw call only reads the state. We swap {@code this.model} between the classic
+ * (4-px arm) and slim (3-px arm) variants per render based on what the skin
+ * manager reports for this entity id.
+ */
 @Environment(EnvType.CLIENT)
-public class BossEntityRenderer extends BipedEntityRenderer<BossEntity, PlayerEntityModel<BossEntity>> {
+public class BossEntityRenderer
+        extends BipedEntityRenderer<BossEntity, BossEntityRenderState, BipedEntityModel<BossEntityRenderState>> {
 
     private static final Identifier DEFAULT_TEXTURE =
-            new Identifier(FiwBosses.MOD_ID, "textures/entity/boss_default.png");
+            Identifier.of(FiwBosses.MOD_ID, "textures/entity/boss_default.png");
 
-    /** Classic / Steve model (4-px wide arms). Passed to super as the default. */
-    private final PlayerEntityModel<BossEntity> classicModel;
-    /** Slim / Alex model (3-px wide arms). Used when ClientSkinManager.isSlim() returns true. */
-    private final PlayerEntityModel<BossEntity> slimModel;
+    private final BipedEntityModel<BossEntityRenderState> classicModel;
+    private final BipedEntityModel<BossEntityRenderState> slimModel;
 
     public BossEntityRenderer(EntityRendererFactory.Context ctx) {
-        // Use the classic (wide-arm) player model as the default; this gives us full
-        // overlay rendering (hat, jacket, sleeves, pants) via PlayerEntityModel.
-        super(ctx, new PlayerEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER), false), 0.5f);
+        super(ctx, new BipedEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER)), 0.5f);
         this.classicModel = this.model;
-        this.slimModel    = new PlayerEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_SLIM), true);
+        // EntityModelLayers.PLAYER_SLIM is declared twice (yarn maps two distinct fields
+        // to the same name in 1.21.11), so we cannot reference it from Java source.
+        // Bake the slim model from PlayerEntityModel's static model data instead.
+        this.slimModel = new BipedEntityModel<>(
+                TexturedModelData.of(
+                        PlayerEntityModel.getTexturedModelData(Dilation.NONE, true), 64, 64
+                ).createModel());
+        this.addFeature(new HeldItemFeatureRenderer<>(this));
 
-        // Armor rendering
-        this.addFeature(new ArmorFeatureRenderer<>(this,
-                new ArmorEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_INNER_ARMOR)),
-                new ArmorEntityModel<>(ctx.getPart(EntityModelLayers.PLAYER_OUTER_ARMOR)),
-                ctx.getModelManager()));
-
-        // Held-item rendering
-        this.addFeature(new HeldItemFeatureRenderer<>(this, ctx.getHeldItemRenderer()));
-    }
-
-    /**
-     * Swap to the correct arm-width model before each render so that slim skins
-     * (Alex model) have properly mapped arm UV coordinates.
-     */
-    @Override
-    public void render(BossEntity entity, float yaw, float tickDelta,
-                       MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        this.model = ClientSkinManager.isSlim(entity.getId()) ? slimModel : classicModel;
-        super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+        // Armor (vanilla biped equipment layer). 1.21.11 has a duplicate-named PLAYER_SLIM
+        // field for the equipment variant that's unreferenceable from Java source, so we
+        // always use the classic PLAYER_EQUIPMENT layer — slim-armed bosses get slightly
+        // wider arm armour, which is the same compromise other player-skin custom mobs make.
+        this.addFeature(new ArmorFeatureRenderer<>(
+                this,
+                EntityModelLayers.PLAYER_EQUIPMENT.map(layer ->
+                        new BipedEntityModel<BossEntityRenderState>(ctx.getPart(layer))),
+                ctx.getEquipmentRenderer()));
     }
 
     @Override
-    public Identifier getTexture(BossEntity entity) {
-        Identifier skin = ClientSkinManager.getSkinTexture(entity.getId());
+    public BossEntityRenderState createRenderState() {
+        return new BossEntityRenderState();
+    }
+
+    @Override
+    public void updateRenderState(BossEntity entity, BossEntityRenderState state, float tickProgress) {
+        super.updateRenderState(entity, state, tickProgress);
+        state.entityId = entity.getId();
+        state.slim     = ClientSkinManager.isSlim(entity.getId());
+        // Swap model BEFORE the draw call so arm UVs match the skin variant.
+        this.model = state.slim ? slimModel : classicModel;
+    }
+
+    @Override
+    public Identifier getTexture(BossEntityRenderState state) {
+        Identifier skin = ClientSkinManager.getSkinTexture(state.entityId);
         return skin != null ? skin : DEFAULT_TEXTURE;
     }
 }

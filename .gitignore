@@ -23,7 +23,7 @@ bin/
 
 # ─── Minecraft run directories ───────────────────────────────────────────────
 run/
-# Keep example configs tracked if desired — comment the line above and use:
+# Keep example configs tracked if desired comment the line above and use:
 # run/logs/
 # run/crash-reports/
 # run/saves/
@@ -58,3 +58,6 @@ logs/
 
 # ─── Claude Code ─────────────────────────────────────────────────────────────
 .claude/
+
+# ─── Temp / scratch ──────────────────────────────────────────────────────────
+tempfiles/

@@ -50,8 +50,8 @@ public class MeteorGoal extends Goal {
     public void start() {
         windupTick = 0;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.HOSTILE, 1.5f, 0.6f);
 
@@ -82,9 +82,9 @@ public class MeteorGoal extends Goal {
         LivingEntity target = boss.getTarget();
         if (target != null) boss.getLookControl().lookAt(target, 360, 90);
 
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Warning particles: smoke rings on the ground + fire falling from sky
         if (target != null) {
@@ -119,12 +119,12 @@ public class MeteorGoal extends Goal {
     }
 
     private void fireMeteors() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
         LivingEntity target = boss.getTarget();
         if (target == null) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         world.playSound(null, target.getX(), target.getY(), target.getZ(),
                 SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.HOSTILE, 1.2f, 0.4f);
@@ -137,12 +137,12 @@ public class MeteorGoal extends Goal {
             double spawnY = ty + height;
 
             if (type.equals("wither_skull")) {
-                WitherSkullEntity skull = new WitherSkullEntity(world, boss, 0, -1, 0);
+                WitherSkullEntity skull = new WitherSkullEntity(world, boss, new net.minecraft.util.math.Vec3d(0, -1, 0));
                 skull.setPosition(tx, spawnY, tz);
                 skull.setCharged(boss.getRandom().nextFloat() < 0.2f);
                 world.spawnEntity(skull);
             } else {
-                FireballEntity fireball = new FireballEntity(world, boss, 0, -1, 0, 1);
+                FireballEntity fireball = new FireballEntity(world, boss, new net.minecraft.util.math.Vec3d(0, -1, 0), 1);
                 fireball.setPosition(tx, spawnY, tz);
                 world.spawnEntity(fireball);
             }

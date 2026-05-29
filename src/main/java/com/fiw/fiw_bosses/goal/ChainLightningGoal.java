@@ -64,14 +64,14 @@ public class ChainLightningGoal extends Goal {
     }
 
     private void performChainLightning() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
         LivingEntity primaryTarget = boss.getTarget();
         if (primaryTarget == null) return;
 
         // Gather nearby players
-        Box area = Box.of(boss.getPos(), radius * 2, radius * 2, radius * 2);
+        Box area = Box.of(boss.getEntityPos(), radius * 2, radius * 2, radius * 2);
         List<PlayerEntity> nearby = world.getEntitiesByClass(PlayerEntity.class, area,
                 p -> p.isAlive() && p.squaredDistanceTo(boss) <= radius * radius);
 
@@ -129,7 +129,7 @@ public class ChainLightningGoal extends Goal {
             }
 
             // Damage
-            entity.damage(boss.getDamageSources().lightningBolt(), damage);
+            entity.damage(world, boss.getDamageSources().lightningBolt(), damage);
 
             // Cosmetic lightning bolt (no fire, no mob conversion)
             LightningEntity bolt = new LightningEntity(EntityType.LIGHTNING_BOLT, world);

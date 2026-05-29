@@ -60,14 +60,14 @@ public class ChargeGoal extends Goal {
         LivingEntity target = boss.getTarget();
         if (target == null) return;
 
-        chargeDir = target.getPos().subtract(boss.getPos()).normalize();
+        chargeDir = target.getEntityPos().subtract(boss.getEntityPos()).normalize();
         chargeTick = -WINDUP_TICKS; // negative = windup phase
         maxChargeTicks = (int) (distance / (speed * 0.5f));
         maxChargeTicks = Math.max(5, Math.min(30, maxChargeTicks));
         alreadyHit.clear();
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Windup sound
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_RAVAGER_ROAR, SoundCategory.HOSTILE, 1.5f, 0.8f);
@@ -97,13 +97,13 @@ public class ChargeGoal extends Goal {
     public void tick() {
         chargeTick++;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             if (chargeTick <= 0) {
                 // Windup phase — boss stands still, particles gather
                 boss.setVelocity(0, boss.getVelocity().y, 0);
-                boss.velocityModified = true;
+                boss.velocityDirty = true;
 
                 world.spawnParticles(ParticleTypes.ANGRY_VILLAGER,
                         boss.getX(), boss.getY() + 2.0, boss.getZ(),
@@ -116,7 +116,7 @@ public class ChargeGoal extends Goal {
 
             // Charge phase — move fast
             boss.setVelocity(chargeDir.x * speed * 0.5, boss.getVelocity().y, chargeDir.z * speed * 0.5);
-            boss.velocityModified = true;
+            boss.velocityDirty = true;
 
             // Hit entities in path (only once per entity)
             Box hitbox = boss.getBoundingBox().expand(0.8);
@@ -125,10 +125,10 @@ public class ChargeGoal extends Goal {
                             && !boss.isMinion(e) && !alreadyHit.contains(e.getUuid()));
 
             for (LivingEntity entity : hit) {
-                entity.damage(boss.getDamageSources().mobAttack(boss), damage);
-                Vec3d knockDir = entity.getPos().subtract(boss.getPos()).normalize();
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), damage);
+                Vec3d knockDir = entity.getEntityPos().subtract(boss.getEntityPos()).normalize();
                 entity.addVelocity(knockDir.x * 1.5, 0.6, knockDir.z * 1.5);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
                 alreadyHit.add(entity.getUuid());
 
                 // Impact sound + particles
@@ -153,11 +153,11 @@ public class ChargeGoal extends Goal {
     public void stop() {
         cooldownTimer = cooldown;
         boss.setVelocity(0, boss.getVelocity().y, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
 
         // Impact stomp at end of charge
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 1.0f, 0.6f);
         }

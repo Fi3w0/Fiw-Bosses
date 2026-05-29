@@ -45,8 +45,8 @@ public class HealGoal extends Goal {
     public void start() {
         healTick = 0;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_EVOKER_PREPARE_WOLOLO, SoundCategory.HOSTILE, 2.0f, 1.0f);
 
@@ -77,8 +77,8 @@ public class HealGoal extends Goal {
         float healPerTick = amount / HEAL_DURATION;
         boss.heal(healPerTick);
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             // Heart particles
             if (healTick % 2 == 0) {

@@ -87,8 +87,8 @@ public class FireArrowGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         if (state == STATE_CHARGE) {
             // Lock look at target
@@ -116,10 +116,10 @@ public class FireArrowGoal extends Goal {
 
             // Fire the arrow
             if (tick >= chargeTime) {
-                Vec3d origin = boss.getPos().add(0, 1.4, 0);
+                Vec3d origin = boss.getEntityPos().add(0, 1.4, 0);
                 Vec3d targetPos = lockedTarget != null
-                        ? lockedTarget.getPos().add(0, 1.0, 0)
-                        : boss.getPos().add(boss.getRotationVector().multiply(range));
+                        ? lockedTarget.getEntityPos().add(0, 1.0, 0)
+                        : boss.getEntityPos().add(boss.getRotationVector().multiply(range));
                 arrowDir = targetPos.subtract(origin).normalize();
                 arrowPos = origin;
                 traveled = 0;
@@ -201,16 +201,16 @@ public class FireArrowGoal extends Goal {
                 p -> p.isAlive());
 
         for (PlayerEntity player : players) {
-            double dist = player.getPos().distanceTo(pos);
+            double dist = player.getEntityPos().distanceTo(pos);
             if (dist > explosionRadius) continue;
 
             float falloff = (float) (1.0 - dist / explosionRadius);
-            player.damage(boss.getDamageSources().magic(), damage * falloff);
+            player.damage(world, boss.getDamageSources().magic(), damage * falloff);
 
             // Knockback
-            Vec3d knock = player.getPos().subtract(pos).normalize().multiply(1.5 * falloff);
+            Vec3d knock = player.getEntityPos().subtract(pos).normalize().multiply(1.5 * falloff);
             player.addVelocity(knock.x, knock.y, knock.z);
-            player.velocityModified = true;
+            player.velocityDirty = true;
         }
     }
 }

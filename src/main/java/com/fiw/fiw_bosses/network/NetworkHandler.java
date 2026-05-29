@@ -8,18 +8,42 @@ import com.fiw.fiw_bosses.skin.SkinData;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
 public class NetworkHandler {
 
-    public static final Identifier BOSS_SKIN_CHANNEL = new Identifier(FiwBosses.MOD_ID, "boss_skin");
+    public record BossSkinPayload(int entityId, boolean slim, byte[] png) implements CustomPayload {
+        public static final CustomPayload.Id<BossSkinPayload> ID =
+                new CustomPayload.Id<>(Identifier.of(FiwBosses.MOD_ID, "boss_skin"));
+
+        public static final PacketCodec<PacketByteBuf, BossSkinPayload> CODEC = PacketCodec.of(
+                (value, buf) -> {
+                    buf.writeInt(value.entityId);
+                    buf.writeBoolean(value.slim);
+                    buf.writeByteArray(value.png);
+                },
+                buf -> new BossSkinPayload(buf.readInt(), buf.readBoolean(), buf.readByteArray())
+        );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {
+            return ID;
+        }
+    }
+
+    /** Called from {@code FiwBosses.onInitialize} — payload types live on both sides. */
+    public static void registerPayloadTypes() {
+        PayloadTypeRegistry.playS2C().register(BossSkinPayload.ID, BossSkinPayload.CODEC);
+    }
 
     public static void registerServerPackets() {
-        // Server doesn't receive skin packets, only sends them
+        // Server doesn't receive skin packets, only sends them.
     }
 
     public static void sendSkinToPlayer(ServerPlayerEntity player, BossEntity boss) {
@@ -29,7 +53,7 @@ public class NetworkHandler {
         if (skinData == null) {
             SkinCache.getSkinAsync(boss.getBossId()).thenAccept(data -> {
                 if (data != null) {
-                    player.server.execute(() -> doSendSkin(player, boss.getId(), data));
+                    player.getEntityWorld().getServer().execute(() -> doSendSkin(player, boss.getId(), data));
                 }
             });
             return;
@@ -39,21 +63,13 @@ public class NetworkHandler {
     }
 
     private static void doSendSkin(ServerPlayerEntity player, int entityId, SkinData skinData) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(entityId);
-        buf.writeBoolean(skinData.slim);
-        buf.writeByteArray(skinData.png);
-        ServerPlayNetworking.send(player, BOSS_SKIN_CHANNEL, buf);
+        ServerPlayNetworking.send(player, new BossSkinPayload(entityId, skinData.slim, skinData.png));
     }
 
     @Environment(EnvType.CLIENT)
     public static void registerClientReceivers() {
-        ClientPlayNetworking.registerGlobalReceiver(BOSS_SKIN_CHANNEL, (client, handler, buf, responseSender) -> {
-            int     entityId = buf.readInt();
-            boolean slim     = buf.readBoolean();
-            byte[]  skinData = buf.readByteArray();
-
-            client.execute(() -> ClientSkinManager.registerSkin(entityId, skinData, slim));
-        });
+        ClientPlayNetworking.registerGlobalReceiver(BossSkinPayload.ID, (payload, context) ->
+                context.client().execute(() ->
+                        ClientSkinManager.registerSkin(payload.entityId(), payload.png(), payload.slim())));
     }
 }

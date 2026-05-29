@@ -94,11 +94,11 @@ public class LightningRadialGoal extends Goal {
         jumpOriginY  = boss.getY();
 
         boss.addVelocity(0, 0.6, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
         boss.setInvulnerable(true);
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.HOSTILE, 1.5f, 1.5f);
         }
@@ -113,8 +113,8 @@ public class LightningRadialGoal extends Goal {
     public void tick() {
         tick++;
         spiralAngle += 18.0;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_JUMP    -> tickJump(world);
@@ -237,9 +237,9 @@ public class LightningRadialGoal extends Goal {
                 for (PlayerEntity player : victims) {
                     if (blade.hitSet.contains(player.getUuid())) continue;
                     blade.hitSet.add(player.getUuid());
-                    player.damage(boss.getDamageSources().magic(), damage);
+                    player.damage(world, boss.getDamageSources().magic(), damage);
                     player.addVelocity(blade.dir.x * 1.2, 0.3, blade.dir.z * 1.2);
-                    player.velocityModified = true;
+                    player.velocityDirty = true;
                     world.spawnParticles(ParticleTypes.ASH,
                             player.getX(), player.getY() + 1.0, player.getZ(),
                             8, 0.3, 0.5, 0.3, 0.1);

@@ -94,8 +94,8 @@ public class EssenceAbsorptionGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_WINDUP  -> tickWindup(world);
@@ -122,10 +122,10 @@ public class EssenceAbsorptionGoal extends Goal {
 
         if (tick >= WINDUP_TICKS) {
             // Launch projectile
-            Vec3d start = boss.getPos().add(0, 1.2, 0);
+            Vec3d start = boss.getEntityPos().add(0, 1.2, 0);
             Vec3d dir;
             if (target != null && target.isAlive()) {
-                dir = target.getPos().add(0, 1.0, 0).subtract(start).normalize();
+                dir = target.getEntityPos().add(0, 1.0, 0).subtract(start).normalize();
             } else {
                 dir = boss.getRotationVector();
             }
@@ -158,7 +158,7 @@ public class EssenceAbsorptionGoal extends Goal {
         // Steer toward nearest player (max 5° turn per tick)
         PlayerEntity nearest = findNearestPlayer(world, 15.0);
         if (nearest != null) {
-            Vec3d desired = nearest.getPos().add(0, 1.0, 0)
+            Vec3d desired = nearest.getEntityPos().add(0, 1.0, 0)
                     .subtract(projPos).normalize().multiply(projectileSpeed);
             projVel = steerToward(projVel, desired, Math.toRadians(5.0));
         }
@@ -199,7 +199,7 @@ public class EssenceAbsorptionGoal extends Goal {
     }
 
     private void onHit(ServerWorld world, PlayerEntity target) {
-        target.damage(boss.getDamageSources().magic(), damage);
+        target.damage(world, boss.getDamageSources().magic(), damage);
         target.addStatusEffect(
                 new StatusEffectInstance(StatusEffects.WEAKNESS, weaknessDuration, 1, false, true));
         boss.heal(healAmount);

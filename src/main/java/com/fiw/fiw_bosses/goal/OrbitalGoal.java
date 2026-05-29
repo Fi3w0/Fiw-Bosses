@@ -60,8 +60,8 @@ public class OrbitalGoal extends Goal {
         orbitalTick = 0;
         currentAngle = 0;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.BLOCK_BEACON_AMBIENT, SoundCategory.HOSTILE, 1.2f, 1.6f);
 
@@ -91,9 +91,9 @@ public class OrbitalGoal extends Goal {
         currentAngle = (currentAngle + speed) % 360;
         hitThisTick.clear();
 
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
         double cx = boss.getX();
         double cy = boss.getY() + 1.0;
         double cz = boss.getZ();
@@ -115,7 +115,7 @@ public class OrbitalGoal extends Goal {
                     p -> p.isAlive() && !hitThisTick.contains(p.getUuid()));
 
             for (PlayerEntity victim : victims) {
-                victim.damage(boss.getDamageSources().mobAttack(boss), damage);
+                victim.damage(world, boss.getDamageSources().mobAttack(boss), damage);
                 hitThisTick.add(victim.getUuid());
 
                 world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR,
@@ -137,8 +137,8 @@ public class OrbitalGoal extends Goal {
     public void stop() {
         cooldownTimer = cooldown;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Dispersal burst when orbitals disappear
             world.spawnParticles(ParticleTypes.END_ROD,
                     boss.getX(), boss.getY() + 1.0, boss.getZ(),

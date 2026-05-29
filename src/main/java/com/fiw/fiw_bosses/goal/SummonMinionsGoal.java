@@ -7,6 +7,7 @@ import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.entity.BossEntityRegistry;
 import com.fiw.fiw_bosses.entity.MinionEntity;
+import com.fiw.fiw_bosses.util.LegacyNbtToComponents;
 import com.fiw.fiw_bosses.util.TextUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.entity.Entity;
@@ -75,8 +76,8 @@ public class SummonMinionsGoal extends Goal {
     }
 
     private void summonMinions() {
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
         PhaseDefinition phase = boss.getPhaseManager().getCurrentPhase();
         if (phase == null || phase.minions == null) return;
 
@@ -153,7 +154,7 @@ public class SummonMinionsGoal extends Goal {
 
         if (def.isCustom()) {
             // Custom skin minion — use MinionEntity
-            MinionEntity minion = BossEntityRegistry.MINION_TYPE.create(world);
+            MinionEntity minion = BossEntityRegistry.MINION_TYPE.create(world, SpawnReason.MOB_SUMMONED);
             if (minion == null) return null;
             minion.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
             minion.applyMinionDefinition(def, boss);
@@ -172,29 +173,29 @@ public class SummonMinionsGoal extends Goal {
         Identifier typeId = Identifier.tryParse(def.baseEntity);
         if (typeId == null) return null;
 
-        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOrEmpty(typeId);
+        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOptionalValue(typeId);
         if (entityTypeOpt.isEmpty()) return null;
 
-        Entity entity = entityTypeOpt.get().create(world);
+        Entity entity = entityTypeOpt.get().create(world, SpawnReason.MOB_SUMMONED);
         if (entity == null) return null;
 
         entity.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
         if (entity instanceof MobEntity mob) {
             mob.initialize(world,
                     world.getLocalDifficulty(BlockPos.ofFloored(x, y, z)),
-                    SpawnReason.MOB_SUMMONED, null, null);
+                    SpawnReason.MOB_SUMMONED, null);
             mob.setPersistent();
 
             // Override stats
-            var healthAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+            var healthAttr = mob.getAttributeInstance(EntityAttributes.MAX_HEALTH);
             if (healthAttr != null) { healthAttr.setBaseValue(def.health); mob.setHealth(def.health); }
-            var armorAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_ARMOR);
+            var armorAttr = mob.getAttributeInstance(EntityAttributes.ARMOR);
             if (armorAttr != null) armorAttr.setBaseValue(def.armor);
-            var speedAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            var speedAttr = mob.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
             if (speedAttr != null) speedAttr.setBaseValue(def.speed);
-            var dmgAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+            var dmgAttr = mob.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE);
             if (dmgAttr != null) dmgAttr.setBaseValue(def.attackDamage);
-            var kbAttr = mob.getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+            var kbAttr = mob.getAttributeInstance(EntityAttributes.KNOCKBACK_RESISTANCE);
             if (kbAttr != null) kbAttr.setBaseValue(def.knockbackResistance);
 
             // Custom name
@@ -235,8 +236,8 @@ public class SummonMinionsGoal extends Goal {
         ItemStack stack = new ItemStack(item);
         if (entry.nbt != null && !entry.nbt.isEmpty()) {
             try {
-                NbtCompound tag = StringNbtReader.parse(entry.nbt);
-                stack.setNbt(tag);
+                NbtCompound tag = StringNbtReader.readCompound(entry.nbt);
+                LegacyNbtToComponents.apply(stack, tag, mob.getRegistryManager());
             } catch (Exception ignored) {}
         }
         mob.equipStack(slot, stack);
@@ -246,17 +247,17 @@ public class SummonMinionsGoal extends Goal {
         Identifier typeId = Identifier.tryParse(minionDef.entityType);
         if (typeId == null) return null;
 
-        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOrEmpty(typeId);
+        Optional<EntityType<?>> entityTypeOpt = Registries.ENTITY_TYPE.getOptionalValue(typeId);
         if (entityTypeOpt.isEmpty()) return null;
 
-        Entity entity = entityTypeOpt.get().create(world);
+        Entity entity = entityTypeOpt.get().create(world, SpawnReason.MOB_SUMMONED);
         if (entity == null) return null;
 
         entity.refreshPositionAndAngles(x, y, z, boss.getRandom().nextFloat() * 360, 0);
         if (entity instanceof MobEntity mob) {
             mob.initialize(world,
                     world.getLocalDifficulty(BlockPos.ofFloored(x, y, z)),
-                    SpawnReason.MOB_SUMMONED, null, null);
+                    SpawnReason.MOB_SUMMONED, null);
             mob.setPersistent();
             if (boss.getTarget() != null) {
                 mob.setTarget(boss.getTarget());

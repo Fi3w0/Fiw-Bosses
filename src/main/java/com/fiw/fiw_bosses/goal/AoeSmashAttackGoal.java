@@ -52,8 +52,8 @@ public class AoeSmashAttackGoal extends Goal {
     public void start() {
         windupTick = 0;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Windup sound — rising rumble
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, SoundCategory.HOSTILE, 1.5f, 0.5f);
@@ -69,8 +69,8 @@ public class AoeSmashAttackGoal extends Goal {
     public void tick() {
         windupTick++;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             // Windup: rising ground particles, expanding ring
             if (windupTick <= WINDUP_DURATION) {
@@ -104,10 +104,10 @@ public class AoeSmashAttackGoal extends Goal {
     }
 
     private void performSmash() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
-        Vec3d center = boss.getPos();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
+        Vec3d center = boss.getEntityPos();
 
         // Impact sound
         world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
@@ -124,12 +124,12 @@ public class AoeSmashAttackGoal extends Goal {
             double dist = entity.distanceTo(boss);
             if (dist <= radius) {
                 float finalDamage = damage * (1.0f - (float) (dist / radius) * 0.3f);
-                entity.damage(boss.getDamageSources().mobAttack(boss), finalDamage);
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), finalDamage);
 
-                Vec3d dir = entity.getPos().subtract(center).normalize();
+                Vec3d dir = entity.getEntityPos().subtract(center).normalize();
                 double yLaunch = 0.4 + (1.0 - dist / radius) * 0.4;
                 entity.addVelocity(dir.x * knockback, yLaunch, dir.z * knockback);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
                 hitCount++;
             }
         }

@@ -12,7 +12,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -21,7 +20,7 @@ import java.util.List;
 public class TrackingOrbGoal extends Goal {
 
     private static final DustParticleEffect DUST_PURPLE =
-            new DustParticleEffect(new Vector3f(0.6f, 0.1f, 0.9f), 1.2f);
+            new DustParticleEffect(0x991AE6, 1.2f);
 
     private static class OrbProjectile {
         Vec3d pos;
@@ -89,14 +88,14 @@ public class TrackingOrbGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         orbAngle += 3.0;
         double orbRad = Math.toRadians(orbAngle);
 
         // Figure-8 orbit — orbCenter moves in a figure-8 around the boss
-        Vec3d orbCenter = boss.getPos().add(
+        Vec3d orbCenter = boss.getEntityPos().add(
                 Math.cos(orbRad) * orbRadius,
                 1.5 + Math.sin(Math.toRadians(orbAngle * 0.7)) * 0.4,
                 Math.sin(orbRad) * orbRadius
@@ -144,7 +143,7 @@ public class TrackingOrbGoal extends Goal {
             }
 
             if (closest != null) {
-                Vec3d dir = closest.getPos().add(0, 1, 0)
+                Vec3d dir = closest.getEntityPos().add(0, 1, 0)
                         .subtract(orbCenter)
                         .normalize();
                 projectiles.add(new OrbProjectile(orbCenter, dir));
@@ -177,7 +176,7 @@ public class TrackingOrbGoal extends Goal {
 
             if (!victims.isEmpty()) {
                 PlayerEntity hit = victims.get(0);
-                hit.damage(boss.getDamageSources().magic(), (float) damage);
+                hit.damage(world, boss.getDamageSources().magic(), (float) damage);
                 world.spawnParticles(ParticleTypes.WITCH,
                         proj.pos.x, proj.pos.y, proj.pos.z,
                         6, 0.2, 0.2, 0.2, 0.1);

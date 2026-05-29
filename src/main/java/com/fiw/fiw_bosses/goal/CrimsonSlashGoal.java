@@ -12,7 +12,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -108,7 +107,7 @@ public class CrimsonSlashGoal extends Goal {
         // Compute initial clawDir from boss toward target
         LivingEntity target = boss.getTarget();
         if (target != null) {
-            Vec3d toTarget = target.getPos().subtract(boss.getPos());
+            Vec3d toTarget = target.getEntityPos().subtract(boss.getEntityPos());
             Vec3d horizontal = new Vec3d(toTarget.x, 0, toTarget.z);
             clawDir = horizontal.lengthSquared() > 0.0001 ? horizontal.normalize() : boss.getRotationVector();
         } else {
@@ -120,8 +119,8 @@ public class CrimsonSlashGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Always try to face target
         LivingEntity target = boss.getTarget();
@@ -136,7 +135,7 @@ public class CrimsonSlashGoal extends Goal {
                 double px = boss.getX() + Math.cos(a) * 1.5;
                 double pz = boss.getZ() + Math.sin(a) * 1.5;
                 world.spawnParticles(
-                        new DustParticleEffect(new Vector3f(0.8f, 0.0f, 0.2f), 1.0f),
+                        new DustParticleEffect(0xCC0033, 1.0f),
                         px, boss.getY() + 1.0, pz, 1, 0.05, 0.05, 0.05, 0.0);
             }
             world.spawnParticles(ParticleTypes.CRIT,
@@ -147,7 +146,7 @@ public class CrimsonSlashGoal extends Goal {
         if (tick == nextClawTick && currentClaw < clawCount) {
             // Update clawDir toward current target position
             if (target != null) {
-                Vec3d toTarget = target.getPos().subtract(boss.getPos());
+                Vec3d toTarget = target.getEntityPos().subtract(boss.getEntityPos());
                 Vec3d horizontal = new Vec3d(toTarget.x, 0, toTarget.z);
                 if (horizontal.lengthSquared() > 0.0001) {
                     clawDir = horizontal.normalize();
@@ -155,7 +154,7 @@ public class CrimsonSlashGoal extends Goal {
             }
 
             clawSize     = 1.0 + currentClaw * 0.5;
-            clawPos      = boss.getPos().add(0, 0.3, 0);
+            clawPos      = boss.getEntityPos().add(0, 0.3, 0);
             clawTraveled = 0;
             state        = STATE_SLASHING;
 
@@ -210,7 +209,7 @@ public class CrimsonSlashGoal extends Goal {
             world.spawnParticles(ParticleTypes.CRIT,
                     p.x, p.y + 0.05, p.z, 1, 0.05, 0.0, 0.05, 0.0);
             world.spawnParticles(
-                    new DustParticleEffect(new Vector3f(0.8f, 0.0f, 0.3f), 1.2f),
+                    new DustParticleEffect(0xCC004D, 1.2f),
                     p.x, p.y + 0.1, p.z, 1, 0.05, 0.0, 0.05, 0.0);
         }
 
@@ -218,7 +217,7 @@ public class CrimsonSlashGoal extends Goal {
         double fanHeight = 1.5 + clawSize * 0.4;
         for (double h = 0.5; h <= fanHeight; h += 0.4) {
             world.spawnParticles(
-                    new DustParticleEffect(new Vector3f(0.9f, 0.0f, 0.2f), 1.0f),
+                    new DustParticleEffect(0xE60033, 1.0f),
                     pos.x, pos.y + h, pos.z, 1, 0.05, 0.0, 0.05, 0.0);
             world.spawnParticles(ParticleTypes.CRIT,
                     pos.x, pos.y + h, pos.z, 1, 0.04, 0.0, 0.04, 0.0);
@@ -236,7 +235,7 @@ public class CrimsonSlashGoal extends Goal {
 
         float clawDamage = damage * (1.0f + clawIndex * 0.2f);
         for (PlayerEntity player : players) {
-            player.damage(boss.getDamageSources().magic(), clawDamage);
+            player.damage(world, boss.getDamageSources().magic(), clawDamage);
             hitPerClaw.get(clawIndex).add(player.getUuid());
         }
     }
@@ -251,7 +250,7 @@ public class CrimsonSlashGoal extends Goal {
 
         double ds = explosionRadius * 0.3;
         world.spawnParticles(
-                new DustParticleEffect(new Vector3f(0.7f, 0.0f, 0.2f), 2.0f),
+                new DustParticleEffect(0xB30033, 2.0f),
                 pos.x, pos.y, pos.z, 30, ds, ds, ds, 0.0);
 
         double ls = explosionRadius * 0.2;
@@ -285,16 +284,16 @@ public class CrimsonSlashGoal extends Goal {
                 p -> p.isAlive());
 
         for (PlayerEntity player : players) {
-            double dist = player.getPos().distanceTo(pos);
+            double dist = player.getEntityPos().distanceTo(pos);
             if (dist > explosionRadius) continue;
 
             float falloff = (float)(1.0 - dist / explosionRadius);
-            player.damage(boss.getDamageSources().magic(), damage * 1.5f * falloff);
+            player.damage(world, boss.getDamageSources().magic(), damage * 1.5f * falloff);
 
-            Vec3d knock = player.getPos().subtract(pos).normalize()
+            Vec3d knock = player.getEntityPos().subtract(pos).normalize()
                     .multiply(1.8 * falloff);
             player.addVelocity(knock.x, 0.8 * falloff, knock.z);
-            player.velocityModified = true;
+            player.velocityDirty = true;
         }
     }
 }

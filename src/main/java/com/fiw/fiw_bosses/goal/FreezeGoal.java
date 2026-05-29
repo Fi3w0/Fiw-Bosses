@@ -70,8 +70,8 @@ public class FreezeGoal extends Goal {
     public void start() {
         tick = 0;
         frozenTargets = new ArrayList<>();
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Collect targets once at start
         Box area = boss.getBoundingBox().expand(radius);
@@ -113,8 +113,8 @@ public class FreezeGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Re-apply frozen ticks every tick to hold the freeze in place
         frozenTargets.removeIf(e -> !e.isAlive());

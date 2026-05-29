@@ -1,11 +1,11 @@
 # FIW Bosses
 
-> Custom Boss Framework · NeoForge 1.21.1 & Fabric 1.20.1 · JSON-Driven · Server-Side Only
+> Custom Boss Framework · NeoForge 1.21.1 · Fabric 1.21.11 · Fabric 1.20.1 · JSON-Driven · Server-Side Only
 
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1_|_1.20.1-62B47A)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11_|_1.21.1_|_1.20.1-62B47A)](https://minecraft.net)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-F16436)](https://neoforged.net)
-[![Fabric](https://img.shields.io/badge/Fabric-1.20.1-DBB591)](https://fabricmc.net)
+[![Fabric](https://img.shields.io/badge/Fabric-1.21.11_|_1.20.1-DBB591)](https://fabricmc.net)
 [![License](https://img.shields.io/badge/License-GPL--v3-blue)](LICENSE)
 
 A data-driven boss framework — inspired by MythicMobs, built from scratch for my SMP. Define fully custom multi-phase bosses entirely through JSON. No coding, no restarts — drop a config, run `/boss reload`, and your boss is live.
@@ -15,9 +15,10 @@ A data-driven boss framework — inspired by MythicMobs, built from scratch for 
 | Loader | Minecraft | Status | Branch |
 |---|---|---|---|
 | **NeoForge** | **1.21.1** | **Active** — primary development target | [`main`](https://github.com/Fi3w0/Fiw-Bosses) |
+| **Fabric** | **1.21.11** | **Active** — current Fabric target | [`fabric-1.21.11`](https://github.com/Fi3w0/Fiw-Bosses/tree/fabric-1.21.11) |
 | Fabric | 1.20.1 | Legacy — may still receive occasional updates, but not guaranteed | [`legacy-fabric-1.20.1`](https://github.com/Fi3w0/Fiw-Bosses/tree/legacy-fabric-1.20.1) |
 
-Both loaders share the **same JSON schema, same 42 abilities, same feature set**. A boss config written for one works on the other. Development focus is on NeoForge 1.21.1 going forward; Fabric 1.20.1 is no longer the active branch but may still get ports of fixes and new abilities when practical.
+All three ports share the **same JSON schema, same 42 abilities, same feature set, same commands**. A boss config written for one works on every other — drop the same `.json` into NeoForge or Fabric and it behaves identically. Active development happens on NeoForge 1.21.1 and Fabric 1.21.11 in parallel; Fabric 1.20.1 is still buildable but no longer the primary target.
 
 ---
 
@@ -51,6 +52,16 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 | Java | 21 |
 | Client-side required | No |
 
+### Fabric 1.21.11 (active)
+
+| Dependency | Version |
+|---|---|
+| Minecraft | 1.21.11 |
+| Fabric Loader | 0.18.1 or newer |
+| Fabric API | 0.141.3+1.21.11 or newer |
+| Java | 21 |
+| Client-side required | No |
+
 ### Fabric 1.20.1 (legacy)
 
 | Dependency | Version |
@@ -70,10 +81,16 @@ Both loaders share the **same JSON schema, same 42 abilities, same feature set**
 2. Drop the NeoForge jar (`fiw-bosses-<version>-neoforge-1.21.1.jar`) into your `mods/` folder
 3. Start the server — configs live in `config/fiw_bosses/`
 
+**Fabric 1.21.11:**
+1. Install [Fabric Loader](https://fabricmc.net/use/installer/) 0.18.1+ for Minecraft 1.21.11
+2. Install [Fabric API](https://modrinth.com/mod/fabric-api) 0.141.3+1.21.11 or newer
+3. Drop the Fabric jar (`fiw-bosses-fabric-1.21.11-<version>.jar`) into your `mods/` folder
+4. Start the server — configs generate automatically in `config/fiw_bosses/`
+
 **Fabric 1.20.1 (legacy):**
 1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.20.1
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Drop the Fabric jar (`fiw-bosses-<version>-fabric-1.20.1.jar`) into your `mods/` folder
+3. Drop the Fabric jar (`fiw-bosses-fabric-1.20.1-<version>.jar`) into your `mods/` folder
 4. Start the server — configs generate automatically in `config/fiw_bosses/`
 
 ---
@@ -185,6 +202,13 @@ cd Fiw-Bosses
 ./gradlew build
 ```
 
+**Fabric 1.21.11:**
+```bash
+git clone -b fabric-1.21.11 https://github.com/Fi3w0/Fiw-Bosses
+cd Fiw-Bosses
+./gradlew build
+```
+
 **Fabric 1.20.1 (legacy branch):**
 ```bash
 git clone -b legacy-fabric-1.20.1 https://github.com/Fi3w0/Fiw-Bosses
@@ -214,7 +238,7 @@ See [LICENSE](LICENSE) for full terms.
 ## Credits
 
 - **Fi3w0** — design, mechanics, and direction
-- **Claude Opus 4.6 (Anthropic)** — assisted in code implementation
+- **Claude Opus 4.8 (Anthropic)** — assisted in code implementation
 
 ---
 

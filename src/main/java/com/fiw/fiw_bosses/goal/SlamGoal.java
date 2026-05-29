@@ -83,8 +83,8 @@ public class SlamGoal extends Goal {
         tick = 0;
         slamDone = false;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             // Taunt
             if (taunt != null) {
@@ -114,10 +114,10 @@ public class SlamGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
-        Vec3d bossPos = boss.getPos();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
+        Vec3d bossPos = boss.getEntityPos();
 
         // ── WINDUP PHASE ──────────────────────────────────────────────────────
         if (tick <= windupTicks) {
@@ -142,7 +142,7 @@ public class SlamGoal extends Goal {
                 double px = bossPos.x + Math.cos(armAngle) * spiralDist;
                 double pz = bossPos.z + Math.sin(armAngle) * spiralDist;
                 double py = bossPos.y + 0.5 + progress * 0.8;
-                world.spawnParticles(ParticleTypes.DRAGON_BREATH, px, py, pz, 1, 0.05, 0.05, 0.05, 0.01);
+                world.spawnParticles(net.minecraft.particle.DragonBreathParticleEffect.of(ParticleTypes.DRAGON_BREATH, 1.0f), px, py, pz, 1, 0.05, 0.05, 0.05, 0.01);
             }
 
             // Ground warning ring — expands to full radius over windup
@@ -202,11 +202,11 @@ public class SlamGoal extends Goal {
         if (target != null && target.isAlive()) {
             double dist = boss.distanceTo(target);
             if (dist > teleportRange) {
-                Vec3d dir = target.getPos().subtract(bossPos).normalize();
+                Vec3d dir = target.getEntityPos().subtract(bossPos).normalize();
                 double tx = target.getX() - dir.x * 1.8;
                 double tz = target.getZ() - dir.z * 1.8;
-                boss.teleport(tx, target.getY(), tz);
-                bossPos = boss.getPos();
+                boss.requestTeleport(tx, target.getY(), tz);
+                bossPos = boss.getEntityPos();
 
                 // Shadow-step smoke burst
                 world.spawnParticles(ParticleTypes.POOF, bossPos.x, bossPos.y + 1, bossPos.z,
@@ -235,12 +235,12 @@ public class SlamGoal extends Goal {
             double dist = entity.distanceTo(boss);
             if (dist <= radius) {
                 float falloff = 1.0f - (float)(dist / radius) * 0.4f;
-                entity.damage(boss.getDamageSources().mobAttack(boss), damage * falloff);
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), damage * falloff);
 
-                Vec3d dir = entity.getPos().subtract(center).normalize();
+                Vec3d dir = entity.getEntityPos().subtract(center).normalize();
                 double yLaunch = 0.5 + (1.0 - dist / radius) * 0.6;
                 entity.addVelocity(dir.x * knockback, yLaunch, dir.z * knockback);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
             }
         }
 
@@ -259,7 +259,7 @@ public class SlamGoal extends Goal {
         }
 
         // Central impact flash
-        world.spawnParticles(ParticleTypes.FLASH, center.x, center.y + 0.5, center.z, 1, 0, 0, 0, 0);
+        world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF), center.x, center.y + 0.5, center.z, 1, 0, 0, 0, 0);
 
         // Upward debris column
         world.spawnParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE,

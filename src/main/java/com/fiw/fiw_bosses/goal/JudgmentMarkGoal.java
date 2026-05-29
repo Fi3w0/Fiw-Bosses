@@ -89,8 +89,8 @@ public class JudgmentMarkGoal extends Goal {
         active = true;
         markedUuids.clear();
 
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Mark all players in range
         List<PlayerEntity> targets = getPlayersInRange(castRadius);
@@ -111,8 +111,8 @@ public class JudgmentMarkGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_CAST  -> tickCast(world);
@@ -134,7 +134,7 @@ public class JudgmentMarkGoal extends Goal {
             double pz = boss.getZ() + Math.sin(a) * radius;
             world.spawnParticles(ParticleTypes.ENCHANT,
                     px, boss.getY() + 1.2, pz, 1, 0, 0.1, 0, 0.05);
-            world.spawnParticles(ParticleTypes.DRAGON_BREATH,
+            world.spawnParticles(net.minecraft.particle.DragonBreathParticleEffect.of(ParticleTypes.DRAGON_BREATH, 1.0f),
                     px, boss.getY() + 0.3, pz, 1, 0, 0, 0, 0.02);
         }
 
@@ -222,7 +222,7 @@ public class JudgmentMarkGoal extends Goal {
                         player.getX(), player.getY() + 1.0, player.getZ(),
                         15, 0.4, 0.5, 0.4, 0.1);
             } else {
-                player.damage(boss.getDamageSources().magic(), damage);
+                player.damage(world, boss.getDamageSources().magic(), damage);
                 world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
                         player.getX(), player.getY() + 0.5, player.getZ(),
                         1, 0, 0, 0, 0);
@@ -235,7 +235,7 @@ public class JudgmentMarkGoal extends Goal {
         // Big explosion at boss
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
                 boss.getX(), boss.getY() + 1.0, boss.getZ(), 3, 0.5, 0.5, 0.5, 0);
-        world.spawnParticles(ParticleTypes.DRAGON_BREATH,
+        world.spawnParticles(net.minecraft.particle.DragonBreathParticleEffect.of(ParticleTypes.DRAGON_BREATH, 1.0f),
                 boss.getX(), boss.getY() + 1.0, boss.getZ(), 40, 2.0, 1.0, 2.0, 0.05);
         world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                 SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 2.0f, 0.7f);
@@ -258,7 +258,7 @@ public class JudgmentMarkGoal extends Goal {
     }
 
     private List<PlayerEntity> getPlayersInRange(double radius) {
-        return boss.getWorld().getEntitiesByClass(PlayerEntity.class,
+        return boss.getEntityWorld().getEntitiesByClass(PlayerEntity.class,
                 new Box(boss.getX() - radius, boss.getY() - 4, boss.getZ() - radius,
                         boss.getX() + radius, boss.getY() + 4, boss.getZ() + radius),
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative());
@@ -277,8 +277,8 @@ public class JudgmentMarkGoal extends Goal {
         cooldownTimer = cooldown;
         active = false;
         // Safety cleanup: remove Glowing from any still-marked players
-        if (!boss.getWorld().isClient) {
-            ServerWorld sw = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld sw = (ServerWorld) boss.getEntityWorld();
             for (PlayerEntity p : resolveMarked(sw)) {
                 p.removeStatusEffect(StatusEffects.GLOWING);
             }

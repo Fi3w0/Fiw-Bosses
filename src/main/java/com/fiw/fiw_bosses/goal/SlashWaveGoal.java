@@ -85,8 +85,8 @@ public class SlashWaveGoal extends Goal {
         if (target != null) boss.getLookControl().lookAt(target, 360, 90);
         lockOrientation();
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Charge sound
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.HOSTILE, 1.5f, 0.25f);
@@ -114,10 +114,10 @@ public class SlashWaveGoal extends Goal {
     public void tick() {
         tick++;
         boss.setVelocity(0, boss.getVelocity().y, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
 
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // ── CHARGE ────────────────────────────────────────────────────────────
         if (tick <= chargeTime) {
@@ -177,7 +177,7 @@ public class SlashWaveGoal extends Goal {
 
         // Flash at mid-range
         if (traveled >= range * 0.5 - speed && traveled <= range * 0.5 + speed) {
-            world.spawnParticles(ParticleTypes.FLASH,
+            world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                     slashPos.x, slashPos.y + 1.0, slashPos.z, 1, 0, 0, 0, 0);
         }
 
@@ -190,16 +190,16 @@ public class SlashWaveGoal extends Goal {
                 e -> e != boss && e.isAlive() && !boss.isMinion(e) && !alreadyHit.contains(e.getUuid()));
 
         for (LivingEntity victim : victims) {
-            victim.damage(boss.getDamageSources().mobAttack(boss), damage);
+            victim.damage(world, boss.getDamageSources().mobAttack(boss), damage);
             alreadyHit.add(victim.getUuid());
 
             // Knockback sideways (perpendicular to slash direction adds disorientation)
-            Vec3d knock = victim.getPos().subtract(slashPos);
+            Vec3d knock = victim.getEntityPos().subtract(slashPos);
             double sideComponent = knock.dotProduct(right);
             Vec3d knockDir = (sideComponent >= 0 ? right : right.negate())
                     .add(forward.multiply(0.4)).normalize();
             victim.addVelocity(knockDir.x * 0.9, 0.5, knockDir.z * 0.9);
-            victim.velocityModified = true;
+            victim.velocityDirty = true;
 
             world.spawnParticles(ParticleTypes.CRIT,
                     victim.getX(), victim.getY() + victim.getHeight() / 2, victim.getZ(),
@@ -213,7 +213,7 @@ public class SlashWaveGoal extends Goal {
 
         // End burst when slash reaches max range
         if (traveled >= range) {
-            world.spawnParticles(ParticleTypes.FLASH,
+            world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                     slashPos.x, slashPos.y + 1.0, slashPos.z, 1, 0, 0, 0, 0);
             world.spawnParticles(ParticleTypes.CRIT,
                     slashPos.x, slashPos.y + 1.0, slashPos.z,
@@ -232,7 +232,7 @@ public class SlashWaveGoal extends Goal {
         Vec3d fwd = boss.getRotationVec(1.0f);
         forward = new Vec3d(fwd.x, 0, fwd.z).normalize();
         right   = new Vec3d(-forward.z, 0, forward.x);
-        origin  = boss.getPos();
+        origin  = boss.getEntityPos();
         slashPos = origin;
     }
 }

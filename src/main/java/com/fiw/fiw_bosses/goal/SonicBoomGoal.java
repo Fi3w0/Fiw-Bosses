@@ -69,13 +69,13 @@ public class SonicBoomGoal extends Goal {
     @Override
     public void start() {
         tick = 0;
-        chargeOrigin = boss.getPos();
+        chargeOrigin = boss.getEntityPos();
 
         LivingEntity target = boss.getTarget();
         if (target != null) boss.getLookControl().lookAt(target, 360, 90);
 
-        if (!boss.getWorld().isClient) {
-            boss.getWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
+        if (!boss.getEntityWorld().isClient()) {
+            boss.getEntityWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, SoundCategory.HOSTILE, 2.0f, 0.6f);
         }
     }
@@ -89,10 +89,10 @@ public class SonicBoomGoal extends Goal {
     public void tick() {
         tick++;
         boss.setVelocity(0, boss.getVelocity().y, 0);
-        boss.velocityModified = true;
+        boss.velocityDirty = true;
 
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Keep facing target during charge
         if (tick < chargeTime) {
@@ -172,7 +172,7 @@ public class SonicBoomGoal extends Goal {
                 e -> e != boss && e.isAlive() && !boss.isMinion(e));
 
         for (LivingEntity entity : targets) {
-            Vec3d toEntity = entity.getPos().subtract(boss.getPos());
+            Vec3d toEntity = entity.getEntityPos().subtract(boss.getEntityPos());
             double dist = toEntity.length();
             if (dist > radius) continue;
 
@@ -183,7 +183,7 @@ public class SonicBoomGoal extends Goal {
             }
 
             // Sonic boom ignores armor — use magic damage source
-            entity.damage(boss.getDamageSources().magic(), damage);
+            entity.damage(world, boss.getDamageSources().magic(), damage);
 
             // Knockback away from boss along the boom direction
             Vec3d knockDir = new Vec3d(toEntity.x, 0.3, toEntity.z).normalize();
@@ -192,7 +192,7 @@ public class SonicBoomGoal extends Goal {
                     knockDir.x * knockback * falloff,
                     0.5 + knockDir.y * knockback * falloff,
                     knockDir.z * knockback * falloff);
-            entity.velocityModified = true;
+            entity.velocityDirty = true;
 
             // Darkness effect
             if (darkness) {

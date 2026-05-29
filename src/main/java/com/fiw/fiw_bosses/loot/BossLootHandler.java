@@ -4,6 +4,7 @@ import com.fiw.fiw_bosses.FiwBosses;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.LootEntry;
 import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.util.LegacyNbtToComponents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
@@ -46,15 +47,15 @@ public final class BossLootHandler {
 
             if (entry.nbt != null && !entry.nbt.isEmpty()) {
                 try {
-                    NbtCompound nbt = StringNbtReader.parse(entry.nbt);
-                    stack.setNbt(nbt);
+                    NbtCompound nbt = StringNbtReader.readCompound(entry.nbt);
+                    LegacyNbtToComponents.apply(stack, nbt, entity.getRegistryManager());
                 } catch (Exception e) {
                     FiwBosses.LOGGER.warn("Failed to parse loot NBT for {}: {}", entry.item, e.getMessage());
                 }
             }
 
             ItemEntity itemEntity = new ItemEntity(
-                    entity.getWorld(),
+                    entity.getEntityWorld(),
                     entity.getX(),
                     entity.getY() + 0.5,
                     entity.getZ(),
@@ -65,7 +66,7 @@ public final class BossLootHandler {
                     0.3,
                     (entity.getRandom().nextDouble() - 0.5) * 0.3
             );
-            entity.getWorld().spawnEntity(itemEntity);
+            entity.getEntityWorld().spawnEntity(itemEntity);
         }
     }
 }

@@ -53,9 +53,9 @@ public class DodgeGoal extends Goal {
     }
 
     private void performDodge() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         Vec3d look = boss.getRotationVec(1.0f).normalize();
         boolean dodgeRight = boss.getRandom().nextBoolean();
@@ -63,7 +63,7 @@ public class DodgeGoal extends Goal {
                 ? new Vec3d(-look.z, 0, look.x)
                 : new Vec3d(look.z, 0, -look.x);
 
-        Vec3d dodgeTarget = boss.getPos().add(sideDir.multiply(distance));
+        Vec3d dodgeTarget = boss.getEntityPos().add(sideDir.multiply(distance));
         BlockPos groundCheck = new BlockPos(
                 (int) dodgeTarget.x, (int) (dodgeTarget.y - 1), (int) dodgeTarget.z);
 
@@ -81,7 +81,7 @@ public class DodgeGoal extends Goal {
                     SoundEvents.ENTITY_PHANTOM_FLAP, SoundCategory.HOSTILE, 1.0f, 1.5f);
 
             boss.setVelocity(sideDir.multiply(0.9).add(0, 0.15, 0));
-            boss.velocityModified = true;
+            boss.velocityDirty = true;
         }
     }
 }

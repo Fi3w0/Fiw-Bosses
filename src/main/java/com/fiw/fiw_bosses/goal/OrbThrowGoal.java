@@ -12,7 +12,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -46,9 +45,9 @@ public class OrbThrowGoal extends Goal {
     private Set<UUID>    hitPlayers;
 
     private static final DustParticleEffect DUST_GREEN  =
-            new DustParticleEffect(new Vector3f(0.2f, 1.0f, 0.3f), 1.2f);
+            new DustParticleEffect(0x33FF4D, 1.2f);
     private static final DustParticleEffect DUST_YELLOW =
-            new DustParticleEffect(new Vector3f(0.9f, 0.9f, 0.1f), 1.0f);
+            new DustParticleEffect(0xE6E61A, 1.0f);
 
     public OrbThrowGoal(BossEntity boss, int cooldownTicks, JsonObject params) {
         this.boss           = boss;
@@ -78,7 +77,7 @@ public class OrbThrowGoal extends Goal {
         active   = true;
         orbAngle = 0.0;
         traveled = 0.0;
-        orbPos   = boss.getPos().add(0, 1.2, 0);
+        orbPos   = boss.getEntityPos().add(0, 1.2, 0);
         flyDir   = null;
         hitPlayers.clear();
     }
@@ -91,8 +90,8 @@ public class OrbThrowGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_ORBIT -> tickOrbit(world);
@@ -109,7 +108,7 @@ public class OrbThrowGoal extends Goal {
         orbAngle += 4.5;
         double rad = Math.toRadians(orbAngle);
 
-        Vec3d orbCenter = boss.getPos()
+        Vec3d orbCenter = boss.getEntityPos()
                 .add(0, 1.2, 0)
                 .add(Math.cos(rad) * 2.2, 0, Math.sin(rad) * 2.2);
 
@@ -162,13 +161,13 @@ public class OrbThrowGoal extends Goal {
         // Transition to fly state
         if (tick >= orbitTime) {
             if (target != null && target.isAlive()) {
-                flyDir = target.getPos().add(0, 1, 0)
-                        .subtract(boss.getPos().add(0, 1.2, 0))
+                flyDir = target.getEntityPos().add(0, 1, 0)
+                        .subtract(boss.getEntityPos().add(0, 1.2, 0))
                         .normalize();
             } else {
                 flyDir = boss.getRotationVector().normalize();
             }
-            orbPos = boss.getPos().add(0, 1.2, 0);
+            orbPos = boss.getEntityPos().add(0, 1.2, 0);
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_ENDER_EYE_LAUNCH, SoundCategory.HOSTILE, 1.5f, 0.8f);
             state = STATE_FLY;
@@ -276,7 +275,7 @@ public class OrbThrowGoal extends Goal {
             double factor = 1.0 - (actualDist / explosionRadius);
             if (factor <= 0) continue;
 
-            player.damage(boss.getDamageSources().magic(), (float)(damage * factor));
+            player.damage(world, boss.getDamageSources().magic(), (float)(damage * factor));
 
             // Knockback direction
             double len = Math.sqrt(dx * dx + dz * dz);
@@ -284,7 +283,7 @@ public class OrbThrowGoal extends Goal {
                 double kx = (dx / len) * knockback * factor;
                 double kz = (dz / len) * knockback * factor;
                 player.addVelocity(kx, 0.6 * factor, kz);
-                player.velocityModified = true;
+                player.velocityDirty = true;
             }
         }
     }

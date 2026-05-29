@@ -3,6 +3,7 @@ package com.fiw.fiw_bosses.entity;
 import com.fiw.fiw_bosses.FiwBosses;
 import com.fiw.fiw_bosses.config.*;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
+import com.fiw.fiw_bosses.util.LegacyNbtToComponents;
 import com.fiw.fiw_bosses.util.TextUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,6 +22,9 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -83,13 +87,13 @@ public class BossEntity extends HostileEntity {
 
     public static DefaultAttributeContainer.Builder createBossAttributes() {
         return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH,       200.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED,   0.3)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE,    10.0)
-                .add(EntityAttributes.GENERIC_ARMOR,            0.0)
-                .add(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE, 0.5)
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE,     64.0)
-                .add(EntityAttributes.GENERIC_ATTACK_KNOCKBACK, 1.5);
+                .add(EntityAttributes.MAX_HEALTH,           200.0)
+                .add(EntityAttributes.MOVEMENT_SPEED,       0.3)
+                .add(EntityAttributes.ATTACK_DAMAGE,        10.0)
+                .add(EntityAttributes.ARMOR,                0.0)
+                .add(EntityAttributes.KNOCKBACK_RESISTANCE, 0.5)
+                .add(EntityAttributes.FOLLOW_RANGE,         64.0)
+                .add(EntityAttributes.ATTACK_KNOCKBACK,     1.5);
     }
 
     // ── Definition / setup ───────────────────────────────────────────────────
@@ -101,16 +105,16 @@ public class BossEntity extends HostileEntity {
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);
 
-        Objects.requireNonNull(getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH))
+        Objects.requireNonNull(getAttributeInstance(EntityAttributes.MAX_HEALTH))
                .setBaseValue(def.health);
         setHealth(def.health);
-        Objects.requireNonNull(getAttributeInstance(EntityAttributes.GENERIC_ARMOR))
+        Objects.requireNonNull(getAttributeInstance(EntityAttributes.ARMOR))
                .setBaseValue(def.armor);
-        Objects.requireNonNull(getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED))
+        Objects.requireNonNull(getAttributeInstance(EntityAttributes.MOVEMENT_SPEED))
                .setBaseValue(def.speed);
-        Objects.requireNonNull(getAttributeInstance(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE))
+        Objects.requireNonNull(getAttributeInstance(EntityAttributes.KNOCKBACK_RESISTANCE))
                .setBaseValue(def.knockbackResistance);
-        Objects.requireNonNull(getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE))
+        Objects.requireNonNull(getAttributeInstance(EntityAttributes.ATTACK_DAMAGE))
                .setBaseValue(def.attackDamage);
 
         Text barName = TextUtil.parseColorCodes(def.displayName);
@@ -160,7 +164,8 @@ public class BossEntity extends HostileEntity {
         ItemStack stack = new ItemStack(item);
         if (entry.nbt != null && !entry.nbt.isEmpty()) {
             try {
-                stack.setNbt(StringNbtReader.parse(entry.nbt));
+                NbtCompound parsed = StringNbtReader.readCompound(entry.nbt);
+                LegacyNbtToComponents.apply(stack, parsed, this.getRegistryManager());
             } catch (Exception e) {
                 FiwBosses.LOGGER.warn("Failed to parse NBT for equipment slot {}: {}", slot, e.getMessage());
             }
@@ -176,22 +181,20 @@ public class BossEntity extends HostileEntity {
     // ── Tick ─────────────────────────────────────────────────────────────────
 
     @Override
-    protected void mobTick() {
+    protected void mobTick(ServerWorld world) {
         // Drain deferred goal actions before goalSelector.tick().
         Runnable action;
         while ((action = pendingGoalActions.poll()) != null) {
             action.run();
         }
 
-        super.mobTick();
+        super.mobTick(world);
 
-        if (!getWorld().isClient) {
-            tickBossBar();
-            tickAggroSwitch();
-            tickStrafing();
-            tickIdleSystem();
-            tickDialogueSystem();
-        }
+        tickBossBar();
+        tickAggroSwitch();
+        tickStrafing();
+        tickIdleSystem();
+        tickDialogueSystem();
 
         if (phaseManager != null) {
             phaseManager.tick();
@@ -215,7 +218,7 @@ public class BossEntity extends HostileEntity {
         // Rebuild the player set every tick: clear first to automatically evict
         // dead / spectator / out-of-range players (including respawned entities).
         bossBar.clearPlayers();
-        if (getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+        if (getEntityWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
             for (ServerPlayerEntity sp : sw.getPlayers()) {
                 if (sp.isAlive() && !sp.isSpectator()
                         && sp.squaredDistanceTo(this) <= 64 * 64) {
@@ -229,7 +232,7 @@ public class BossEntity extends HostileEntity {
 
     @Override
     protected ActionResult interactMob(PlayerEntity player, Hand hand) {
-        if (!getWorld().isClient && bossState == BossState.INACTIVE) {
+        if (!getEntityWorld().isClient() && bossState == BossState.INACTIVE) {
             startPreFightSequence();
             return ActionResult.SUCCESS;
         }
@@ -292,7 +295,7 @@ public class BossEntity extends HostileEntity {
                         // blocks all damage while in PRE_DEATH, which would prevent death.
                         bossState = BossState.ACTIVE;
                         setInvulnerable(false);
-                        this.kill();
+                        this.kill((ServerWorld) getEntityWorld());
                     }
             );
         }
@@ -318,7 +321,7 @@ public class BossEntity extends HostileEntity {
 
     private void sendDialogueLine(String line) {
         Text text = TextUtil.parseColorCodes(line);
-        for (var player : getWorld().getPlayers()) {
+        for (var player : getEntityWorld().getPlayers()) {
             if (player instanceof ServerPlayerEntity sp
                     && sp.squaredDistanceTo(this) <= 80 * 80) {
                 sp.sendMessage(text, false);
@@ -329,7 +332,7 @@ public class BossEntity extends HostileEntity {
     // ── Damage ────────────────────────────────────────────────────────────────
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
+    public boolean damage(ServerWorld world, DamageSource source, float amount) {
         // Fully immune while inactive / mid-dialogue
         if (bossState == BossState.INACTIVE
                 || bossState == BossState.PRE_FIGHT
@@ -355,12 +358,10 @@ public class BossEntity extends HostileEntity {
         }
 
         // Track last hit for GuardianShieldGoal
-        if (!getWorld().isClient) {
-            lastDamageTick     = getWorld().getTime();
-            lastDamageAttacker = attacker;
-        }
+        lastDamageTick     = world.getTime();
+        lastDamageAttacker = attacker;
 
-        boolean result = super.damage(source, amount);
+        boolean result = super.damage(world, source, amount);
 
         if (result) idleTimer = 0;
 
@@ -378,12 +379,12 @@ public class BossEntity extends HostileEntity {
 
     /** Applies bonus magic damage to the marked target on every successful melee hit. */
     @Override
-    public boolean tryAttack(Entity target) {
-        boolean result = super.tryAttack(target);
+    public boolean tryAttack(ServerWorld world, Entity target) {
+        boolean result = super.tryAttack(world, target);
         if (result && markedTarget != null && markDamageBonus > 0
                 && target.getUuid().equals(markedTarget)
                 && target instanceof LivingEntity le) {
-            le.damage(getDamageSources().magic(), markDamageBonus);
+            le.damage(world, getDamageSources().magic(), markDamageBonus);
         }
         return result;
     }
@@ -396,7 +397,7 @@ public class BossEntity extends HostileEntity {
     @Override
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
-        if (!getWorld().isClient && definition != null) {
+        if (!getEntityWorld().isClient() && definition != null) {
             BossLootHandler.dropLoot(this, definition);
         }
         bossBar.clearPlayers();
@@ -411,21 +412,32 @@ public class BossEntity extends HostileEntity {
     // ── NBT persistence ───────────────────────────────────────────────────────
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-        if (bossId != null) nbt.putString("BossId", bossId);
+    protected void writeCustomData(WriteView view) {
+        super.writeCustomData(view);
+        writeBossCustomData(view);
+    }
+
+    /** Hook so {@link MinionEntity} can replace boss-specific persistence with its own. */
+    protected void writeBossCustomData(WriteView view) {
+        if (bossId != null) view.putString("BossId", bossId);
         if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
-            nbt.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
-        nbt.putString("BossState", bossState.name());
-        nbt.putBoolean("PreDeathTriggered", preDeathTriggered);
+            view.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
+        view.putString("BossState", bossState.name());
+        view.putBoolean("PreDeathTriggered", preDeathTriggered);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt); // Restores vanilla fields (Health, etc.)
-        if (!nbt.contains("BossId")) return;
+    protected void readCustomData(ReadView view) {
+        super.readCustomData(view); // Restores vanilla fields (Health, etc.)
+        readBossCustomData(view);
+    }
 
-        this.bossId = nbt.getString("BossId");
+    /** Hook so {@link MinionEntity} can replace boss-specific persistence with its own. */
+    protected void readBossCustomData(ReadView view) {
+        var bossIdOpt = view.getOptionalString("BossId");
+        if (bossIdOpt.isEmpty()) return;
+
+        this.bossId = bossIdOpt.get();
         BossDefinition def = BossConfigLoader.getDefinition(bossId);
         if (def == null) {
             FiwBosses.LOGGER.warn("Boss definition '{}' not found, entity will be removed", bossId);
@@ -444,15 +456,16 @@ public class BossEntity extends HostileEntity {
         }
 
         // Restore saved phase silently (no transition messages or effects).
-        if (nbt.contains("BossPhase") && phaseManager != null) {
-            int savedPhase = nbt.getInt("BossPhase");
-            if (savedPhase > 0) phaseManager.restoreToPhase(savedPhase);
+        int savedPhase = view.getInt("BossPhase", -1);
+        if (savedPhase > 0 && phaseManager != null) {
+            phaseManager.restoreToPhase(savedPhase);
         }
 
         // Restore boss state (overrides what applyDefinition set).
-        if (nbt.contains("BossState")) {
+        var stateOpt = view.getOptionalString("BossState");
+        if (stateOpt.isPresent()) {
             BossState savedState;
-            try { savedState = BossState.valueOf(nbt.getString("BossState")); }
+            try { savedState = BossState.valueOf(stateOpt.get()); }
             catch (IllegalArgumentException e) { savedState = BossState.ACTIVE; }
 
             // PRE_FIGHT → INACTIVE on reload (don't resume mid-dialogue)
@@ -462,8 +475,7 @@ public class BossEntity extends HostileEntity {
             this.bossState = savedState;
         }
 
-        if (nbt.contains("PreDeathTriggered"))
-            this.preDeathTriggered = nbt.getBoolean("PreDeathTriggered");
+        this.preDeathTriggered = view.getBoolean("PreDeathTriggered", false);
 
         // Ensure goals are cleared if boss reloaded in INACTIVE state.
         if (this.bossState == BossState.INACTIVE) clearGoalsForInactive();
@@ -489,7 +501,7 @@ public class BossEntity extends HostileEntity {
         aggroSwitchTimer = AGGRO_SWITCH_MIN + getRandom().nextInt(AGGRO_SWITCH_MAX - AGGRO_SWITCH_MIN);
 
         LivingEntity current = getTarget();
-        List<PlayerEntity> nearbyPlayers = getWorld().getEntitiesByClass(
+        List<PlayerEntity> nearbyPlayers = getEntityWorld().getEntitiesByClass(
                 PlayerEntity.class, getBoundingBox().expand(48),
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative());
 
@@ -535,7 +547,7 @@ public class BossEntity extends HostileEntity {
         if (definition == null || definition.idleTimeout <= 0) return;
         if (bossState != BossState.ACTIVE) return;
 
-        boolean playerNearby = !getWorld().getEntitiesByClass(
+        boolean playerNearby = !getEntityWorld().getEntitiesByClass(
                 PlayerEntity.class, getBoundingBox().expand(64),
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative()).isEmpty();
 
@@ -558,7 +570,10 @@ public class BossEntity extends HostileEntity {
 
     // ── Misc ─────────────────────────────────────────────────────────────────
 
-    @Override
+    // TODO 1.21.11 port: isImmuneToExplosion() was renamed/removed. Re-implement
+    // explosion immunity via isInvulnerableTo(ServerWorld, DamageSource) when
+    // verifying behaviour in an IDE. Boss still takes 0 damage via damage()
+    // override during PRE_DEATH so loss of vanilla pushback only.
     public boolean isImmuneToExplosion() { return true; }
 
     // ── Minion management ────────────────────────────────────────────────────

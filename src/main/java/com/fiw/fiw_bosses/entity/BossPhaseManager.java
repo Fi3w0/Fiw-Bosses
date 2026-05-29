@@ -19,13 +19,12 @@ import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class BossPhaseManager {
 
-    private static final UUID SPEED_MODIFIER_UUID = UUID.fromString("b3f40c00-cafe-4b49-9a6a-e1f1c5d1e7a1");
-    private static final UUID DAMAGE_MODIFIER_UUID = UUID.fromString("b3f40c00-cafe-4b49-9a6a-e1f1c5d1e7a2");
+    private static final Identifier SPEED_MODIFIER_ID  = Identifier.of("fiw_bosses", "phase_speed");
+    private static final Identifier DAMAGE_MODIFIER_ID = Identifier.of("fiw_bosses", "phase_damage");
 
     private final BossEntity boss;
     private final List<PhaseDefinition> phases;
@@ -77,7 +76,7 @@ public class BossPhaseManager {
         boolean isInitial = currentPhaseIndex == -1;
         currentPhaseIndex = newIndex;
 
-        if (!isInitial && !boss.getWorld().isClient) {
+        if (!isInitial && !boss.getEntityWorld().isClient()) {
             playTransitionEffects(phase);
         }
 
@@ -132,30 +131,30 @@ public class BossPhaseManager {
     }
 
     private void applyStatModifiers(PhaseDefinition phase) {
-        var speedAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        var damageAttr = boss.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        var speedAttr = boss.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+        var damageAttr = boss.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE);
 
         if (speedAttr != null) {
-            speedAttr.removeModifier(SPEED_MODIFIER_UUID);
+            speedAttr.removeModifier(SPEED_MODIFIER_ID);
             if (phase.speedMultiplier != 1.0f) {
                 speedAttr.addTemporaryModifier(new EntityAttributeModifier(
-                        SPEED_MODIFIER_UUID, "boss_phase_speed",
-                        phase.speedMultiplier - 1.0, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+                        SPEED_MODIFIER_ID,
+                        phase.speedMultiplier - 1.0, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
         }
 
         if (damageAttr != null) {
-            damageAttr.removeModifier(DAMAGE_MODIFIER_UUID);
+            damageAttr.removeModifier(DAMAGE_MODIFIER_ID);
             if (phase.damageMultiplier != 1.0f) {
                 damageAttr.addTemporaryModifier(new EntityAttributeModifier(
-                        DAMAGE_MODIFIER_UUID, "boss_phase_damage",
-                        phase.damageMultiplier - 1.0, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+                        DAMAGE_MODIFIER_ID,
+                        phase.damageMultiplier - 1.0, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
         }
     }
 
     private void playTransitionEffects(PhaseDefinition phase) {
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         if (phase.transitionMessage != null && !phase.transitionMessage.isEmpty()) {
             Text message = TextUtil.parseColorCodes(phase.transitionMessage);

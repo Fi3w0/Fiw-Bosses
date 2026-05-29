@@ -28,6 +28,7 @@ public class FiwBosses implements ModInitializer {
         BossConfigLoader.loadAll();
         MinionConfigLoader.loadAll();
         SkinCache.fetchAll();
+        NetworkHandler.registerPayloadTypes();
         NetworkHandler.registerServerPackets();
 
         CommandRegistrationCallback.EVENT.register(BossCommand::register);

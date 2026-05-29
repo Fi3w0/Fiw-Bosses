@@ -74,7 +74,7 @@ public class ShockwaveGoal extends Goal {
     @Override
     public void start() {
         tick = 0;
-        slamOrigin = boss.getPos();
+        slamOrigin = boss.getEntityPos();
         waveRadii = new float[waves];
         waveLaunchTick = new int[waves];
         waveHit = new HashSet[waves];
@@ -87,8 +87,8 @@ public class ShockwaveGoal extends Goal {
             waveHit[i] = new HashSet<>();
         }
 
-        if (!boss.getWorld().isClient) {
-            boss.getWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
+        if (!boss.getEntityWorld().isClient()) {
+            boss.getEntityWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, SoundCategory.HOSTILE, 1.5f, 0.5f);
         }
     }
@@ -105,8 +105,8 @@ public class ShockwaveGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // ── WINDUP ───────────────────────────────────────────────────────────
         if (tick <= windupTicks) {
@@ -196,12 +196,12 @@ public class ShockwaveGoal extends Goal {
                 boolean jumping = entity.getVelocity().y > 0.15;
                 if (jumping) continue;
 
-                entity.damage(boss.getDamageSources().mobAttack(boss), damage);
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), damage);
                 waveHit[w].add(entity.getUuid());
 
                 Vec3d dir = new Vec3d(dx, 0, dz).normalize();
                 entity.addVelocity(dir.x * knockback, 0.35, dir.z * knockback);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
 
                 world.spawnParticles(ParticleTypes.CRIT,
                         entity.getX(), entity.getY() + 0.5, entity.getZ(),

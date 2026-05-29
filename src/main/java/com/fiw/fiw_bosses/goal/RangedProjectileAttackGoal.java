@@ -74,9 +74,9 @@ public class RangedProjectileAttackGoal extends Goal {
         }
 
         // Windup — gathering energy
-        if (windupTick <= WINDUP_TICKS && !boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
-            Vec3d handPos = boss.getPos().add(0, boss.getHeight() * 0.7, 0);
+        if (windupTick <= WINDUP_TICKS && !boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
+            Vec3d handPos = boss.getEntityPos().add(0, boss.getHeight() * 0.7, 0);
 
             if (projectileType.contains("fireball")) {
                 world.spawnParticles(ParticleTypes.FLAME,
@@ -100,12 +100,12 @@ public class RangedProjectileAttackGoal extends Goal {
     }
 
     private void shootProjectiles() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
         LivingEntity target = boss.getTarget();
         if (target == null) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         if (projectileType.contains("fireball")) {
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
@@ -116,8 +116,8 @@ public class RangedProjectileAttackGoal extends Goal {
         }
 
         for (int i = 0; i < count; i++) {
-            Vec3d dir = target.getPos().add(0, target.getHeight() / 2, 0)
-                    .subtract(boss.getPos().add(0, boss.getHeight() / 2, 0))
+            Vec3d dir = target.getEntityPos().add(0, target.getHeight() / 2, 0)
+                    .subtract(boss.getEntityPos().add(0, boss.getHeight() / 2, 0))
                     .normalize();
 
             if (count > 1) {
@@ -133,27 +133,29 @@ public class RangedProjectileAttackGoal extends Goal {
             double startY = boss.getEyeY() - 0.1;
             double startZ = boss.getZ();
 
+            net.minecraft.util.math.Vec3d dirVec = new net.minecraft.util.math.Vec3d(dir.x, dir.y, dir.z);
             switch (projectileType) {
                 case "minecraft:fireball" -> {
-                    FireballEntity fireball = new FireballEntity(world, boss, dir.x, dir.y, dir.z, 1);
+                    FireballEntity fireball = new FireballEntity(world, boss, dirVec, 1);
                     fireball.setPosition(startX, startY, startZ);
                     world.spawnEntity(fireball);
                 }
                 case "minecraft:arrow" -> {
-                    ArrowEntity arrow = new ArrowEntity(world, boss);
+                    net.minecraft.item.ItemStack arrowStack = new net.minecraft.item.ItemStack(net.minecraft.item.Items.ARROW);
+                    ArrowEntity arrow = new ArrowEntity(world, boss, arrowStack, arrowStack);
                     arrow.setPosition(startX, startY, startZ);
                     arrow.setVelocity(dir.x, dir.y, dir.z, 1.6f, spread);
                     arrow.setDamage(2.5);
                     world.spawnEntity(arrow);
                 }
                 default -> {
-                    SmallFireballEntity fireball = new SmallFireballEntity(world, boss, dir.x, dir.y, dir.z);
+                    SmallFireballEntity fireball = new SmallFireballEntity(world, boss, dirVec);
                     fireball.setPosition(startX, startY, startZ);
                     world.spawnEntity(fireball);
                 }
             }
 
-            world.spawnParticles(ParticleTypes.FLASH,
+            world.spawnParticles(net.minecraft.particle.TintedParticleEffect.create(ParticleTypes.FLASH, 0xFFFFFFFF),
                     startX + dir.x * 0.5, startY + dir.y * 0.5, startZ + dir.z * 0.5,
                     1, 0, 0, 0, 0);
         }

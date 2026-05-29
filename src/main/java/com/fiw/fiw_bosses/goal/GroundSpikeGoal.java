@@ -17,7 +17,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -94,8 +93,8 @@ public class GroundSpikeGoal extends Goal {
 
         LivingEntity target = boss.getTarget();
         Vec3d center = (target != null && target.isAlive())
-                ? target.getPos()
-                : boss.getPos().add(boss.getRotationVector().multiply(radius * 0.5));
+                ? target.getEntityPos()
+                : boss.getEntityPos().add(boss.getRotationVector().multiply(radius * 0.5));
 
         // Distribute spike positions in two concentric rings
         int innerCount = spikeCount / 3;
@@ -118,8 +117,8 @@ public class GroundSpikeGoal extends Goal {
             spikePositions.add(new Vec3d(sx, center.y, sz));
         }
 
-        if (!boss.getWorld().isClient) {
-            boss.getWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
+        if (!boss.getEntityWorld().isClient()) {
+            boss.getEntityWorld().playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.HOSTILE, 1.0f, 0.4f);
         }
     }
@@ -127,8 +126,8 @@ public class GroundSpikeGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         LivingEntity target = boss.getTarget();
         if (target != null) {
@@ -138,7 +137,7 @@ public class GroundSpikeGoal extends Goal {
         // ── MARK PHASE ───────────────────────────────────────────────────────
         if (phase == 0) {
             double pulseRadius = 0.5 + 0.3 * Math.sin(tick * 0.3);
-            DustParticleEffect dustRed = new DustParticleEffect(new Vector3f(0.8f, 0.2f, 0.1f), 1.0f);
+            DustParticleEffect dustRed = new DustParticleEffect(0xCC331A, 1.0f);
             BlockStateParticleEffect stoneBlock = new BlockStateParticleEffect(
                     ParticleTypes.BLOCK, Blocks.STONE.getDefaultState());
 
@@ -235,9 +234,9 @@ public class GroundSpikeGoal extends Goal {
 
                     for (PlayerEntity player : players) {
                         hitPlayers.add(player.getUuid());
-                        player.damage(boss.getDamageSources().magic(), damage);
+                        player.damage(world, boss.getDamageSources().magic(), damage);
                         player.addVelocity(0, knockback, 0);
-                        player.velocityModified = true;
+                        player.velocityDirty = true;
                         world.spawnParticles(ParticleTypes.CRIT,
                                 player.getX(), player.getY() + 0.5, player.getZ(),
                                 8, 0.4, 0.3, 0.4, 0.2);
@@ -250,7 +249,7 @@ public class GroundSpikeGoal extends Goal {
             }
 
             // Maintain crack/glow particles during spike phase
-            DustParticleEffect dustRed = new DustParticleEffect(new Vector3f(0.8f, 0.2f, 0.1f), 1.0f);
+            DustParticleEffect dustRed = new DustParticleEffect(0xCC331A, 1.0f);
             for (Vec3d pos : spikePositions) {
                 for (int h = 0; h <= 2; h++) {
                     world.spawnParticles(ParticleTypes.CRIT,

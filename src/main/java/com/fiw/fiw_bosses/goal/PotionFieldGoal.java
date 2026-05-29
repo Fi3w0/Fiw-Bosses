@@ -11,13 +11,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -44,7 +44,7 @@ public class PotionFieldGoal extends Goal {
     private static final int WINDUP_TICKS = 20;
 
     private final BossEntity boss;
-    private final StatusEffect effect;
+    private final RegistryEntry<StatusEffect> effect;
     private final int    amplifier;
     private final int    effectDuration;
     private final int    applyInterval;
@@ -66,9 +66,9 @@ public class PotionFieldGoal extends Goal {
     private Vec3d   fieldCenter;
 
     private static final DustParticleEffect DUST_PURPLE =
-            new DustParticleEffect(new Vector3f(0.6f, 0.0f, 1.0f), 1.2f);
+            new DustParticleEffect(0x9900FF, 1.2f);
     private static final DustParticleEffect DUST_VIOLET =
-            new DustParticleEffect(new Vector3f(0.4f, 0.0f, 0.8f), 0.9f);
+            new DustParticleEffect(0x6600CC, 0.9f);
 
     public PotionFieldGoal(BossEntity boss, int cooldownTicks, JsonObject params) {
         this.boss          = boss;
@@ -82,10 +82,10 @@ public class PotionFieldGoal extends Goal {
         this.cooldown      = cooldownTicks;
 
         // Resolve status effect
-        StatusEffect resolved = null;
+        RegistryEntry<StatusEffect> resolved = null;
         if (params.has("effect")) {
             Identifier id = Identifier.tryParse(params.get("effect").getAsString());
-            if (id != null) resolved = Registries.STATUS_EFFECT.get(id);
+            if (id != null) resolved = Registries.STATUS_EFFECT.getEntry(id).orElse(null);
         }
         this.effect = (resolved != null) ? resolved : StatusEffects.SLOWNESS;
 
@@ -119,8 +119,8 @@ public class PotionFieldGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         switch (state) {
             case STATE_WINDUP -> tickWindup(world);
@@ -148,10 +148,10 @@ public class PotionFieldGoal extends Goal {
 
         if (tick >= WINDUP_TICKS) {
             // Launch projectile toward target
-            Vec3d start = boss.getPos().add(0, 1.2, 0);
+            Vec3d start = boss.getEntityPos().add(0, 1.2, 0);
             Vec3d dir;
             if (target != null && target.isAlive()) {
-                dir = target.getPos().add(0, 0.5, 0).subtract(start).normalize();
+                dir = target.getEntityPos().add(0, 0.5, 0).subtract(start).normalize();
             } else {
                 dir = boss.getRotationVector();
             }
@@ -212,7 +212,7 @@ public class PotionFieldGoal extends Goal {
                     p -> p.isAlive() && !p.isSpectator() && !p.isCreative()
                             && p.squaredDistanceTo(pos.x, pos.y, pos.z) <= rSq);
             for (PlayerEntity p : players) {
-                p.damage(boss.getDamageSources().magic(), damage);
+                p.damage(world, boss.getDamageSources().magic(), damage);
             }
         }
 

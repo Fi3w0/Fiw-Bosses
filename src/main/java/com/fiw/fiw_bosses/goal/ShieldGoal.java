@@ -45,8 +45,8 @@ public class ShieldGoal extends Goal {
         activeTick = 0;
         boss.setDamageReduction(damageReduction);
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Activation sound
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 2.0f, 0.5f);
@@ -82,8 +82,8 @@ public class ShieldGoal extends Goal {
     public void tick() {
         activeTick++;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             // Rotating shield ring
             if (activeTick % 3 == 0) {
@@ -111,8 +111,8 @@ public class ShieldGoal extends Goal {
         boss.setDamageReduction(0.0f);
         cooldownTimer = cooldown;
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Shield break effect
             world.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ITEM_SHIELD_BREAK, SoundCategory.HOSTILE, 1.5f, 0.8f);

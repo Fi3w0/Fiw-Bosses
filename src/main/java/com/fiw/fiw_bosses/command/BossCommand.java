@@ -12,6 +12,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.BlockPosArgumentType;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
@@ -25,11 +28,15 @@ import java.util.List;
 
 public class BossCommand {
 
+    private static boolean hasLevel(ServerCommandSource src, PermissionLevel level) {
+        return src.getPermissions().hasPermission(new Permission.Level(level));
+    }
+
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher,
                                 CommandRegistryAccess registryAccess,
                                 CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(CommandManager.literal("boss")
-                .requires(src -> src.hasPermissionLevel(2))
+                .requires(src -> hasLevel(src, PermissionLevel.GAMEMASTERS))
                 .then(CommandManager.literal("spawn")
                         .then(CommandManager.argument("boss_id", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
@@ -55,7 +62,7 @@ public class BossCommand {
                 .then(CommandManager.literal("list")
                         .executes(ctx -> listBosses(ctx.getSource())))
                 .then(CommandManager.literal("reload")
-                        .requires(src -> src.hasPermissionLevel(3))
+                        .requires(src -> hasLevel(src, PermissionLevel.ADMINS))
                         .executes(ctx -> reloadConfigs(ctx.getSource())))
                 .then(CommandManager.literal("minion")
                         .then(CommandManager.literal("list")
@@ -101,7 +108,7 @@ public class BossCommand {
             z = source.getPosition().z;
         }
 
-        BossEntity boss = BossEntityRegistry.BOSS_TYPE.create(world);
+        BossEntity boss = BossEntityRegistry.BOSS_TYPE.create(world, SpawnReason.COMMAND);
         if (boss == null) {
             source.sendError(Text.literal("Failed to create boss entity"));
             return 0;
@@ -146,7 +153,7 @@ public class BossCommand {
             source.sendError(Text.literal("No living boss with id '" + bossId + "' found."));
             return 0;
         }
-        found.forEach(net.minecraft.entity.Entity::kill);
+        found.forEach(e -> e.kill((ServerWorld) e.getEntityWorld()));
         final int count = found.size();
         source.sendFeedback(() -> Text.literal("Killed ")
                 .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))
@@ -167,7 +174,7 @@ public class BossCommand {
             source.sendFeedback(() -> Text.literal("No bosses alive.").formatted(Formatting.YELLOW), false);
             return 0;
         }
-        found.forEach(net.minecraft.entity.Entity::kill);
+        found.forEach(e -> e.kill((ServerWorld) e.getEntityWorld()));
         final int count = found.size();
         source.sendFeedback(() -> Text.literal("Killed ")
                 .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))
@@ -212,7 +219,7 @@ public class BossCommand {
         double y = source.getPosition().y;
         double z = source.getPosition().z;
 
-        MinionEntity minion = BossEntityRegistry.MINION_TYPE.create(world);
+        MinionEntity minion = BossEntityRegistry.MINION_TYPE.create(world, SpawnReason.COMMAND);
         if (minion == null) {
             source.sendError(Text.literal("Failed to create minion entity"));
             return 0;
@@ -239,7 +246,7 @@ public class BossCommand {
             source.sendError(Text.literal("No living minion with id '" + minionId + "' found."));
             return 0;
         }
-        found.forEach(net.minecraft.entity.Entity::kill);
+        found.forEach(e -> e.kill((ServerWorld) e.getEntityWorld()));
         final int count = found.size();
         source.sendFeedback(() -> Text.literal("Killed ")
                 .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))
@@ -259,7 +266,7 @@ public class BossCommand {
             source.sendFeedback(() -> Text.literal("No minions alive.").formatted(Formatting.YELLOW), false);
             return 0;
         }
-        found.forEach(net.minecraft.entity.Entity::kill);
+        found.forEach(e -> e.kill((ServerWorld) e.getEntityWorld()));
         final int count = found.size();
         source.sendFeedback(() -> Text.literal("Killed ")
                 .append(Text.literal(String.valueOf(count)).formatted(Formatting.RED))

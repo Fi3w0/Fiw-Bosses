@@ -55,12 +55,12 @@ public class TeleportGoal extends Goal {
     }
 
     private void performTeleport() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
         LivingEntity target = boss.getTarget();
         if (target == null) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Origin effects — dark particles + sound
         world.spawnParticles(ParticleTypes.PORTAL,
@@ -134,7 +134,7 @@ public class TeleportGoal extends Goal {
             BlockPos check = basePos.up(dy);
             if (world.isAir(check) && world.isAir(check.up())
                     && world.getBlockState(check.down()).isSolidBlock(world, check.down())) {
-                boss.teleport(check.getX() + 0.5, check.getY(), check.getZ() + 0.5);
+                boss.requestTeleport(check.getX() + 0.5, check.getY(), check.getZ() + 0.5);
                 return true;
             }
         }

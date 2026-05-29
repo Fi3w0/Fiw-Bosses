@@ -12,7 +12,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 
@@ -52,9 +51,9 @@ public class ArrowRainGoal extends Goal {
     private Vec3d   rainCenter;
 
     private static final DustParticleEffect DUST_ORANGE =
-            new DustParticleEffect(new Vector3f(1.0f, 0.5f, 0.0f), 1.2f);
+            new DustParticleEffect(0xFF8000, 1.2f);
     private static final DustParticleEffect DUST_RED =
-            new DustParticleEffect(new Vector3f(1.0f, 0.1f, 0.0f), 1.0f);
+            new DustParticleEffect(0xFF1A00, 1.0f);
 
     public ArrowRainGoal(BossEntity boss, int cooldownTicks, JsonObject params) {
         this.boss        = boss;
@@ -89,15 +88,15 @@ public class ArrowRainGoal extends Goal {
 
         LivingEntity target = boss.getTarget();
         rainCenter = (target != null && target.isAlive())
-                ? target.getPos()
-                : boss.getPos().add(boss.getRotationVector().multiply(radius));
+                ? target.getEntityPos()
+                : boss.getEntityPos().add(boss.getRotationVector().multiply(radius));
     }
 
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         LivingEntity target = boss.getTarget();
         if (target != null) {
@@ -169,7 +168,8 @@ public class ArrowRainGoal extends Goal {
                 double az    = rainCenter.z + Math.sin(angle) * r;
                 double ay    = rainCenter.y + height;
 
-                ArrowEntity arrow = new ArrowEntity(world, ax, ay, az);
+                net.minecraft.item.ItemStack arrowStack = new net.minecraft.item.ItemStack(net.minecraft.item.Items.ARROW);
+                ArrowEntity arrow = new ArrowEntity(world, ax, ay, az, arrowStack, arrowStack);
                 arrow.setOwner(boss);
                 arrow.setDamage(damage);
                 arrow.pickupType = PersistentProjectileEntity.PickupPermission.DISALLOWED;

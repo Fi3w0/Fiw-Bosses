@@ -9,8 +9,10 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
+import net.minecraft.util.Uuids;
 import net.minecraft.world.World;
 
 import java.util.EnumSet;
@@ -83,16 +85,16 @@ public class MinionEntity extends BossEntity {
             switch (movementMode) {
                 case "static" -> {
                     // Remove wander goals — minion stays in place, only uses abilities
-                    goalSelector.getGoals().stream()
+                    getGoalSelector().getGoals().stream()
                             .filter(wg -> wg.getGoal() instanceof WanderAroundFarGoal)
                             .map(PrioritizedGoal::getGoal)
                             .toList()
-                            .forEach(goalSelector::remove);
+                            .forEach(getGoalSelector()::remove);
                 }
                 case "follow_boss" -> {
                     // Add a follow-owner goal (higher priority than wander)
                     if (ownerBossUuid != null) {
-                        goalSelector.add(3, new MinionFollowOwnerGoal(this));
+                        getGoalSelector().add(3, new MinionFollowOwnerGoal(this));
                     }
                 }
                 // "normal" — default chase-target AI from BossPhaseManager, no changes needed
@@ -105,7 +107,7 @@ public class MinionEntity extends BossEntity {
     @Override
     public void onDeath(DamageSource damageSource) {
         // Drop minion-specific loot instead of boss loot
-        if (!getWorld().isClient && minionDef != null && minionDef.loot != null) {
+        if (!getEntityWorld().isClient() && minionDef != null && minionDef.loot != null) {
             BossLootHandler.dropLootEntries(this, minionDef.loot);
         }
         // Call BossEntity.onDeath() — the synthetic def has empty loot, so
@@ -116,7 +118,7 @@ public class MinionEntity extends BossEntity {
     // ── Damage: immune to owner boss ─────────────────────────────────────────
 
     @Override
-    public boolean damage(DamageSource source, float amount) {
+    public boolean damage(ServerWorld world, DamageSource source, float amount) {
         Entity attacker = source.getAttacker();
         // Immune to the owner boss
         if (attacker != null && ownerBossUuid != null && attacker.getUuid().equals(ownerBossUuid)) {
@@ -127,7 +129,7 @@ public class MinionEntity extends BossEntity {
                 && ownerBossUuid.equals(other.ownerBossUuid)) {
             return false;
         }
-        return super.damage(source, amount);
+        return super.damage(world, source, amount);
     }
 
     // ── Never auto-despawn, but despawn when owner dies ──────────────────────
@@ -137,39 +139,29 @@ public class MinionEntity extends BossEntity {
 
     // ── NBT persistence ──────────────────────────────────────────────────────
 
+    /**
+     * Override the BossEntity hook so MinionEntity writes minion-specific tags
+     * INSTEAD OF the boss tags. Vanilla HostileEntity data still goes out via
+     * the {@link BossEntity#writeCustomData} super-call chain.
+     */
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        // Call BossEntity's save, then remove boss-specific tags.
-        // Minions don't use BossId so BossEntity.readCustomDataFromNbt is a no-op on load.
-        super.writeCustomDataToNbt(nbt);
-        nbt.remove("BossId");
-        nbt.remove("BossPhase");
-        nbt.remove("BossState");
-        nbt.remove("PreDeathTriggered");
-
-        if (minionId != null) nbt.putString("MinionId", minionId);
-        if (ownerBossUuid != null) nbt.putUuid("OwnerBoss", ownerBossUuid);
-        nbt.putString("MovementMode", movementMode);
+    protected void writeBossCustomData(WriteView view) {
+        if (minionId != null) view.putString("MinionId", minionId);
+        if (ownerBossUuid != null) view.put("OwnerBoss", Uuids.CODEC, ownerBossUuid);
+        view.putString("MovementMode", movementMode);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        // BossEntity.readCustomDataFromNbt checks for "BossId" first — since
-        // we removed it in save, it will call HostileEntity's read then return early.
-        super.readCustomDataFromNbt(nbt);
-
-        if (!nbt.contains("MinionId")) {
+    protected void readBossCustomData(ReadView view) {
+        var minionIdOpt = view.getOptionalString("MinionId");
+        if (minionIdOpt.isEmpty()) {
             this.discard();
             return;
         }
 
-        this.minionId = nbt.getString("MinionId");
-        if (nbt.containsUuid("OwnerBoss")) {
-            this.ownerBossUuid = nbt.getUuid("OwnerBoss");
-        }
-        if (nbt.contains("MovementMode")) {
-            this.movementMode = nbt.getString("MovementMode");
-        }
+        this.minionId = minionIdOpt.get();
+        view.read("OwnerBoss", Uuids.CODEC).ifPresent(uuid -> this.ownerBossUuid = uuid);
+        view.getOptionalString("MovementMode").ifPresent(m -> this.movementMode = m);
 
         MinionDefinition def = MinionConfigLoader.getDefinition(minionId);
         if (def == null) {
@@ -215,7 +207,7 @@ public class MinionEntity extends BossEntity {
             if (minion.ownerBossUuid == null) return false;
             if (minion.getTarget() != null && minion.getTarget().isAlive()) return false;
 
-            Entity e = minion.getWorld() instanceof ServerWorld sw
+            Entity e = minion.getEntityWorld() instanceof ServerWorld sw
                     ? sw.getEntity(minion.ownerBossUuid) : null;
             if (e instanceof LivingEntity le && le.isAlive()) {
                 this.owner = le;

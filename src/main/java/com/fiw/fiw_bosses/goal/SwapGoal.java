@@ -64,20 +64,20 @@ public class SwapGoal extends Goal {
     public void start() {
         LivingEntity target = boss.getTarget();
         if (target == null || !target.isAlive()) return;
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
-        Vec3d bossPos   = boss.getPos();
-        Vec3d targetPos = target.getPos();
+        Vec3d bossPos   = boss.getEntityPos();
+        Vec3d targetPos = target.getEntityPos();
 
         // Departure bursts at both positions
         spawnSwapBurst(world, bossPos);
         spawnSwapBurst(world, targetPos);
 
         // Swap
-        boss.teleport(targetPos.x, targetPos.y, targetPos.z);
-        target.teleport(bossPos.x, bossPos.y, bossPos.z);
+        boss.requestTeleport(targetPos.x, targetPos.y, targetPos.z);
+        target.requestTeleport(bossPos.x, bossPos.y, bossPos.z);
 
         // Arrival bursts at swapped positions
         spawnSwapBurst(world, targetPos);

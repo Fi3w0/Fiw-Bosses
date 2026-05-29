@@ -80,8 +80,8 @@ public class MovingTornadoGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         spinAngle += 8.0;
 
@@ -99,8 +99,8 @@ public class MovingTornadoGoal extends Goal {
         }
 
         Vec3d targetPos = (target != null && target.isAlive())
-                ? target.getPos()
-                : boss.getPos().add(boss.getRotationVector().multiply(6.0));
+                ? target.getEntityPos()
+                : boss.getEntityPos().add(boss.getRotationVector().multiply(6.0));
 
         // Warning swirl at target ground area — 8 WARPED_SPORE in fast-spinning circle
         double warnRad = Math.toRadians(spinAngle * 3.0); // fast spin for warning
@@ -194,17 +194,17 @@ public class MovingTornadoGoal extends Goal {
                 double len = dist > 0.001 ? dist : 0.001;
                 Vec3d toward = new Vec3d(-dx / len, 0, -dz / len);
                 player.addVelocity(toward.x * pullStrength, 0.25, toward.z * pullStrength);
-                player.velocityModified = true;
+                player.velocityDirty = true;
 
                 // Inner vortex — extra upward lift
                 if (dist <= radius * 0.5) {
                     player.addVelocity(0, 0.15, 0);
-                    player.velocityModified = true;
+                    player.velocityDirty = true;
                 }
 
                 // Damage every 20 ticks
                 if (tick % 20 == 0) {
-                    player.damage(boss.getDamageSources().magic(), (float) damage);
+                    player.damage(world, boss.getDamageSources().magic(), (float) damage);
                     absorbedPlayers.add(player.getUuid());
                 }
             }

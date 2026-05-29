@@ -67,8 +67,8 @@ public class MeleeSlashAttackGoal extends Goal {
         attackTick++;
 
         // Windup particles (ticks 1-4)
-        if (attackTick <= 4 && !boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (attackTick <= 4 && !boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             world.spawnParticles(ParticleTypes.ENCHANTED_HIT,
                     boss.getX(), boss.getY() + 1.2, boss.getZ(),
                     2, 0.3, 0.2, 0.3, 0.1);
@@ -86,10 +86,10 @@ public class MeleeSlashAttackGoal extends Goal {
     }
 
     private void performSlash() {
-        if (boss.getWorld().isClient) return;
+        if (boss.getEntityWorld().isClient()) return;
 
-        ServerWorld world = (ServerWorld) boss.getWorld();
-        Vec3d bossPos = boss.getPos();
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
+        Vec3d bossPos = boss.getEntityPos();
         Vec3d lookDir = boss.getRotationVec(1.0f).normalize();
         float halfArc = arc / 2.0f;
 
@@ -103,15 +103,15 @@ public class MeleeSlashAttackGoal extends Goal {
 
         int hitCount = 0;
         for (LivingEntity entity : entities) {
-            Vec3d toEntity = entity.getPos().subtract(bossPos).normalize();
+            Vec3d toEntity = entity.getEntityPos().subtract(bossPos).normalize();
             double dot = lookDir.dotProduct(toEntity);
             double angle = Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
 
             if (angle <= halfArc && boss.squaredDistanceTo(entity) <= range * range) {
-                entity.damage(boss.getDamageSources().mobAttack(boss), damage);
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), damage);
                 Vec3d knockback = toEntity.multiply(0.7);
                 entity.addVelocity(knockback.x, 0.25, knockback.z);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
                 hitCount++;
 
                 // Blood/hit particles on the entity

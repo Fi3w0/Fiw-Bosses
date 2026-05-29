@@ -12,7 +12,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
-import org.joml.Vector3f;
 
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -35,7 +34,7 @@ public class DetectMarkGoal extends Goal {
     private static final int STATE_MARK = 1;
 
     private static final DustParticleEffect DUST_GOLD =
-            new DustParticleEffect(new Vector3f(1.0f, 0.8f, 0.0f), 1.2f);
+            new DustParticleEffect(0xFFCC00, 1.2f);
 
     private final BossEntity boss;
     private final double markRadius;
@@ -93,8 +92,8 @@ public class DetectMarkGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         // Re-resolve player reference each tick in case of reconnect
         if (markedUuid != null && (markedPlayer == null || !markedPlayer.isAlive())) {
@@ -205,7 +204,7 @@ public class DetectMarkGoal extends Goal {
     }
 
     private List<PlayerEntity> getNearbyPlayers() {
-        return boss.getWorld().getEntitiesByClass(PlayerEntity.class,
+        return boss.getEntityWorld().getEntitiesByClass(PlayerEntity.class,
                 new Box(boss.getX() - markRadius, boss.getY() - 4, boss.getZ() - markRadius,
                         boss.getX() + markRadius, boss.getY() + 4, boss.getZ() + markRadius),
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative());

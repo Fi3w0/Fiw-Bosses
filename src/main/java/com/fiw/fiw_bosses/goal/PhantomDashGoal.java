@@ -12,7 +12,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -39,9 +38,9 @@ public class PhantomDashGoal extends Goal {
     private static final int WINDUP_TICKS = 10;
 
     private static final DustParticleEffect DUST_YELLOW =
-            new DustParticleEffect(new Vector3f(0.95f, 0.90f, 0.10f), 1.4f);
+            new DustParticleEffect(0xF2E61A, 1.4f);
     private static final DustParticleEffect DUST_WHITE =
-            new DustParticleEffect(new Vector3f(1.0f, 1.0f, 1.0f), 2.0f);
+            new DustParticleEffect(0xFFFFFF, 2.0f);
 
     private final BossEntity boss;
     private final int    dashCount;
@@ -97,8 +96,8 @@ public class PhantomDashGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         LivingEntity target = boss.getTarget();
         if (target != null && target.isAlive()) {
@@ -154,11 +153,11 @@ public class PhantomDashGoal extends Goal {
      * with a small random angle variation for unpredictability.
      */
     private void prepareDash(LivingEntity target, int dashIndex) {
-        dashStart = boss.getPos();
+        dashStart = boss.getEntityPos();
 
         Vec3d toTarget;
         if (target != null && target.isAlive()) {
-            toTarget = target.getPos().subtract(dashStart).normalize();
+            toTarget = target.getEntityPos().subtract(dashStart).normalize();
         } else {
             toTarget = boss.getRotationVector().normalize();
         }
@@ -217,13 +216,13 @@ public class PhantomDashGoal extends Goal {
                         && !hitPlayers.contains(p.getUuid()));
         for (PlayerEntity p : victims) {
             hitPlayers.add(p.getUuid());
-            p.damage(boss.getDamageSources().magic(), damage);
+            p.damage(world, boss.getDamageSources().magic(), damage);
             world.spawnParticles(ParticleTypes.CRIT,
                     p.getX(), p.getY() + 1.0, p.getZ(), 8, 0.3, 0.3, 0.3, 0.2);
         }
 
         // Prepare for the next dash starting from current position
-        dashStart = boss.getPos();
+        dashStart = boss.getEntityPos();
     }
 
     @Override

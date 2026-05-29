@@ -74,10 +74,10 @@ public class ParticleTornadoGoal extends Goal {
     public void start() {
         tick = 0;
         rotation = 0;
-        origin = boss.getPos();
+        origin = boss.getEntityPos();
 
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
             world.playSound(null, origin.x, origin.y, origin.z,
                     SoundEvents.ENTITY_ENDER_DRAGON_FLAP, SoundCategory.HOSTILE, 1.5f, 0.4f);
@@ -104,8 +104,8 @@ public class ParticleTornadoGoal extends Goal {
     @Override
     public void tick() {
         tick++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         rotation = (rotation + rotationSpeed) % 360.0;
         double rotRad = Math.toRadians(rotation);
@@ -147,11 +147,11 @@ public class ParticleTornadoGoal extends Goal {
                     e -> e != boss && e.isAlive() && !boss.isMinion(e)
                          && isInsideTornado(e));
             for (LivingEntity entity : inside) {
-                entity.damage(boss.getDamageSources().mobAttack(boss), damage);
+                entity.damage(world, boss.getDamageSources().mobAttack(boss), damage);
                 // Spin velocity
-                Vec3d toCenter = origin.subtract(entity.getPos()).normalize();
+                Vec3d toCenter = origin.subtract(entity.getEntityPos()).normalize();
                 entity.addVelocity(toCenter.x * 0.3, 0.15, toCenter.z * 0.3);
-                entity.velocityModified = true;
+                entity.velocityDirty = true;
             }
         }
 
@@ -166,8 +166,8 @@ public class ParticleTornadoGoal extends Goal {
     @Override
     public void stop() {
         cooldownTimer = cooldown;
-        if (!boss.getWorld().isClient) {
-            ServerWorld world = (ServerWorld) boss.getWorld();
+        if (!boss.getEntityWorld().isClient()) {
+            ServerWorld world = (ServerWorld) boss.getEntityWorld();
             // Dispersal burst
             world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
                     origin.x, origin.y + height * 0.5, origin.z, 1, 0, 0, 0, 0);

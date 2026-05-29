@@ -11,7 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 import java.util.EnumSet;
 
@@ -30,7 +29,7 @@ import java.util.EnumSet;
 public class GuardianShieldGoal extends Goal {
 
     private static final DustParticleEffect DUST_CYAN =
-            new DustParticleEffect(new Vector3f(0.0f, 0.85f, 0.85f), 1.1f);
+            new DustParticleEffect(0x00D9D9, 1.1f);
 
     private final BossEntity boss;
     private final float  counterDamage;
@@ -77,8 +76,8 @@ public class GuardianShieldGoal extends Goal {
     @Override
     public void tick() {
         age++;
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         spawnShieldParticles(world);
         checkAndCounterAttack(world);
@@ -125,12 +124,12 @@ public class GuardianShieldGoal extends Goal {
     }
 
     private void executeCounterAttack(ServerWorld world, PlayerEntity target) {
-        target.damage(boss.getDamageSources().magic(), counterDamage);
+        target.damage(world, boss.getDamageSources().magic(), counterDamage);
 
         // Knockback away from boss
-        Vec3d dir = target.getPos().subtract(boss.getPos()).normalize();
+        Vec3d dir = target.getEntityPos().subtract(boss.getEntityPos()).normalize();
         target.addVelocity(dir.x * counterKnockback, 0.4, dir.z * counterKnockback);
-        target.velocityModified = true;
+        target.velocityDirty = true;
 
         // Visual
         world.spawnParticles(ParticleTypes.CRIT,
@@ -141,8 +140,8 @@ public class GuardianShieldGoal extends Goal {
                 8, 0.3, 0.3, 0.3, 0);
 
         // Line of ENCHANT from boss to target
-        Vec3d from = boss.getPos().add(0, 1.0, 0);
-        Vec3d to   = target.getPos().add(0, 1.0, 0);
+        Vec3d from = boss.getEntityPos().add(0, 1.0, 0);
+        Vec3d to   = target.getEntityPos().add(0, 1.0, 0);
         int   steps = Math.max(1, (int) from.distanceTo(to));
         for (int s = 0; s <= steps; s++) {
             double t = (double) s / steps;

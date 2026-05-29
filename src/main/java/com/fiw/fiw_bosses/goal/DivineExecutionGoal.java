@@ -93,8 +93,8 @@ public class DivineExecutionGoal extends Goal {
 
     @Override
     public void tick() {
-        if (boss.getWorld().isClient) return;
-        ServerWorld world = (ServerWorld) boss.getWorld();
+        if (boss.getEntityWorld().isClient()) return;
+        ServerWorld world = (ServerWorld) boss.getEntityWorld();
 
         PlayerEntity grabbed = resolveGrabbed(world);
 
@@ -150,10 +150,10 @@ public class DivineExecutionGoal extends Goal {
         liftAge++;
 
         // Keep player hovering above boss
-        Vec3d liftPos = boss.getPos().add(0, 3.2, 0);
-        target.teleport(liftPos.x, liftPos.y, liftPos.z);
+        Vec3d liftPos = boss.getEntityPos().add(0, 3.2, 0);
+        target.requestTeleport(liftPos.x, liftPos.y, liftPos.z);
         target.setVelocity(0, 0, 0);
-        target.velocityModified = true;
+        target.velocityDirty = true;
 
         // Particle cage around player
         int   pts    = 8;
@@ -184,8 +184,8 @@ public class DivineExecutionGoal extends Goal {
         double vz = facing.z * throwPower;
 
         target.addVelocity(vx, 0.9, vz);
-        target.velocityModified = true;
-        target.damage(boss.getDamageSources().magic(), throwDamage);
+        target.velocityDirty = true;
+        target.damage(world, boss.getDamageSources().magic(), throwDamage);
 
         world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER,
                 target.getX(), target.getY() + 0.5, target.getZ(), 1, 0, 0, 0, 0);
