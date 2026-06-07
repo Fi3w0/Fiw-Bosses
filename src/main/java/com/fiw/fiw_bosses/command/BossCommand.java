@@ -280,6 +280,8 @@ public class BossCommand {
         int bosses = BossConfigLoader.reload();
         int minions = MinionConfigLoader.reload();
         SkinCache.fetchAll();
+        // Surface any toolId typos against the live Fiw Tools registry (no-op if Fiw Tools absent).
+        com.fiw.fiw_bosses.integration.FiwToolsBridge.reportUnknownToolIds();
         source.sendFeedback(() -> Text.literal("Reloaded " + bosses + " boss + " + minions + " minion definitions.")
                 .formatted(Formatting.GREEN), true);
         return bosses + minions;

@@ -7,8 +7,10 @@ import com.fiw.fiw_bosses.entity.BossEntityRegistry;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,10 @@ public class FiwBosses implements ModInitializer {
         NetworkHandler.registerServerPackets();
 
         CommandRegistrationCallback.EVENT.register(BossCommand::register);
+
+        // Once the server is up (and Fiw Tools has loaded its items), warn about any
+        // toolId references in boss/minion configs that don't exist. No-op without Fiw Tools.
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> FiwToolsBridge.reportUnknownToolIds());
 
         EntityTrackingEvents.START_TRACKING.register((entity, player) -> {
             if (entity instanceof com.fiw.fiw_bosses.entity.BossEntity bossEntity) {
