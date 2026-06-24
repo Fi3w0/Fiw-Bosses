@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Configuration help
+    url: https://github.com/Fi3w0/Fiw-Bosses/blob/main/BOSS_CONFIG_DOCS.md
+    about: Full JSON config reference — check here before filing a "how do I…" issue.
+  - name: Modrinth page
+    url: https://modrinth.com/mod/fiw-bosses
+    about: Downloads and version list.

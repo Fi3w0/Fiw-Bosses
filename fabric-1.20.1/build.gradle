@@ -1,0 +1,57 @@
+plugins {
+    id 'fabric-loom' version '1.13-SNAPSHOT'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-fabric-1.20.1"
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Share the version-specific Minecraft code from common-1.20.1. It is compiled
+// here against Fabric's Mojang-mapped Minecraft (same official names Forge uses).
+sourceSets {
+    main {
+        java {
+            srcDir rootProject.file('common-1.20.1/src/main/java')
+        }
+        resources {
+            srcDir rootProject.file('common-1.20.1/src/main/resources')
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    implementation project(':core')
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+jar {
+    from project(':core').sourceSets.main.output
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

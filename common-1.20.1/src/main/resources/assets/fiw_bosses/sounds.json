@@ -1,0 +1,10 @@
+{
+  "domain_break": {
+    "sounds": [
+      {
+        "name": "fiw_bosses:domain_break",
+        "stream": false
+      }
+    ]
+  }
+}

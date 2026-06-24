@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-forge-1.20.1"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Share the version-specific Minecraft code from common-1.20.1, compiled here
+// against Forge's official Mojang-mapped Minecraft (same names Fabric uses).
+sourceSets {
+    main {
+        java {
+            srcDir rootProject.file('common-1.20.1/src/main/java')
+        }
+        resources {
+            srcDir rootProject.file('common-1.20.1/src/main/resources')
+        }
+    }
+}
+
+minecraft {
+    mappings channel: 'official', version: project.minecraft_version
+    copyIdeResources = true
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            mods { fiw_bosses { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run')
+            mods { fiw_bosses { source sourceSets.main } }
+        }
+    }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+    implementation project(':core')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 17
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    from project(':core').sourceSets.main.output
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+    finalizedBy 'reobfJar'
+}

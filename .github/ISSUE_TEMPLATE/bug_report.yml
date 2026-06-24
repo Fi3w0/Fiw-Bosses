@@ -1,0 +1,90 @@
+name: Bug report
+description: Something isn't working as expected (crash, wrong behavior, ability misfire).
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please fill in as much as you can — logs and the boss config are the most helpful.
+
+  - type: dropdown
+    id: target
+    attributes:
+      label: Loader & Minecraft version
+      description: Which jar are you running?
+      options:
+        - Fabric 1.21.11
+        - NeoForge 1.21.11
+        - Fabric 1.21.8
+        - NeoForge 1.21.8
+        - Fabric 1.21.1
+        - NeoForge 1.21.1
+        - Fabric 1.20.1
+        - Forge 1.20.1
+    validations:
+      required: true
+
+  - type: input
+    id: mod_version
+    attributes:
+      label: FIW Bosses version
+      description: The mod version (e.g. 1.1.0).
+      placeholder: "1.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: loader_version
+    attributes:
+      label: Loader / Fabric API version
+      description: Loader version, and Fabric API version if on Fabric.
+      placeholder: "NeoForge 21.1.227 / Fabric Loader 0.16.14 + Fabric API 0.115.0+1.21.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What went wrong, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. /boss spawn ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Boss / minion config (if relevant)
+      description: Paste the JSON config that triggers the issue. It will be formatted automatically.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log / crash report
+      description: Paste the relevant log lines or attach the crash report from `crash-reports/`. Look for `fiw_bosses` lines.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I'm on the latest FIW Bosses release for my Minecraft version.
+          required: true
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true

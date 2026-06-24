@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a new ability, config option, or improvement.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe the feature — a new ability, a config field, a command, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: What boss / encounter are you trying to build? Why does this help?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: targets
+    attributes:
+      label: Relevant targets
+      description: Which loaders/versions should this apply to?
+      multiple: true
+      options:
+        - All targets
+        - Fabric 1.21.11
+        - NeoForge 1.21.11
+        - Fabric 1.21.8
+        - NeoForge 1.21.8
+        - Fabric 1.21.1
+        - NeoForge 1.21.1
+        - Fabric 1.20.1
+        - Forge 1.20.1
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this isn't already requested.
+          required: true

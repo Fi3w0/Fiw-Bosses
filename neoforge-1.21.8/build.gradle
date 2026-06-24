@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-neoforge-1.21.8"
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Share the version-specific Minecraft code from common-1.21.8, compiled here
+// against NeoForge's Mojang-mapped Minecraft.
+sourceSets {
+    main {
+        java {
+            srcDir rootProject.file('common-1.21.8/src/main/java')
+        }
+        resources {
+            srcDir rootProject.file('common-1.21.8/src/main/resources')
+        }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "fiw_bosses" {
+            sourceSet sourceSets.main
+            sourceSet project(':core').sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation project(':core')
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    from project(':core').sourceSets.main.output
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

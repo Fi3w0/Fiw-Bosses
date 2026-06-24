@@ -1,0 +1,36 @@
+package com.fiw.fiw_bosses.client;
+
+import com.fiw.fiw_bosses.client.renderer.BossEntityRenderer;
+import com.fiw.fiw_bosses.client.renderer.MinionEntityRenderer;
+import com.fiw.fiw_bosses.client.skin.ClientSkinManager;
+import com.fiw.fiw_bosses.core.FiwBossesCore;
+import com.fiw.fiw_bosses.entity.BossEntity;
+import com.fiw.fiw_bosses.entity.BossEntityRegistry;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+
+@EventBusSubscriber(modid = FiwBossesCore.MOD_ID, value = Dist.CLIENT)
+public final class FiwBossesClient {
+
+    private FiwBossesClient() {}
+
+    @SubscribeEvent
+    public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(BossEntityRegistry.BOSS.get(), BossEntityRenderer::new);
+        event.registerEntityRenderer(BossEntityRegistry.MINION.get(), MinionEntityRenderer::new);
+    }
+
+    // Release the dynamic skin texture when a boss/minion unloads on the client,
+    // so GPU textures and the skin maps don't leak over a session. BossEntity is
+    // the parent of MinionEntity, so this covers both. Gated to client-side levels
+    // so the integrated server's entity copy doesn't trigger removal.
+    @SubscribeEvent
+    public static void onEntityLeaveLevel(EntityLeaveLevelEvent event) {
+        if (event.getLevel().isClientSide() && event.getEntity() instanceof BossEntity boss) {
+            ClientSkinManager.removeSkin(boss.getId());
+        }
+    }
+}

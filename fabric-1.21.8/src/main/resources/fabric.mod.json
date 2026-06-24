@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "fiw_bosses",
+  "version": "${version}",
+  "name": "FIW Bosses",
+  "description": "Configurable bosses with phases, abilities and dialogue.",
+  "authors": ["Fi3w0"],
+  "license": "GPL-3.0-only",
+  "contact": {
+    "issues": "https://github.com/Fi3w0/Fiw-Bosses/issues",
+    "sources": "https://github.com/Fi3w0/Fiw-Bosses"
+  },
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.fiw.fiw_bosses.FiwBossesFabric"],
+    "client": ["com.fiw.fiw_bosses.FiwBossesClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": ">=1.21.8 <1.21.9",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

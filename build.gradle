@@ -1,0 +1,9 @@
+// Root project: no plugins applied here. Each module configures itself.
+// :core is plain Java; :common-* use Fabric Loom (Mojmap, no loader jar);
+// :fabric-* use Fabric Loom; :neoforge-* use NeoForge ModDevGradle;
+// :forge-1.20.1 uses ForgeGradle.
+
+allprojects {
+    group = project.maven_group
+    version = project.mod_version
+}

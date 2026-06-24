@@ -1,0 +1,584 @@
+package com.fiw.fiw_bosses.entity;
+
+import com.fiw.fiw_bosses.core.FiwBossesCore;
+import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.config.BossDefinition;
+import com.fiw.fiw_bosses.config.EquipmentConfig;
+import com.fiw.fiw_bosses.config.EquipmentEntry;
+import com.fiw.fiw_bosses.loot.BossLootHandler;
+import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
+import com.fiw.fiw_bosses.util.TextUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.WrappedGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.server.level.ServerBossEvent;
+
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+public class BossEntity extends Monster {
+
+    // ── Boss state ────────────────────────────────────────────────────────────
+    public enum BossState { INACTIVE, PRE_FIGHT, ACTIVE, PRE_DEATH }
+    private BossState bossState = BossState.ACTIVE;
+
+    private String bossId;
+    private BossDefinition definition;
+    private BossPhaseManager phaseManager;
+    private final ServerBossEvent bossBar;
+
+    // Dialogue
+    private int dialogueTimer = 0;
+    private int dialogueLine  = 0;
+
+    // Pre-death guard (fire only once)
+    private boolean preDeathTriggered = false;
+
+    // ── Aggro switching ───────────────────────────────────────────────────────
+    private int aggroSwitchTimer = 0;
+    private static final int AGGRO_SWITCH_MIN = 100;
+    private static final int AGGRO_SWITCH_MAX = 300;
+
+    // ── Minion tracking ───────────────────────────────────────────────────────
+    private final Set<UUID> minionUuids = new HashSet<>();
+
+    // ── Strafing ──────────────────────────────────────────────────────────────
+    private int strafeTimer = 0;
+    private int strafeDir   = 1;
+
+    // ── Damage tracking (for GuardianShieldGoal) ──────────────────────────────
+    private long   lastDamageTick     = -1L;
+    private Entity lastDamageAttacker = null;
+
+    // ── Mark system (for DetectMarkGoal) ─────────────────────────────────────
+    private UUID  markedTarget    = null;
+    private float markDamageBonus = 0f;
+
+    // ── Idle despawn / heal ───────────────────────────────────────────────────
+    private int idleTimer      = 0;
+    private int idleHealTimer  = 0;
+
+    // ── Shield damage reduction ───────────────────────────────────────────────
+    private float damageReduction = 0.0f;
+
+    // ── Deferred goal-selector actions ───────────────────────────────────────
+    private final Queue<Runnable> pendingGoalActions = new ArrayDeque<>();
+
+    public BossEntity(EntityType<? extends Monster> entityType, Level level) {
+        super(entityType, level);
+        this.bossBar = new ServerBossEvent(
+                Component.literal("Boss"),
+                BossEvent.BossBarColor.RED,
+                BossEvent.BossBarOverlay.PROGRESS
+        );
+        this.setPersistenceRequired();
+        this.xpReward = 500;
+        this.aggroSwitchTimer = AGGRO_SWITCH_MIN
+                + (int) (Math.random() * (AGGRO_SWITCH_MAX - AGGRO_SWITCH_MIN));
+    }
+
+    public static AttributeSupplier.Builder createBossAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH,       200.0)
+                .add(Attributes.MOVEMENT_SPEED,   0.3)
+                .add(Attributes.ATTACK_DAMAGE,    10.0)
+                .add(Attributes.ARMOR,            0.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
+                .add(Attributes.FOLLOW_RANGE,     64.0)
+                .add(Attributes.ATTACK_KNOCKBACK, 1.5);
+    }
+
+    // ── Definition / setup ───────────────────────────────────────────────────
+
+    public void applyDefinition(BossDefinition def) {
+        this.definition = def;
+        this.bossId     = def.id;
+
+        this.setCustomName(TextUtil.parseColorCodes(def.displayName));
+        this.setCustomNameVisible(true);
+
+        Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH)).setBaseValue(def.health);
+        setHealth((float) def.health);
+        Objects.requireNonNull(getAttribute(Attributes.ARMOR)).setBaseValue(def.armor);
+        Objects.requireNonNull(getAttribute(Attributes.MOVEMENT_SPEED)).setBaseValue(def.speed);
+        Objects.requireNonNull(getAttribute(Attributes.KNOCKBACK_RESISTANCE)).setBaseValue(def.knockbackResistance);
+        Objects.requireNonNull(getAttribute(Attributes.ATTACK_DAMAGE)).setBaseValue(def.attackDamage);
+
+        Component barName = TextUtil.parseColorCodes(def.displayName);
+        bossBar.setName(barName);
+        try { bossBar.setColor(BossEvent.BossBarColor.valueOf(def.bossBar.color.toUpperCase())); }
+        catch (IllegalArgumentException ignored) {}
+        try { bossBar.setOverlay(BossEvent.BossBarOverlay.valueOf(def.bossBar.overlay.toUpperCase())); }
+        catch (IllegalArgumentException ignored) {}
+
+        applyEquipment(def.equipment);
+
+        this.phaseManager = new BossPhaseManager(this, def.phases);
+
+        if (def.preFightDialogue != null && !def.preFightDialogue.isEmpty()) {
+            this.bossState = BossState.INACTIVE;
+            this.phaseManager.transitionToPhase(0);
+            clearGoalsForInactive();
+        } else {
+            this.bossState = BossState.ACTIVE;
+            this.phaseManager.transitionToPhase(0);
+        }
+    }
+
+    public void applyEquipment(EquipmentConfig equipment) {
+        if (equipment == null) return;
+        setEquipmentSlot(EquipmentSlot.MAINHAND, equipment.mainHand);
+        setEquipmentSlot(EquipmentSlot.OFFHAND,  equipment.offHand);
+        setEquipmentSlot(EquipmentSlot.HEAD,     equipment.head);
+        setEquipmentSlot(EquipmentSlot.CHEST,    equipment.chest);
+        setEquipmentSlot(EquipmentSlot.LEGS,     equipment.legs);
+        setEquipmentSlot(EquipmentSlot.FEET,     equipment.feet);
+    }
+
+    private void setEquipmentSlot(EquipmentSlot slot, EquipmentEntry entry) {
+        ItemStack stack = ConfiguredItemStacks.equipment(
+                entry, level().getServer(), registryAccess(), slot.getSerializedName());
+        if (!stack.isEmpty()) this.setItemSlot(slot, stack);
+    }
+
+    @Override
+    protected void registerGoals() {
+        // Goals are set dynamically by BossPhaseManager.
+    }
+
+    // ── Tick ─────────────────────────────────────────────────────────────────
+
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
+        // Drain deferred goal actions before goalSelector.tick().
+        Runnable action;
+        while ((action = pendingGoalActions.poll()) != null) {
+            action.run();
+        }
+
+        super.customServerAiStep(level);
+
+        tickBossBar();
+        tickAggroSwitch();
+        tickStrafing();
+        tickIdleSystem();
+        tickDialogueSystem();
+
+        if (phaseManager != null) {
+            phaseManager.tick();
+        }
+    }
+
+    protected boolean showBossBar() { return true; }
+
+    private void tickBossBar() {
+        if (!showBossBar()) {
+            bossBar.removeAllPlayers();
+            return;
+        }
+        if (bossState == BossState.INACTIVE || bossState == BossState.PRE_FIGHT) {
+            bossBar.removeAllPlayers();
+            setTarget(null);
+            return;
+        }
+        bossBar.setProgress(getHealth() / getMaxHealth());
+        bossBar.removeAllPlayers();
+        if (level() instanceof ServerLevel sl) {
+            for (ServerPlayer sp : sl.players()) {
+                if (sp.isAlive() && !sp.isSpectator()
+                        && sp.distanceToSqr(this) <= 64 * 64) {
+                    bossBar.addPlayer(sp);
+                }
+            }
+        }
+    }
+
+    // ── Activation (right-click) ─────────────────────────────────────────────
+
+    @Override
+    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (!level().isClientSide() && bossState == BossState.INACTIVE) {
+            startPreFightSequence();
+            return InteractionResult.SUCCESS;
+        }
+        return super.mobInteract(player, hand);
+    }
+
+    private void startPreFightSequence() {
+        bossState     = BossState.PRE_FIGHT;
+        dialogueTimer = 0;
+        dialogueLine  = 0;
+    }
+
+    private void activateBoss() {
+        bossState = BossState.ACTIVE;
+        if (phaseManager != null) {
+            int idx = phaseManager.getCurrentPhaseIndex();
+            phaseManager.transitionToPhase(idx >= 0 ? idx : 0);
+        }
+    }
+
+    // ── Pre-death sequence ───────────────────────────────────────────────────
+
+    private void startPreDeathSequence() {
+        preDeathTriggered = true;
+        bossState         = BossState.PRE_DEATH;
+        dialogueTimer     = 0;
+        dialogueLine      = 0;
+        setInvulnerable(true);
+        setTarget(null);
+
+        scheduleGoalAction(() -> {
+            var goals = goalSelector.getAvailableGoals().stream()
+                    .map(WrappedGoal::getGoal).collect(Collectors.toList());
+            goals.forEach(goalSelector::removeGoal);
+            var targets = targetSelector.getAvailableGoals().stream()
+                    .map(WrappedGoal::getGoal).collect(Collectors.toList());
+            targets.forEach(targetSelector::removeGoal);
+            goalSelector.addGoal(0, new FloatGoal(this));
+            goalSelector.addGoal(9, new RandomLookAroundGoal(this));
+        });
+    }
+
+    // ── Dialogue ticker ───────────────────────────────────────────────────────
+
+    private void tickDialogueSystem() {
+        if (bossState == BossState.PRE_FIGHT) {
+            tickLinedDialogue(
+                    definition != null ? definition.preFightDialogue : List.of(),
+                    definition != null ? definition.dialogueLineDelay : 60,
+                    this::activateBoss
+            );
+        } else if (bossState == BossState.PRE_DEATH) {
+            tickLinedDialogue(
+                    definition != null ? definition.preDeathDialogue : List.of(),
+                    definition != null ? definition.preDeathDialogueDelay : 40,
+                    () -> {
+                        // Must set state to ACTIVE before kill() — our hurt() override
+                        // blocks all damage while in PRE_DEATH, which would prevent death.
+                        bossState = BossState.ACTIVE;
+                        setInvulnerable(false);
+                        this.kill((ServerLevel) level());
+                    }
+            );
+        }
+    }
+
+    private void tickLinedDialogue(List<String> lines, int delay, Runnable onFinished) {
+        if (lines.isEmpty()) { onFinished.run(); return; }
+        dialogueTimer++;
+        if (dialogueLine < lines.size() && dialogueTimer > dialogueLine * delay) {
+            sendDialogueLine(lines.get(dialogueLine));
+            dialogueLine++;
+        }
+        if (dialogueLine >= lines.size() && dialogueTimer > dialogueLine * delay) {
+            onFinished.run();
+        }
+    }
+
+    private void sendDialogueLine(String line) {
+        Component text = TextUtil.parseColorCodes(line);
+        for (Player player : level().players()) {
+            if (player instanceof ServerPlayer sp
+                    && sp.distanceToSqr(this) <= 80 * 80) {
+                sp.sendSystemMessage(text);
+            }
+        }
+    }
+
+    // ── Damage ────────────────────────────────────────────────────────────────
+
+    @Override
+    public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
+        // Fully immune while inactive / mid-dialogue
+        if (bossState == BossState.INACTIVE
+                || bossState == BossState.PRE_FIGHT
+                || bossState == BossState.PRE_DEATH) {
+            return false;
+        }
+
+        // Immune to own minions
+        Entity attacker = source.getEntity();
+        if (attacker != null && isMinion(attacker)) return false;
+
+        if (damageReduction > 0) amount *= (1.0f - damageReduction);
+
+        // Intercept lethal damage to start pre-death monologue
+        if (!preDeathTriggered
+                && definition != null
+                && definition.preDeathDialogue != null
+                && !definition.preDeathDialogue.isEmpty()
+                && getHealth() - amount <= 1.0f) {
+            setHealth(1.0f);
+            startPreDeathSequence();
+            return false;
+        }
+
+        if (!level().isClientSide()) {
+            lastDamageTick     = level().getGameTime();
+            lastDamageAttacker = attacker;
+        }
+
+        boolean result = super.hurtServer(world, source, amount);
+
+        if (result) idleTimer = 0;
+
+        // Revenge aggro switch
+        if (result && attacker instanceof Player playerAttacker) {
+            LivingEntity current = getTarget();
+            if (current != playerAttacker && getRandom().nextFloat() < 0.35f) {
+                setTarget(playerAttacker);
+                aggroSwitchTimer = AGGRO_SWITCH_MIN / 2;
+            }
+        }
+
+        return result;
+    }
+
+    /** Applies bonus magic damage to the marked target on every successful melee hit. */
+    @Override
+    public boolean doHurtTarget(ServerLevel level, Entity target) {
+        boolean result = super.doHurtTarget(level, target);
+        if (result && markedTarget != null && markDamageBonus > 0
+                && target.getUUID().equals(markedTarget)
+                && target instanceof LivingEntity le) {
+            le.hurtServer(level, damageSources().magic(), markDamageBonus);
+        }
+        return result;
+    }
+
+    // ── Death / removal ───────────────────────────────────────────────────────
+
+    @Override
+    public void checkDespawn() { /* bosses never auto-despawn */ }
+
+    @Override
+    public void die(DamageSource damageSource) {
+        super.die(damageSource);
+        if (!level().isClientSide() && definition != null) {
+            BossLootHandler.dropLoot(this, definition);
+        }
+        bossBar.removeAllPlayers();
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
+        bossBar.removeAllPlayers();
+    }
+
+    // ── NBT persistence ───────────────────────────────────────────────────────
+
+    @Override
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        writeBossCustomData(output);
+    }
+
+    /** Hook so {@link MinionEntity} can replace boss-specific persistence with its own. */
+    protected void writeBossCustomData(ValueOutput output) {
+        if (bossId != null) output.putString("BossId", bossId);
+        if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
+            output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
+        output.putString("BossState", bossState.name());
+        output.putBoolean("PreDeathTriggered", preDeathTriggered);
+    }
+
+    @Override
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        readBossCustomData(input);
+    }
+
+    /** Hook so {@link MinionEntity} can replace boss-specific persistence with its own. */
+    protected void readBossCustomData(ValueInput input) {
+        Optional<String> bossIdOpt = input.getString("BossId");
+        if (bossIdOpt.isEmpty()) return;
+
+        this.bossId = bossIdOpt.get();
+        BossDefinition def = BossConfigLoader.getDefinition(bossId);
+        if (def == null) {
+            FiwBossesCore.LOGGER.warn("Boss definition '{}' not found, entity will be removed", bossId);
+            this.discard();
+            return;
+        }
+
+        float savedHealth = getHealth();
+
+        applyDefinition(def);
+
+        if (savedHealth > 0 && savedHealth <= getMaxHealth()) {
+            setHealth(savedHealth);
+        }
+
+        // Restore saved phase silently (no transition messages or effects).
+        int savedPhase = input.getIntOr("BossPhase", -1);
+        if (savedPhase > 0 && phaseManager != null) {
+            phaseManager.restoreToPhase(savedPhase);
+        }
+
+        Optional<String> stateOpt = input.getString("BossState");
+        if (stateOpt.isPresent()) {
+            BossState savedState;
+            try { savedState = BossState.valueOf(stateOpt.get()); }
+            catch (IllegalArgumentException e) { savedState = BossState.ACTIVE; }
+
+            // PRE_FIGHT → INACTIVE on reload (don't resume mid-dialogue)
+            // PRE_DEATH → ACTIVE on reload (boss survived the restart, let players finish it)
+            if (savedState == BossState.PRE_FIGHT) savedState = BossState.INACTIVE;
+            if (savedState == BossState.PRE_DEATH)  savedState = BossState.ACTIVE;
+            this.bossState = savedState;
+        }
+
+        this.preDeathTriggered = input.getBooleanOr("PreDeathTriggered", false);
+
+        if (this.bossState == BossState.INACTIVE) clearGoalsForInactive();
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Removes all goals/targets except FloatGoal so INACTIVE boss just stands there. */
+    private void clearGoalsForInactive() {
+        scheduleGoalAction(() -> {
+            var goals = goalSelector.getAvailableGoals().stream()
+                    .map(WrappedGoal::getGoal).collect(Collectors.toList());
+            goals.forEach(goalSelector::removeGoal);
+            var targets = targetSelector.getAvailableGoals().stream()
+                    .map(WrappedGoal::getGoal).collect(Collectors.toList());
+            targets.forEach(targetSelector::removeGoal);
+            goalSelector.addGoal(0, new FloatGoal(this));
+        });
+    }
+
+    private void tickAggroSwitch() {
+        if (aggroSwitchTimer > 0) { aggroSwitchTimer--; return; }
+        aggroSwitchTimer = AGGRO_SWITCH_MIN + getRandom().nextInt(AGGRO_SWITCH_MAX - AGGRO_SWITCH_MIN);
+
+        LivingEntity current = getTarget();
+        List<Player> nearbyPlayers = level().getEntitiesOfClass(
+                Player.class, getBoundingBox().inflate(48),
+                p -> p.isAlive() && !p.isSpectator() && !p.isCreative());
+
+        if (nearbyPlayers.size() <= 1) return;
+        if (getRandom().nextFloat() < 0.4f) {
+            if (current instanceof Player) nearbyPlayers.remove(current);
+            if (!nearbyPlayers.isEmpty())
+                setTarget(nearbyPlayers.get(getRandom().nextInt(nearbyPlayers.size())));
+        }
+    }
+
+    private void tickStrafing() {
+        if (bossState != BossState.ACTIVE) return;
+        LivingEntity target = getTarget();
+        if (target == null || !target.isAlive()) return;
+
+        boolean abilityHoldingMove = goalSelector.getAvailableGoals().stream().anyMatch(pg ->
+                pg.isRunning()
+                && pg.getGoal().getFlags().contains(Goal.Flag.MOVE)
+                && !(pg.getGoal() instanceof MeleeAttackGoal)
+                && !(pg.getGoal() instanceof WaterAvoidingRandomStrollGoal));
+        if (abilityHoldingMove) { strafeTimer = 0; return; }
+
+        double dist = distanceTo(target);
+        if (dist < 7.0 && dist > 2.0) {
+            strafeTimer++;
+            if (strafeTimer % 30 == 0 && getRandom().nextFloat() < 0.5f) strafeDir *= -1;
+            if (strafeTimer % 2 == 0) {
+                getMoveControl().strafe(-0.3f, strafeDir * 0.6f);
+                getLookControl().setLookAt(target, 30.0f, 30.0f);
+            }
+        } else {
+            strafeTimer = 0;
+        }
+    }
+
+    private void tickIdleSystem() {
+        if (definition == null || definition.idleTimeout <= 0) return;
+        if (bossState != BossState.ACTIVE) return;
+
+        boolean playerNearby = !level().getEntitiesOfClass(
+                Player.class, getBoundingBox().inflate(64),
+                p -> p.isAlive() && !p.isSpectator() && !p.isCreative()).isEmpty();
+
+        if (playerNearby) { idleTimer = 0; idleHealTimer = 0; return; }
+
+        idleTimer++;
+        if (idleTimer < definition.idleTimeout) return;
+
+        if ("despawn".equals(definition.idleAction)) {
+            this.discard();
+        } else if ("heal".equals(definition.idleAction)) {
+            idleHealTimer++;
+            if (idleHealTimer >= definition.idleHealInterval) {
+                idleHealTimer = 0;
+                if (getHealth() < getMaxHealth())
+                    setHealth((float) Math.min(getHealth() + definition.idleHealAmount, getMaxHealth()));
+            }
+        }
+    }
+
+    // ── Misc ─────────────────────────────────────────────────────────────────
+
+    @Override
+    public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) { return true; }
+
+    // ── Minion management ────────────────────────────────────────────────────
+
+    public void registerMinion(UUID minionUuid) { minionUuids.add(minionUuid); }
+    public boolean isMinion(Entity entity) { return minionUuids.contains(entity.getUUID()); }
+    public Set<UUID> getMinionUuids() { return minionUuids; }
+
+    // ── Accessors ────────────────────────────────────────────────────────────
+
+    public String getBossId() { return bossId; }
+    public BossDefinition getDefinition() { return definition; }
+    public BossPhaseManager getPhaseManager() { return phaseManager; }
+    public net.minecraft.world.entity.ai.goal.GoalSelector getGoalSelector() { return this.goalSelector; }
+    public net.minecraft.world.entity.ai.goal.GoalSelector getTargetSelector() { return this.targetSelector; }
+    public BossState getBossState() { return bossState; }
+    public boolean isActive() { return bossState == BossState.ACTIVE; }
+
+    // Damage-tracking accessors (used by GuardianShieldGoal)
+    public long   getLastDamageTick()     { return lastDamageTick; }
+    public Entity getLastDamageAttacker() { return lastDamageAttacker; }
+
+    // Mark-target accessors (used by DetectMarkGoal)
+    public void setMarkTarget(UUID uuid, float bonus) { markedTarget = uuid; markDamageBonus = bonus; }
+    public void clearMarkTarget() { markedTarget = null; markDamageBonus = 0f; }
+    public UUID getMarkedTarget() { return markedTarget; }
+
+    public void scheduleGoalAction(Runnable action) { pendingGoalActions.add(action); }
+
+    public void setDamageReduction(float reduction) { this.damageReduction = reduction; }
+    public float getDamageReduction() { return damageReduction; }
+}
