@@ -8,8 +8,14 @@ import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
@@ -71,6 +77,7 @@ public class BossEntity extends Monster {
 
     // Pre-death guard (fire only once)
     private boolean preDeathTriggered = false;
+    private boolean fightStarted = false;
 
     // ── Aggro switching ───────────────────────────────────────────────────────
     private int aggroSwitchTimer = 0;
@@ -100,6 +107,19 @@ public class BossEntity extends Monster {
 
     // ── Per-boss named ability cooldowns (survive phase/goal rebuilds) ────────
     private final java.util.Map<String, Integer> namedCooldowns = new java.util.HashMap<>();
+
+    // ── Second Wind (auto-revive, armed by SecondWindGoal) ───────────────────
+    private boolean secondWindArmed = false;
+    private float   secondWindRevivePercent = 0.5f;
+
+    // ── Adaptation (resist the damage type used most, set by AdaptationGoal) ──
+    private final java.util.Map<String, Float> recentDamageByType = new java.util.HashMap<>();
+    private String adaptedDamageType   = null;
+    private float  adaptationResist     = 0.0f;
+    private long   adaptationUntilTick  = -1L;
+
+    // ── Cleanse debuff immunity (set by CleanseGoal) ─────────────────────────
+    private long debuffImmuneUntilTick = -1L;
 
     public BossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -132,6 +152,8 @@ public class BossEntity extends Monster {
         this.bossId     = def.id;
         setMovementMode(def.movement);
         setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
+        FiwBossesCore.LOGGER.info("Boss {} applied renderEntity={} resolvedDisguise={}",
+                def.id, def.renderEntity, getDisguiseEntity());
 
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);
@@ -156,10 +178,11 @@ public class BossEntity extends Monster {
 
         if (def.preFightDialogue != null && !def.preFightDialogue.isEmpty()) {
             this.bossState = BossState.INACTIVE;
-            this.phaseManager.transitionToPhase(0);
+            this.fightStarted = false;
             clearGoalsForInactive();
         } else {
             this.bossState = BossState.ACTIVE;
+            this.fightStarted = true;
             this.phaseManager.transitionToPhase(0);
         }
     }
@@ -206,6 +229,12 @@ public class BossEntity extends Monster {
         if (!namedCooldowns.isEmpty()) {
             namedCooldowns.replaceAll((k, v) -> v - 1);
             namedCooldowns.values().removeIf(v -> v <= 0);
+        }
+
+        // Fade out the adaptation damage history so it tracks *recent* damage only.
+        if (!recentDamageByType.isEmpty() && tickCount % 20 == 0) {
+            recentDamageByType.replaceAll((k, v) -> v * 0.85f);
+            recentDamageByType.values().removeIf(v -> v < 0.5f);
         }
 
         tickBossBar();
@@ -256,12 +285,14 @@ public class BossEntity extends Monster {
 
     private void startPreFightSequence() {
         bossState     = BossState.PRE_FIGHT;
+        fightStarted  = true;
         dialogueTimer = 0;
         dialogueLine  = 0;
     }
 
     private void activateBoss() {
         bossState = BossState.ACTIVE;
+        fightStarted = true;
         if (phaseManager != null) {
             int idx = phaseManager.getCurrentPhaseIndex();
             phaseManager.transitionToPhase(idx >= 0 ? idx : 0);
@@ -351,7 +382,24 @@ public class BossEntity extends Monster {
         Entity attacker = source.getEntity();
         if (attacker != null && isMinion(attacker)) return false;
 
+        // Adaptation: remember what hit us, and soften the type we've adapted to
+        String damageType = classifyDamage(source);
+        recentDamageByType.merge(damageType, amount, Float::sum);
+        if (adaptedDamageType != null
+                && adaptedDamageType.equals(damageType)
+                && level().getGameTime() < adaptationUntilTick) {
+            amount *= (1.0f - adaptationResist);
+        }
+
         if (damageReduction > 0) amount *= (1.0f - damageReduction);
+
+        // Second Wind: survive one otherwise-fatal blow, then disarm
+        if (secondWindArmed && bossState == BossState.ACTIVE && getHealth() - amount <= 1.0f) {
+            secondWindArmed = false;
+            setHealth(Math.max(1.0f, getMaxHealth() * secondWindRevivePercent));
+            onSecondWind();
+            return false;
+        }
 
         // Intercept lethal damage to start pre-death monologue
         if (!preDeathTriggered
@@ -431,6 +479,7 @@ public class BossEntity extends Monster {
         if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
             output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
         output.putString("BossState", bossState.name());
+        output.putBoolean("FightStarted", fightStarted);
         output.putBoolean("PreDeathTriggered", preDeathTriggered);
         String disguise = getDisguiseEntity();
         if (!disguise.isEmpty()) output.putString("DisguiseEntity", disguise);
@@ -465,9 +514,6 @@ public class BossEntity extends Monster {
 
         // Restore saved phase silently (no transition messages or effects).
         int savedPhase = input.getIntOr("BossPhase", -1);
-        if (savedPhase > 0 && phaseManager != null) {
-            phaseManager.restoreToPhase(savedPhase);
-        }
 
         Optional<String> stateOpt = input.getString("BossState");
         if (stateOpt.isPresent()) {
@@ -483,9 +529,17 @@ public class BossEntity extends Monster {
         }
 
         this.preDeathTriggered = input.getBooleanOr("PreDeathTriggered", false);
-        input.getString("DisguiseEntity").ifPresent(this::setDisguiseEntity);
-
-        if (this.bossState == BossState.INACTIVE) clearGoalsForInactive();
+        this.fightStarted = input.getBooleanOr("FightStarted", false);
+        if (!fightStarted && definition != null
+                && definition.preFightDialogue != null
+                && !definition.preFightDialogue.isEmpty()) {
+            this.bossState = BossState.INACTIVE;
+            clearGoalsForInactive();
+        } else if (this.bossState == BossState.INACTIVE) {
+            clearGoalsForInactive();
+        } else if (phaseManager != null && phaseManager.getCurrentPhaseIndex() < 0) {
+            phaseManager.restoreToPhase(savedPhase >= 0 ? savedPhase : 0);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -598,4 +652,65 @@ public class BossEntity extends Monster {
 
     public void setDamageReduction(float reduction) { this.damageReduction = reduction; }
     public float getDamageReduction() { return damageReduction; }
+
+    // ── Second Wind (used by SecondWindGoal) ─────────────────────────────────
+    public void armSecondWind(float revivePercent) {
+        this.secondWindArmed = true;
+        this.secondWindRevivePercent = revivePercent;
+    }
+    public boolean isSecondWindArmed() { return secondWindArmed; }
+
+    private void onSecondWind() {
+        if (level() instanceof ServerLevel sl) {
+            sl.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
+                    getX(), getY() + getBbHeight() * 0.5, getZ(), 90, 0.6, 1.0, 0.6, 0.35);
+            sl.playSound(null, getX(), getY(), getZ(),
+                    SoundEvents.TOTEM_USE, SoundSource.HOSTILE, 1.6f, 0.8f);
+        }
+        addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, false, true));
+        addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 60, 1, false, true));
+    }
+
+    // ── Adaptation (used by AdaptationGoal) ──────────────────────────────────
+    /** The damage type that has dealt the most (recent) damage, or null if none yet. */
+    public String getDominantDamageType() {
+        String best = null;
+        float bestVal = 0f;
+        for (java.util.Map.Entry<String, Float> e : recentDamageByType.entrySet()) {
+            if (e.getValue() > bestVal) { bestVal = e.getValue(); best = e.getKey(); }
+        }
+        return best;
+    }
+
+    public void setAdaptation(String damageType, float resistPercent, int durationTicks) {
+        this.adaptedDamageType  = damageType;
+        this.adaptationResist    = resistPercent;
+        this.adaptationUntilTick = level().getGameTime() + durationTicks;
+    }
+
+    public String getAdaptedDamageType() {
+        return level().getGameTime() < adaptationUntilTick ? adaptedDamageType : null;
+    }
+
+    private static String classifyDamage(DamageSource source) {
+        if (source.is(DamageTypeTags.IS_FIRE))      return "fire";
+        if (source.is(DamageTypeTags.IS_EXPLOSION)) return "explosion";
+        if (source.is(DamageTypeTags.IS_PROJECTILE)) return "projectile";
+        if (source.is(DamageTypeTags.WITCH_RESISTANT_TO)) return "magic";
+        return "melee";
+    }
+
+    // ── Cleanse debuff immunity (used by CleanseGoal) ────────────────────────
+    public void setDebuffImmuneTicks(int ticks) {
+        if (ticks > 0) this.debuffImmuneUntilTick = level().getGameTime() + ticks;
+    }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effectInstance) {
+        if (level().getGameTime() < debuffImmuneUntilTick
+                && !effectInstance.getEffect().value().isBeneficial()) {
+            return false;
+        }
+        return super.canBeAffected(effectInstance);
+    }
 }

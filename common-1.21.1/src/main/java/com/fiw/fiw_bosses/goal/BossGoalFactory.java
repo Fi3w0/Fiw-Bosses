@@ -64,6 +64,10 @@ public interface BossGoalFactory {
         register("sacrifice_minion", SacrificeMinionGoal::new);
         register("last_breath", LastBreathGoal::new);
         register("wither_crown", WitherCrownGoal::new);
+        register("cleanse", CleanseGoal::new);
+        register("second_wind", SecondWindGoal::new);
+        register("adaptation", AdaptationGoal::new);
+        register("rewind", RewindGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {

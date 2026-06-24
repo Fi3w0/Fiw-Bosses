@@ -1,0 +1,72 @@
+{
+  "id": "test_b_abilities",
+  "displayName": "&5&lEcho Wraith &7(Ability Test)",
+  "health": 180.0,
+  "armor": 2.0,
+  "speed": 0.3,
+  "knockbackResistance": 0.3,
+  "attackDamage": 2.0,
+  "baseEntity": "custom",
+  "movement": "hit_and_run",
+  "bossBar": { "color": "PURPLE", "overlay": "PROGRESS" },
+  "skin": { "type": "player", "value": "Dinnerbone" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:iron_sword" }
+  },
+  "preFightDialogue": [
+    "&5[Echo Wraith] &fI am every moment you failed to land.",
+    "&5[Echo Wraith] &fCatch me if you can."
+  ],
+  "dialogueLineDelay": 30,
+  "preDeathDialogue": [
+    "&5[Echo Wraith] &fNo more echoes to spend..."
+  ],
+  "preDeathDialogueDelay": 30,
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "mirror_image", "cooldownTicks": 160, "params": { "cloneCount": 4, "radius": 5.0, "duration": 90, "swapInterval": 25, "invisibility": true, "reappearDamage": 1.0, "taunt": "&dWhich one is real?" } },
+        { "type": "phantom_dash", "cooldownTicks": 120, "params": { "dashCount": 3, "dashDistance": 4.0, "damage": 2.0, "delayBetweenDashes": 8 } },
+        { "type": "particle_tornado", "cooldownTicks": 140, "params": { "damage": 1.0, "maxRadius": 3.5, "height": 5.0, "duration": 80, "fire": false } },
+        { "type": "arc_slash", "cooldownTicks": 70, "params": { "arc": 170.0, "radius": 4.5, "damage": 2.0, "duration": 9 } },
+        { "type": "dodge", "cooldownTicks": 50, "params": { "chance": 0.35, "distance": 3.0, "taunt": "&7Too slow." } }
+      ],
+      "minions": []
+    },
+    {
+      "hpThresholdPercent": 0.5,
+      "speedMultiplier": 1.1,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "rewind", "cooldownTicks": 400, "params": { "delaySeconds": 4, "triggerBelowPercent": 0.45, "healPercent": 1.0, "taunt": "&5That never happened." } },
+        { "type": "rift_cleave", "cooldownTicks": 130, "params": { "damage": 2.0, "range": 12.0, "width": 1.4, "knockback": 0.8, "windupTicks": 28 } },
+        { "type": "fear_burst", "cooldownTicks": 150, "params": { "damage": 1.0, "radius": 8.0, "knockback": 1.0, "windupTicks": 24 } },
+        { "type": "wither_crown", "cooldownTicks": 220, "params": { "skulls": 3, "windupTicks": 30, "fireInterval": 10, "dangerousChance": 0.0, "taunt": "&8A crown of skulls." } },
+        { "type": "domain", "cooldownTicks": 1800, "params": { "radius": 10.0, "duration": 120, "pushDamage": 1.0, "pullDamage": 1.0, "darkness": true, "taunt": "&8You cannot leave." } }
+      ],
+      "minions": [],
+      "transitionMessage": "&5&lThe Wraith splinters across time!",
+      "transitionSound": "minecraft:entity.illusioner.mirror_move",
+      "transitionParticle": "minecraft:reverse_portal"
+    },
+    {
+      "hpThresholdPercent": 0.25,
+      "speedMultiplier": 1.2,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "last_breath", "cooldownTicks": 600, "params": { "belowPercent": 0.3, "channelTicks": 70, "radius": 12.0, "damage": 2.0, "interruptDamage": 0, "knockback": 1.0, "taunt": "&8One last echo." } },
+        { "type": "arc_slash", "cooldownTicks": 60, "params": { "arc": 170.0, "radius": 4.5, "damage": 2.0, "duration": 9 } }
+      ],
+      "minions": [],
+      "transitionMessage": "&4&lThe final echo gathers!",
+      "transitionSound": "minecraft:entity.wither.death",
+      "transitionParticle": "minecraft:soul"
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:diamond", "count": 2, "chance": 1.0 }
+  ]
+}

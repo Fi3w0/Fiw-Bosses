@@ -21,7 +21,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   - Fabric & NeoForge for Minecraft **1.21.11**, **1.21.8**, and **1.21.1**
   - Fabric & **Forge** for Minecraft **1.20.1** (brand-new Forge module — NeoForge has no 1.20.1)
 - The widest loader/version support of any release so far (8 targets), all sharing one feature set.
-- **More boss abilities** — an expanded set of configurable abilities (48 in total).
+- **More boss abilities** — an expanded set of configurable abilities (52 in total).
 - Six new configurable boss abilities, available on every supported Minecraft version and loader:
   - `rift_cleave`: wind-up line cleave with soul/sculk rift visuals, damage, width, range, knockback, linger, and taunt controls.
   - `fear_burst`: Warden-inspired soul burst with Darkness, Weakness, Slowness, knockback, optional damage, and taunt support.
@@ -29,6 +29,11 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   - `sacrifice_minion`: consumes owned minions to heal the boss and damage nearby players at the sacrificed minion location.
   - `last_breath`: low-health interruptible channel that releases a large soul blast if players do not deal enough damage.
   - `wither_crown`: orbiting wither skull crown that fires real wither skull projectiles one by one.
+- Four new defensive/survival abilities:
+  - `cleanse`: strips all harmful effects off the boss and briefly blocks new debuffs.
+  - `second_wind`: one-shot auto-revive that negates a fatal blow and restores partial health, then re-arms after its cooldown.
+  - `adaptation`: passively grows resistant to whichever damage type (`melee`/`projectile`/`magic`/`fire`/`explosion`) has recently hurt the boss most.
+  - `rewind`: records position and health and snaps the boss back a few seconds when low — intentionally very strong, meant for long cooldowns.
 - **Vanilla mob visuals for FIW entities** — bosses and custom minions can now look like vanilla/modded
   mobs while still using FIW boss/minion logic. Use `renderEntity` on `baseEntity: "custom"` minions,
   or set a boss `baseEntity` / `renderEntity` to a registry ID such as `minecraft:zombie`.
@@ -76,6 +81,11 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   walls, snap to safe ground within a small vertical search, and fizzle in place if no safe landing exists.
 - `particle_tornado` visuals now actually read as a spinning funnel using per-disk helix twist and upward drift.
 - The 1.21.11 ability fixes were ported to **1.21.8**, **1.21.1**, and **1.20.1** with matching logic and JSON format.
+- 1.21.11 Fabric and NeoForge `renderEntity` disguises no longer fall back to Steve. FIW boss/minion render states
+  now stay on the FIW renderer path, submit the vanilla disguise renderer, and copy walking/attack animation into
+  the disguised mob state.
+- 1.21.11 `renderEntity` disguise data is now synced to clients for bosses and custom minions, so configs such as
+  `renderEntity: "minecraft:wither_skeleton"` render correctly in real multiplayer/client worlds.
 
 ### Known issues
 - Because this is a rewrite, some abilities/mechanics may be broken, untested, or inconsistent between

@@ -8,6 +8,7 @@ import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.ModRefs;
 import com.fiw.fiw_bosses.entity.MinionEntity;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
+import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -18,6 +19,7 @@ import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.phys.AABB;
 
@@ -27,6 +29,14 @@ import java.util.List;
 public final class BossCommand {
 
     private BossCommand() {}
+
+    private static void sendSkinToNearbyPlayers(ServerLevel level, BossEntity boss) {
+        for (ServerPlayer player : level.players()) {
+            if (player.distanceToSqr(boss) <= 128.0D * 128.0D) {
+                NetworkHandler.sendSkinToPlayer(player, boss);
+            }
+        }
+    }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("boss")
@@ -113,6 +123,7 @@ public final class BossCommand {
         boss.finalizeSpawn(level, level.getCurrentDifficultyAt(boss.blockPosition()),
                 MobSpawnType.COMMAND, null, null);
         level.addFreshEntity(boss);
+        sendSkinToNearbyPlayers(level, boss);
 
         final double fx = x, fy = y, fz = z;
         source.sendSuccess(() -> Component.literal("Spawned boss ")
@@ -232,6 +243,7 @@ public final class BossCommand {
         minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
                 MobSpawnType.COMMAND, null, null);
         level.addFreshEntity(minion);
+        sendSkinToNearbyPlayers(level, minion);
 
         source.sendSuccess(() -> Component.literal("Spawned minion ")
                 .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))

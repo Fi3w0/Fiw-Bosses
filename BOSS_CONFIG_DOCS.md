@@ -189,6 +189,8 @@ You can also keep `baseEntity: "custom"` and use `renderEntity` as the visual-on
 }
 ```
 
+When `renderEntity` is set, that vanilla/modded entity is the visual model. The player `skin` field is ignored for rendering, but configured `equipment` is still applied to the disguised mob.
+
 For minions, there are two different choices:
 
 | Setup | What you get |
@@ -1416,6 +1418,78 @@ Summons a crown of smoky soul skulls above the boss. The skulls orbit during the
 
 ```json
 { "type": "wither_crown", "cooldownTicks": 260, "params": { "skulls": 7, "orbitRadius": 2.6, "windupTicks": 35, "fireInterval": 7, "dangerousChance": 0.25, "taunt": "&8Kneel beneath the wither crown." } }
+```
+
+---
+
+### `cleanse`
+
+Strips every harmful status effect off the boss and, for a short window, makes it immune to new debuffs. A direct counter to potion/effect-heavy player strategies.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `resistTicks` | 60 | Ticks the boss is immune to **new** harmful effects after cleansing |
+| `requireDebuff` | true | Only activate when the boss actually has a debuff to remove (saves the cooldown otherwise) |
+| `taunt` | null | Message sent when the boss cleanses |
+
+```json
+{ "type": "cleanse", "cooldownTicks": 200, "params": { "resistTicks": 80, "taunt": "&fYour poisons mean nothing." } }
+```
+
+---
+
+### `second_wind`
+
+A one-shot auto-revive. While armed, the next blow that would kill the boss is **negated** — instead the boss is restored to a fraction of its max health and gains a short Regeneration + Resistance burst (with a Totem-style effect). It re-arms after `cooldownTicks`, so a long cooldown lets it save the boss again much later in a fight.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `revivePercent` | 0.5 | Fraction of max health the boss revives to (clamped 0.05–1.0) |
+| `taunt` | null | Message sent when second wind is (re)armed |
+
+> `cooldownTicks` here is the **re-arm delay** after the revive has been spent. Use a large value (e.g. one revive per phase) to avoid an unkillable boss.
+
+```json
+{ "type": "second_wind", "cooldownTicks": 1200, "params": { "revivePercent": 0.4, "taunt": "&c...not yet." } }
+```
+
+---
+
+### `adaptation`
+
+Passive. The boss tracks which damage type has recently hurt it most — `melee`, `projectile`, `magic`, `fire`, or `explosion` — and periodically grows resistant to it. Rewards players who vary their damage sources instead of spamming one.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `resistPercent` | 0.4 | Damage reduction against the currently-adapted type (clamped 0.0–0.9) |
+| `windowTicks` | 200 | How long each adaptation lasts before it must be refreshed |
+| `updateInterval` | 100 | Ticks between re-evaluations (minimum 20) |
+| `announce` | false | When `true`, sends `taunt` whenever the adapted type changes |
+| `taunt` | null | Message on adaptation change; `{type}` is replaced with the damage type |
+
+> `cooldownTicks` is unused — `adaptation` runs continuously while the boss is active.
+
+```json
+{ "type": "adaptation", "cooldownTicks": 0, "params": { "resistPercent": 0.5, "windowTicks": 240, "updateInterval": 100, "announce": true, "taunt": "&bI have learned your {type}." } }
+```
+
+---
+
+### `rewind`
+
+> ⚠️ **Extremely powerful — use it wisely.** Rewind can completely undo a burst of damage *and* reposition the boss to safety. Give it a long cooldown and treat it as a signature / desperation move, **not** a spammable ability — otherwise the fight can become unwinnable.
+
+Continuously records the boss's position and health. When the boss drops to/below a health threshold (and is off cooldown), it snaps back to where it was a few seconds ago and restores the health it had at that moment.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `delaySeconds` | 4.0 | How far back in time the boss rewinds (minimum ~1s) |
+| `triggerBelowPercent` | 0.5 | Rewinds only when current health is at/below this fraction of max |
+| `healPercent` | 1.0 | Fraction of the past health actually restored (`1.0` = full restore to the older health) |
+| `taunt` | null | Message sent when the rewind fires |
+
+```json
+{ "type": "rewind", "cooldownTicks": 900, "params": { "delaySeconds": 5, "triggerBelowPercent": 0.4, "healPercent": 1.0, "taunt": "&5That never happened." } }
 ```
 
 ---

@@ -94,11 +94,13 @@ public class MirrorImageGoal extends Goal {
 
         if (swapInterval > 0 && tick % swapInterval == 0 && !images.isEmpty()) {
             Vec3 target = images.get(boss.getRandom().nextInt(images.size()));
-            level.sendParticles(ParticleTypes.POOF,
-                    boss.getX(), boss.getY() + 1.0, boss.getZ(), 12, 0.35, 0.5, 0.35, 0.05);
-            boss.teleportTo(target.x, target.y, target.z);
-            level.playSound(null, target.x, target.y, target.z,
-                    SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 0.9f, 1.7f);
+            if (canSwapTo(target)) {
+                level.sendParticles(ParticleTypes.POOF,
+                        boss.getX(), boss.getY() + 1.0, boss.getZ(), 12, 0.35, 0.5, 0.35, 0.05);
+                boss.teleportTo(target.x, target.y, target.z);
+                level.playSound(null, target.x, target.y, target.z,
+                        SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 0.9f, 1.7f);
+            }
             rebuildImages();
         }
 
@@ -119,6 +121,11 @@ public class MirrorImageGoal extends Goal {
         images.clear();
         active = false;
         cooldownTimer = cooldown;
+    }
+
+    private boolean canSwapTo(Vec3 target) {
+        return boss.level().noCollision(boss,
+                boss.getBoundingBox().move(target.subtract(boss.position())));
     }
 
     private void rebuildImages() {

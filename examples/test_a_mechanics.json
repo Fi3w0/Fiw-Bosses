@@ -1,0 +1,76 @@
+{
+  "id": "test_a_mechanics",
+  "displayName": "&b&lTrial Construct &7(Mechanics Test)",
+  "health": 160.0,
+  "armor": 4.0,
+  "speed": 0.28,
+  "knockbackResistance": 0.4,
+  "attackDamage": 2.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:wither_skeleton",
+  "movement": "phase_walk",
+  "bossBar": { "color": "BLUE", "overlay": "NOTCHED_6" },
+  "skin": { "type": "player", "value": "Steve" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:stone_sword" },
+    "head": { "item": "minecraft:iron_helmet" }
+  },
+  "preFightDialogue": [
+    "&b[Trial Construct] &fDisguise online — I wear the wither's face.",
+    "&b[Trial Construct] &fBegin the mechanics trial."
+  ],
+  "dialogueLineDelay": 30,
+  "preDeathDialogue": [
+    "&b[Trial Construct] &fSystems failing...",
+    "&b[Trial Construct] &fTrial complete."
+  ],
+  "preDeathDialogueDelay": 30,
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "adaptation", "cooldownTicks": 0, "params": { "resistPercent": 0.4, "windowTicks": 200, "updateInterval": 60, "announce": true, "taunt": "&bAdapting to your {type}." } },
+        { "type": "cleanse", "cooldownTicks": 120, "params": { "requireDebuff": false, "resistTicks": 60, "taunt": "&fPurged." } },
+        { "type": "dodge", "cooldownTicks": 50, "params": { "chance": 0.4, "distance": 2.5, "taunt": "&7Missed." } },
+        { "type": "beam", "cooldownTicks": 110, "params": { "damage": 1.0, "duration": 40 } },
+        { "type": "melee_slash", "cooldownTicks": 45, "params": { "range": 4.0, "arc": 100.0, "damage": 2.0 } }
+      ],
+      "minions": []
+    },
+    {
+      "hpThresholdPercent": 0.6,
+      "speedMultiplier": 1.1,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "summon_minions", "cooldownTicks": 200, "params": { "taunt": "&5Rise." } },
+        { "type": "sacrifice_minion", "cooldownTicks": 140, "params": { "count": 1, "healAmount": 10.0, "damage": 1.0, "belowPercent": 1.0, "taunt": "&5Your life fuels mine." } },
+        { "type": "guardian_shield", "cooldownTicks": 220, "params": { "counterDamage": 2.0, "counterKnockback": 1.0, "duration": 160 } },
+        { "type": "melee_slash", "cooldownTicks": 45, "params": { "range": 4.0, "arc": 100.0, "damage": 2.0 } }
+      ],
+      "minions": [
+        { "entityType": "minecraft:zombie", "count": 2, "maxAlive": 3, "spawnRadius": 4.0 }
+      ],
+      "transitionMessage": "&9&lThe Construct reroutes power!",
+      "transitionSound": "minecraft:block.beacon.activate",
+      "transitionParticle": "minecraft:soul_fire_flame"
+    },
+    {
+      "hpThresholdPercent": 0.3,
+      "speedMultiplier": 1.2,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "second_wind", "cooldownTicks": 1200, "params": { "revivePercent": 0.5, "taunt": "&c...not finished." } },
+        { "type": "melee_slash", "cooldownTicks": 40, "params": { "range": 4.0, "arc": 110.0, "damage": 2.0 } }
+      ],
+      "minions": [],
+      "transitionMessage": "&c&lFinal protocol engaged!",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:totem_of_undying"
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:diamond", "count": 2, "chance": 1.0 }
+  ]
+}

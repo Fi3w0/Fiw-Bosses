@@ -68,7 +68,8 @@ public class BossConfigLoader {
                 }
                 definitions.put(def.id, def);
                 loaded++;
-                FiwBossesCore.LOGGER.info("Loaded boss definition: {}", def.id);
+                FiwBossesCore.LOGGER.info("Loaded boss definition: {} (baseEntity={}, renderEntity={})",
+                        def.id, def.baseEntity, def.renderEntity);
             } catch (Exception e) {
                 FiwBossesCore.LOGGER.error("Failed to load boss definition from {}: {}", file.getName(), e.getMessage());
                 failed++;

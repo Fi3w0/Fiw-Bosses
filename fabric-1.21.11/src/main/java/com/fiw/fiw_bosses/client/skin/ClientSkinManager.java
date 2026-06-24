@@ -4,7 +4,10 @@ import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
 
 import java.io.ByteArrayInputStream;
 import java.util.Map;
@@ -14,6 +17,7 @@ public final class ClientSkinManager {
     private static final Map<Integer, Identifier> SKIN_TEXTURES = new ConcurrentHashMap<>();
     private static final Map<Integer, DynamicTexture> TEXTURE_OBJECTS = new ConcurrentHashMap<>();
     private static final Map<Integer, Boolean> SLIM_FLAGS = new ConcurrentHashMap<>();
+    private static final Map<Integer, PlayerSkin> PLAYER_SKINS = new ConcurrentHashMap<>();
 
     private ClientSkinManager() {}
 
@@ -25,10 +29,16 @@ public final class ClientSkinManager {
             DynamicTexture texture = new DynamicTexture(() -> "fiw_bosses skin " + entityId, image);
             Identifier textureId = Identifier.fromNamespaceAndPath(FiwBossesCore.MOD_ID, "skin/entity_" + entityId);
             Minecraft.getInstance().getTextureManager().register(textureId, texture);
+            PlayerSkin playerSkin = PlayerSkin.insecure(
+                    new ClientAsset.ResourceTexture(textureId, textureId),
+                    null,
+                    null,
+                    slim ? PlayerModelType.SLIM : PlayerModelType.WIDE);
 
             SKIN_TEXTURES.put(entityId, textureId);
             TEXTURE_OBJECTS.put(entityId, texture);
             SLIM_FLAGS.put(entityId, slim);
+            PLAYER_SKINS.put(entityId, playerSkin);
         } catch (Exception e) {
             FiwBossesCore.LOGGER.error("Failed to register skin texture for entity {}: {}", entityId, e.getMessage());
         }
@@ -42,10 +52,15 @@ public final class ClientSkinManager {
         return Boolean.TRUE.equals(SLIM_FLAGS.get(entityId));
     }
 
+    public static PlayerSkin getPlayerSkin(int entityId) {
+        return PLAYER_SKINS.get(entityId);
+    }
+
     public static void removeSkin(int entityId) {
         Identifier old = SKIN_TEXTURES.remove(entityId);
         DynamicTexture oldTexture = TEXTURE_OBJECTS.remove(entityId);
         SLIM_FLAGS.remove(entityId);
+        PLAYER_SKINS.remove(entityId);
         if (old != null && oldTexture != null) {
             Minecraft.getInstance().getTextureManager().release(old);
         }

@@ -1,6 +1,7 @@
 package com.fiw.fiw_bosses;
 
 import com.fiw.fiw_bosses.client.renderer.BossEntityRenderer;
+import com.fiw.fiw_bosses.client.renderer.ClientDisguiseManager;
 import com.fiw.fiw_bosses.client.renderer.MinionEntityRenderer;
 import com.fiw.fiw_bosses.client.skin.ClientSkinManager;
 import com.fiw.fiw_bosses.entity.BossEntity;
@@ -25,6 +26,7 @@ public class FiwBossesClient implements ClientModInitializer {
         // parent of MinionEntity, so this covers both.
         ClientEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
             if (entity instanceof BossEntity) {
+                ClientDisguiseManager.removeDisguise(entity.getId());
                 ClientSkinManager.removeSkin(entity.getId());
             }
         });

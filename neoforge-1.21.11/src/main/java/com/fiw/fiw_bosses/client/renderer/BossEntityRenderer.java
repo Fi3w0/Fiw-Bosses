@@ -14,14 +14,22 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.resources.Identifier;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class BossEntityRenderer
         extends HumanoidMobRenderer<BossEntity, BossEntityRenderState, HumanoidModel<BossEntityRenderState>> {
 
     private static final Identifier DEFAULT_TEXTURE =
             Identifier.fromNamespaceAndPath(FiwBossesCore.MOD_ID, "textures/entity/boss_default.png");
+    private static final Set<Integer> LOGGED_SUBMIT = ConcurrentHashMap.newKeySet();
+    private final HumanoidModel<BossEntityRenderState> classicModel;
+    private final HumanoidModel<BossEntityRenderState> slimModel;
 
     public BossEntityRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new HumanoidModel<>(ctx.bakeLayer(ModelLayers.PLAYER)), 0.5f);
+        this.classicModel = this.model;
+        this.slimModel = new HumanoidModel<>(ctx.bakeLayer(ModelLayers.PLAYER_SLIM));
         this.addLayer(new HumanoidArmorLayer<>(
                 this,
                 ArmorModelSet.bake(ModelLayers.PLAYER_ARMOR, ctx.getModelSet(), HumanoidModel::new),
@@ -39,20 +47,50 @@ public class BossEntityRenderer
         state.entityId = entity.getId();
         state.slim = ClientSkinManager.isSlim(entity.getId());
         state.disguiseState = DisguiseRenderHelper.createState(entity, partialTick, this.entityRenderDispatcher);
+        if (state.disguiseState != null) {
+            hidePlayerModel(state);
+        }
+    }
+
+    private static void hidePlayerModel(BossEntityRenderState state) {
+        state.isInvisible = true;
+        state.isInvisibleToPlayer = true;
     }
 
     @Override
     public void submit(BossEntityRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState cameraState) {
         if (state.disguiseState != null) {
-            this.entityRenderDispatcher.submit(state.disguiseState, cameraState, state.x, state.y, state.z, poseStack, collector);
+            if (LOGGED_SUBMIT.add(state.entityId)) {
+                FiwBossesCore.LOGGER.info("Boss renderer submitting disguise entity={} stateType={} entityType={} at {},{},{}",
+                        state.entityId,
+                        state.disguiseState.getClass().getName(),
+                        state.disguiseState.entityType,
+                        state.x, state.y, state.z);
+            }
+            this.entityRenderDispatcher.submit(state.disguiseState, cameraState, 0.0, 0.0, 0.0, poseStack, collector);
             return;
         }
+        if (LOGGED_SUBMIT.add(state.entityId)) {
+            FiwBossesCore.LOGGER.info("Boss renderer using player fallback entity={} hasClientDisguise={} skin={}",
+                    state.entityId,
+                    ClientDisguiseManager.hasDisguise(state.entityId),
+                    ClientSkinManager.getSkinTexture(state.entityId));
+        }
+        this.model = state.slim ? slimModel : classicModel;
         super.submit(state, poseStack, collector, cameraState);
+    }
+
+    public void render(BossEntityRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState cameraState) {
+        submit(state, poseStack, collector, cameraState);
     }
 
     @Override
     public Identifier getTextureLocation(BossEntityRenderState state) {
-        Identifier skin = ClientSkinManager.getSkinTexture(state.entityId);
+        int entityId = state.entityId;
+        Identifier skin = ClientSkinManager.getSkinTexture(entityId);
+        if (skin != null) {
+            ClientSkinManager.logTextureUseOnce(entityId, skin);
+        }
         return skin != null ? skin : DEFAULT_TEXTURE;
     }
 }

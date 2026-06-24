@@ -32,6 +32,7 @@ public class FiwBossesNeoForge {
 
         BossEntityRegistry.register(modBus);
         ModSounds.register(modBus);
+        modBus.addListener(NetworkHandler::registerPayloads);
         modBus.addListener(this::registerAttributes);
         modBus.addListener(this::commonSetup);
         BossGoalFactory.init();
