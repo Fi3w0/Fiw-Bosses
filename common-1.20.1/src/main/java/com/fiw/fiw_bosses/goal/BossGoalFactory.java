@@ -68,6 +68,8 @@ public interface BossGoalFactory {
         register("second_wind", SecondWindGoal::new);
         register("adaptation", AdaptationGoal::new);
         register("rewind", RewindGoal::new);
+        register("gravity_well", GravityWellGoal::new);
+        register("shadow_clone", ShadowCloneGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {
