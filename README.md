@@ -2,7 +2,7 @@
 
 # FIW Bosses
 
-**Build custom Minecraft boss fights from JSON — phases, minions, loot, dialogue, skins, and 50+ configurable abilities, no Java required.**
+**A data-driven boss framework for Fabric, NeoForge, and Forge. Define multi-phase bosses and minions with 50+ configurable abilities entirely through JSON — no coding, no restarts.**
 
 [![Build](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml/badge.svg)](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml)
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)

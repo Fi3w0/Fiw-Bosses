@@ -2,7 +2,7 @@
 
 # ⚔️ FIW Bosses
 
-### Build the boss fight you've always wanted — from a text file.
+### A data-driven boss framework for NeoForge, Fabric, and Forge — no coding, no restarts.
 
 **Phases. Minions. Loot. Dialogue. Custom skins. 50+ abilities.**
 No Java. No restarts. No combat-modding degree required.

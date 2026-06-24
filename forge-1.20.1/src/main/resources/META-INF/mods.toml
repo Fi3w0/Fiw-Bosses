@@ -10,7 +10,7 @@ displayName="FIW Bosses"
 authors="Fi3w0"
 logoFile="icon.png"
 description='''
-Configurable bosses with phases, abilities and dialogue.
+A data-driven boss framework for Fabric, NeoForge, and Forge. Define multi-phase bosses and minions with configurable abilities entirely through JSON — no coding, no restarts.
 '''
 
 [[dependencies.fiw_bosses]]

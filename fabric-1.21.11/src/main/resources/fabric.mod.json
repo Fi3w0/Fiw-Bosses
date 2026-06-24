@@ -3,7 +3,7 @@
   "id": "fiw_bosses",
   "version": "${version}",
   "name": "FIW Bosses",
-  "description": "Configurable bosses with phases, abilities and dialogue.",
+  "description": "A data-driven boss framework for Fabric, NeoForge, and Forge. Define multi-phase bosses and minions with configurable abilities entirely through JSON — no coding, no restarts.",
   "authors": ["Fi3w0"],
   "license": "GPL-3.0-only",
   "contact": {
