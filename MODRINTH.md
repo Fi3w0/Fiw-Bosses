@@ -2,7 +2,7 @@
 
 # ⚔️ FIW Bosses
 
-### A data-driven boss framework for NeoForge, Fabric, and Forge — no coding, no restarts.
+### Build the boss fight you've always wanted — from a text file.
 
 **Phases. Minions. Loot. Dialogue. Custom skins. 50+ abilities.**
 No Java. No restarts. No combat-modding degree required.
@@ -26,6 +26,9 @@ FIW Bosses hands you the toolkit Mojang didn't: drop a JSON file into `config/fi
 It isn't one hardcoded boss bolted onto the game. It's a **framework**: HP-threshold phases, per-phase ability loadouts, custom minions with their own AI, pre-fight and pre-death dialogue, custom skins, hot reload — one config schema that behaves the same on every loader and version it supports.
 
 > 🧩 **Both-sides mod.** Install the matching jar on the **server and every client** that joins it.
+---
+
+![Short showcase](https://cdn.modrinth.com/data/O9BUcsSY/images/7a6808da1a73d6c234247a25f17242dba341652f.gif)
 
 ---
 
@@ -73,7 +76,6 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 💬 **Fight flow & dialogue** — start a boss dormant and invulnerable until a player right-clicks it; play pre-fight lines, then begin. Hold it at 1 HP for last words before it falls.
 
 ♻️ **Hot reload & persistence** — `/boss reload` re-reads everything live, deleted configs are removed from the world, and a boss's phase survives server restarts.
-
 ---
 
 ## 50+ abilities, mixed and matched
