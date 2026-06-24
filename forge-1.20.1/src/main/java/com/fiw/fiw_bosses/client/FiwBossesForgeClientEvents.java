@@ -1,5 +1,6 @@
 package com.fiw.fiw_bosses.client;
 
+import com.fiw.fiw_bosses.client.renderer.ClientDisguiseManager;
 import com.fiw.fiw_bosses.client.skin.ClientSkinManager;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.entity.BossEntity;
@@ -21,6 +22,7 @@ public final class FiwBossesForgeClientEvents {
     @SubscribeEvent
     public static void onEntityLeave(EntityLeaveLevelEvent event) {
         if (event.getLevel().isClientSide() && event.getEntity() instanceof BossEntity boss) {
+            ClientDisguiseManager.removeDisguise(boss.getId());
             ClientSkinManager.removeSkin(boss.getId());
         }
     }

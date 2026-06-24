@@ -43,7 +43,7 @@ public class BossEntityRenderer
     @Override
     public void render(BossEntityRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         if (state.disguiseState != null) {
-            this.entityRenderDispatcher.render(state.disguiseState, state.x, state.y, state.z, poseStack, buffer, packedLight);
+            this.entityRenderDispatcher.render(state.disguiseState, 0.0, 0.0, 0.0, poseStack, buffer, packedLight);
             return;
         }
         super.render(state, poseStack, buffer, packedLight);

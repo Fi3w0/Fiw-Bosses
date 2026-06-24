@@ -4,7 +4,6 @@ import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.client.renderer.ClientDisguiseManager;
 import com.fiw.fiw_bosses.client.skin.ClientSkinManager;
-import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.skin.SkinCache;
 import com.fiw.fiw_bosses.skin.SkinData;
@@ -48,8 +47,6 @@ public final class NetworkHandler {
 
     private static String sendRenderToPlayer(ServerPlayer player, BossEntity boss) {
         String disguise = resolveDisguise(boss);
-        FiwBossesCore.LOGGER.info("Sending render payload entity={} bossId={} disguise='{}' to {}",
-                boss.getId(), boss.getBossId(), disguise, player.getName().getString());
         ServerPlayNetworking.send(player, new BossRenderPayload(boss.getId(), disguise));
         return disguise;
     }

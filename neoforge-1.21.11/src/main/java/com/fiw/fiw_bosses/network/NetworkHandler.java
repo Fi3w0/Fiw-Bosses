@@ -2,7 +2,6 @@ package com.fiw.fiw_bosses.network;
 
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
-import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.skin.SkinCache;
 import com.fiw.fiw_bosses.skin.SkinData;
@@ -56,14 +55,11 @@ public final class NetworkHandler {
     }
 
     private static void doSend(ServerPlayer player, int entityId, SkinData skinData) {
-        FiwBossesCore.LOGGER.info("Sending skin texture for entity {} to {}", entityId, player.getName().getString());
         PacketDistributor.sendToPlayer(player, new BossSkinPayload(entityId, skinData.slim, skinData.png));
     }
 
     private static String sendRenderToPlayer(ServerPlayer player, BossEntity boss) {
         String disguise = resolveDisguise(boss);
-        FiwBossesCore.LOGGER.info("Sending render payload entity={} bossId={} disguise='{}' to {}",
-                boss.getId(), boss.getBossId(), disguise, player.getName().getString());
         PacketDistributor.sendToPlayer(player, new BossRenderPayload(boss.getId(), disguise));
         return disguise;
     }

@@ -5,6 +5,7 @@ import com.fiw.fiw_bosses.entity.BossEntity;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -20,17 +21,33 @@ final class DisguiseRenderHelper {
 
     static EntityRenderState createState(BossEntity source, float partialTick, EntityRenderDispatcher dispatcher) {
         String disguiseId = source.getDisguiseEntity();
-        if (disguiseId == null || disguiseId.isBlank()) return null;
+        if (disguiseId == null || disguiseId.isBlank()) {
+            disguiseId = ClientDisguiseManager.getDisguise(source.getId());
+        }
+        if (disguiseId == null || disguiseId.isBlank()) {
+            return null;
+        }
 
         ResourceLocation id = ResourceLocation.tryParse(disguiseId);
-        if (id == null) return null;
-        if (FiwBossesCore.MOD_ID.equals(id.getNamespace())) return null;
+        if (id == null) {
+            return null;
+        }
+        if (FiwBossesCore.MOD_ID.equals(id.getNamespace())) {
+            return null;
+        }
 
         Optional<EntityType<?>> typeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
-        if (typeOpt.isEmpty() || typeOpt.get() == source.getType()) return null;
+        if (typeOpt.isEmpty()) {
+            return null;
+        }
+        if (typeOpt.get() == source.getType()) {
+            return null;
+        }
 
         Entity fake = typeOpt.get().create(source.level(), EntitySpawnReason.COMMAND);
-        if (fake == null) return null;
+        if (fake == null) {
+            return null;
+        }
 
         fake.snapTo(source.getX(), source.getY(), source.getZ(), source.getYRot(), source.getXRot());
         fake.tickCount = source.tickCount;
@@ -50,8 +67,18 @@ final class DisguiseRenderHelper {
             }
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        EntityRenderState state = ((EntityRenderer) dispatcher.getRenderer(fake)).createRenderState(fake, partialTick);
-        return state;
+        try {
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            EntityRenderState state = ((EntityRenderer) dispatcher.getRenderer(fake)).createRenderState(fake, partialTick);
+            // The throwaway entity never walks or swings, so copy the boss's
+            // current animation values onto the extracted disguise state.
+            if (state instanceof LivingEntityRenderState livingState) {
+                livingState.walkAnimationPos = source.walkAnimation.position(partialTick);
+                livingState.walkAnimationSpeed = source.walkAnimation.speed(partialTick);
+            }
+            return state;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 }

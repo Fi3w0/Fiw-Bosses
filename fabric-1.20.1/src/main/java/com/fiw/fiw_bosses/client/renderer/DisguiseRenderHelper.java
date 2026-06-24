@@ -28,6 +28,9 @@ final class DisguiseRenderHelper {
 
     private static Entity createFake(BossEntity source) {
         String disguiseId = source.getDisguiseEntity();
+        if (disguiseId == null || disguiseId.isBlank()) {
+            disguiseId = ClientDisguiseManager.getDisguise(source.getId());
+        }
         if (disguiseId == null || disguiseId.isBlank()) return null;
 
         ResourceLocation id = ResourceLocation.tryParse(disguiseId);

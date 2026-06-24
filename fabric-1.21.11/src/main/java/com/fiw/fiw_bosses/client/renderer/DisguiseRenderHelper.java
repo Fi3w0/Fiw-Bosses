@@ -14,12 +14,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 final class DisguiseRenderHelper {
     private DisguiseRenderHelper() {}
-    private static final Set<Integer> LOGGED = ConcurrentHashMap.newKeySet();
 
     static EntityRenderState createState(BossEntity source, float partialTick, EntityRenderDispatcher dispatcher) {
         String disguiseId = source.getDisguiseEntity();
@@ -27,33 +24,27 @@ final class DisguiseRenderHelper {
             disguiseId = ClientDisguiseManager.getDisguise(source.getId());
         }
         if (disguiseId == null || disguiseId.isBlank()) {
-            logOnce(source, "no disguise on entityData/client map");
             return null;
         }
 
         Identifier id = Identifier.tryParse(disguiseId);
         if (id == null) {
-            logOnce(source, "invalid disguise id '" + disguiseId + "'");
             return null;
         }
         if (FiwBossesCore.MOD_ID.equals(id.getNamespace())) {
-            logOnce(source, "ignored FIW entity disguise '" + disguiseId + "'");
             return null;
         }
 
         Optional<EntityType<?>> typeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
         if (typeOpt.isEmpty()) {
-            logOnce(source, "unknown entity type '" + disguiseId + "'");
             return null;
         }
         if (typeOpt.get() == source.getType()) {
-            logOnce(source, "disguise matched source type '" + disguiseId + "'");
             return null;
         }
 
         Entity fake = typeOpt.get().create(source.level(), net.minecraft.world.entity.EntitySpawnReason.COMMAND);
         if (fake == null) {
-            logOnce(source, "failed to create fake entity '" + disguiseId + "'");
             return null;
         }
 
@@ -86,22 +77,9 @@ final class DisguiseRenderHelper {
             if (state instanceof ArmedEntityRenderState armedState) {
                 armedState.attackTime = source.getAttackAnim(partialTick);
             }
-            if (LOGGED.add(source.getId())) {
-                FiwBossesCore.LOGGER.info("Created disguise render state entity={} bossId={} disguise={} stateType={} entityType={}",
-                        source.getId(), source.getBossId(), disguiseId, state.getClass().getName(), state.entityType);
-            }
             return state;
         } catch (Throwable t) {
-            logOnce(source, "extractEntity failed: " + t.getClass().getSimpleName() + ": " + t.getMessage());
             return null;
-        }
-    }
-
-    private static void logOnce(BossEntity source, String reason) {
-        if (LOGGED.add(source.getId())) {
-            FiwBossesCore.LOGGER.info("No disguise render state entity={} bossId={} reason={} entityData='{}' clientMap='{}'",
-                    source.getId(), source.getBossId(), reason, source.getDisguiseEntity(),
-                    ClientDisguiseManager.getDisguise(source.getId()));
         }
     }
 }

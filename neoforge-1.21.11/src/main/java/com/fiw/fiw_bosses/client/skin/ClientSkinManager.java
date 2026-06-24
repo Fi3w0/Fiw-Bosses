@@ -14,7 +14,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.io.ByteArrayInputStream;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ClientSkinManager {
@@ -23,7 +22,6 @@ public final class ClientSkinManager {
     private static final Map<Integer, DynamicTexture> TEXTURE_OBJECTS = new ConcurrentHashMap<>();
     private static final Map<Integer, Boolean> SLIM_FLAGS = new ConcurrentHashMap<>();
     private static final Map<Integer, PlayerSkin> PLAYER_SKINS = new ConcurrentHashMap<>();
-    private static final Set<Integer> LOGGED_TEXTURE_USE = ConcurrentHashMap.newKeySet();
 
     private ClientSkinManager() {}
 
@@ -53,7 +51,6 @@ public final class ClientSkinManager {
             TEXTURE_OBJECTS.put(entityId, texture);
             SLIM_FLAGS.put(entityId, slim);
             PLAYER_SKINS.put(entityId, playerSkin);
-            FiwBossesCore.LOGGER.info("Registered skin texture for entity {} (slim={}, {} bytes)", entityId, slim, pngData.length);
         } catch (Exception e) {
             FiwBossesCore.LOGGER.error("Failed to register skin texture for entity {}: {}", entityId, e.getMessage());
         }
@@ -71,18 +68,11 @@ public final class ClientSkinManager {
         return PLAYER_SKINS.get(entityId);
     }
 
-    public static void logTextureUseOnce(int entityId, Identifier textureId) {
-        if (LOGGED_TEXTURE_USE.add(entityId)) {
-            FiwBossesCore.LOGGER.info("Renderer using skin texture for entity {}: {}", entityId, textureId);
-        }
-    }
-
     public static void removeSkin(int entityId) {
         Identifier old = SKIN_TEXTURES.remove(entityId);
         DynamicTexture oldTexture = TEXTURE_OBJECTS.remove(entityId);
         SLIM_FLAGS.remove(entityId);
         PLAYER_SKINS.remove(entityId);
-        LOGGED_TEXTURE_USE.remove(entityId);
         if (old != null && oldTexture != null) {
             Minecraft.getInstance().getTextureManager().release(old);
         }

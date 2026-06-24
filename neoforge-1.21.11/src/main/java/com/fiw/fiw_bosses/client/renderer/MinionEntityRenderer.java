@@ -71,9 +71,6 @@ public class MinionEntityRenderer
     public Identifier getTextureLocation(MinionEntityRenderState state) {
         int entityId = state.entityId;
         Identifier skin = ClientSkinManager.getSkinTexture(entityId);
-        if (skin != null) {
-            ClientSkinManager.logTextureUseOnce(entityId, skin);
-        }
         return skin != null ? skin : DEFAULT_TEXTURE;
     }
 }

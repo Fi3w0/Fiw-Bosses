@@ -152,8 +152,6 @@ public class BossEntity extends Monster {
         this.bossId     = def.id;
         setMovementMode(def.movement);
         setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
-        FiwBossesCore.LOGGER.info("Boss {} applied renderEntity={} resolvedDisguise={}",
-                def.id, def.renderEntity, getDisguiseEntity());
 
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);

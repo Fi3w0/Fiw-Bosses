@@ -14,15 +14,12 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.resources.Identifier;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BossEntityRenderer
         extends HumanoidMobRenderer<BossEntity, BossEntityRenderState, HumanoidModel<BossEntityRenderState>> {
 
     private static final Identifier DEFAULT_TEXTURE =
             Identifier.fromNamespaceAndPath(FiwBossesCore.MOD_ID, "textures/entity/boss_default.png");
-    private static final Set<Integer> LOGGED_SUBMIT = ConcurrentHashMap.newKeySet();
     private final HumanoidModel<BossEntityRenderState> classicModel;
     private final HumanoidModel<BossEntityRenderState> slimModel;
 
@@ -60,21 +57,8 @@ public class BossEntityRenderer
     @Override
     public void submit(BossEntityRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState cameraState) {
         if (state.disguiseState != null) {
-            if (LOGGED_SUBMIT.add(state.entityId)) {
-                FiwBossesCore.LOGGER.info("Boss renderer submitting disguise entity={} stateType={} entityType={} at {},{},{}",
-                        state.entityId,
-                        state.disguiseState.getClass().getName(),
-                        state.disguiseState.entityType,
-                        state.x, state.y, state.z);
-            }
             this.entityRenderDispatcher.submit(state.disguiseState, cameraState, 0.0, 0.0, 0.0, poseStack, collector);
             return;
-        }
-        if (LOGGED_SUBMIT.add(state.entityId)) {
-            FiwBossesCore.LOGGER.info("Boss renderer using player fallback entity={} hasClientDisguise={} skin={}",
-                    state.entityId,
-                    ClientDisguiseManager.hasDisguise(state.entityId),
-                    ClientSkinManager.getSkinTexture(state.entityId));
         }
         this.model = state.slim ? slimModel : classicModel;
         super.submit(state, poseStack, collector, cameraState);
@@ -88,9 +72,6 @@ public class BossEntityRenderer
     public Identifier getTextureLocation(BossEntityRenderState state) {
         int entityId = state.entityId;
         Identifier skin = ClientSkinManager.getSkinTexture(entityId);
-        if (skin != null) {
-            ClientSkinManager.logTextureUseOnce(entityId, skin);
-        }
         return skin != null ? skin : DEFAULT_TEXTURE;
     }
 }

@@ -1,5 +1,6 @@
 package com.fiw.fiw_bosses.client.skin;
 
+import com.fiw.fiw_bosses.client.renderer.ClientDisguiseManager;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.network.BossSkinPayload;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -21,7 +22,11 @@ public final class ClientSkinManager {
     private ClientSkinManager() {}
 
     public static void handlePayload(BossSkinPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> registerSkin(payload.entityId(), payload.png(), payload.slim()));
+        context.enqueueWork(() -> {
+            if (!ClientDisguiseManager.hasDisguise(payload.entityId())) {
+                registerSkin(payload.entityId(), payload.png(), payload.slim());
+            }
+        });
     }
 
     public static void registerSkin(int entityId, byte[] pngData, boolean slim) {
