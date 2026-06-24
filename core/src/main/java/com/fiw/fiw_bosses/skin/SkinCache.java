@@ -59,6 +59,16 @@ public class SkinCache {
         return cache.containsKey(bossId);
     }
 
+    /**
+     * Stores an already-resolved skin under another id. Used so spawned copies
+     * (e.g. shadow clones) can reuse a boss's fetched skin without re-fetching.
+     */
+    public static void cacheSkin(String id, SkinData data) {
+        if (id != null && data != null) {
+            cache.put(id, data);
+        }
+    }
+
     public static CompletableFuture<SkinData> getSkinAsync(String bossId) {
         SkinData cached = cache.get(bossId);
         if (cached != null) return CompletableFuture.completedFuture(cached);

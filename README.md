@@ -2,7 +2,7 @@
 
 # FIW Bosses
 
-**Build custom Minecraft boss fights from JSON — phases, minions, loot, dialogue, skins, and 48 configurable abilities, no Java required.**
+**Build custom Minecraft boss fights from JSON — phases, minions, loot, dialogue, skins, and 50+ configurable abilities, no Java required.**
 
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
@@ -128,7 +128,7 @@ Bosses persist by default, with phase index saved to NBT. `/boss reload` re-read
 
 ## Abilities
 
-Abilities are small, configurable attack modules. Add them to a phase, set a cooldown, tune the params, and combine them into a moveset — **52 available**.
+Abilities are small, configurable attack modules. Add them to a phase, set a cooldown, tune the params, and combine them into a moveset — **50+ available**.
 
 **Highlights**
 
@@ -151,7 +151,7 @@ Abilities are small, configurable attack modules. Add them to a phase, set a coo
 | `cleanse`           | Strips all debuffs off the boss and briefly blocks new ones                      |
 
 <details>
-<summary><strong>All 48 ability IDs</strong></summary>
+<summary><strong>All ability IDs</strong></summary>
 
 ```text
 melee_slash, arc_slash, dodge, slam, aoe_smash, charge, teleport, shield, heal,
