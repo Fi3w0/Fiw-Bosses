@@ -7,7 +7,7 @@ matching the tag). The newest version goes on top.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-06-24
+## [1.1.0] 
 
 > ⚠️ **Major rewrite — expect bugs.** This is the biggest change since the mod began, and it
 > is still in progress. Because so much was rewritten, it is **not fully tested** — some
@@ -42,6 +42,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   These keep native mob AI and are intentionally less customizable than FIW custom minions.
 - Optional **Fiw Tools** integration — reference Fiw Tools items by `toolId` in boss/phase/minion
   equipment and loot. Reflection-only, no hard dependency; skipped if Fiw Tools is absent.
+  - Example configs under `examples/fiw_tools_integration/` (Void Reaver boss plus its custom items).
 
 ### Changed
 - **Reworked several boss abilities** and **reworked minion/boss behavior** (AI, targeting, movement modes,
@@ -81,11 +82,13 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
   walls, snap to safe ground within a small vertical search, and fizzle in place if no safe landing exists.
 - `particle_tornado` visuals now actually read as a spinning funnel using per-disk helix twist and upward drift.
 - The 1.21.11 ability fixes were ported to **1.21.8**, **1.21.1**, and **1.20.1** with matching logic and JSON format.
-- 1.21.11 Fabric and NeoForge `renderEntity` disguises no longer fall back to Steve. FIW boss/minion render states
-  now stay on the FIW renderer path, submit the vanilla disguise renderer, and copy walking/attack animation into
-  the disguised mob state.
-- 1.21.11 `renderEntity` disguise data is now synced to clients for bosses and custom minions, so configs such as
-  `renderEntity: "minecraft:wither_skeleton"` render correctly in real multiplayer/client worlds.
+- `renderEntity` / vanilla-mob disguises now work on **every loader and version** (Fabric & NeoForge 1.21.8 / 1.21.1,
+  Fabric & Forge 1.20.1), not just 1.21.11. The disguise id is synced to clients (`BossRenderPayload`, or Forge's
+  `BossRenderMessage`, plus a client-side disguise registry), FIW boss/minion render states stay on the FIW renderer
+  path and draw the vanilla disguise instead of falling back to Steve, and walk animation is copied onto the disguised
+  mob — so configs such as `renderEntity: "minecraft:wither_skeleton"` render correctly in real multiplayer/client worlds.
+- 1.21.8 disguises were drawn at a doubled camera offset (only the shadow showed, with no visible body); the disguise
+  is now rendered at the boss's actual position.
 
 ### Known issues
 - Because this is a rewrite, some abilities/mechanics may be broken, untested, or inconsistent between
