@@ -51,6 +51,7 @@ CLAUDE.md
 .cursor/
 .cursorrules
 .github/copilot-instructions.md
+docs/NEXT_SESSION_PLAN.md
 
 # Runtime config/data generated on a live server (never commit real ones).
 # Anchored to repo root so the core 'config' SOURCE package is NOT ignored.

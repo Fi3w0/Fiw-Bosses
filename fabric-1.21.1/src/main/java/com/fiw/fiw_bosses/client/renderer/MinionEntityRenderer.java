@@ -38,6 +38,9 @@ public class MinionEntityRenderer extends MobRenderer<MinionEntity, PlayerModel<
     @Override
     public void render(MinionEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+        if (DisguiseRenderHelper.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight, this.entityRenderDispatcher)) {
+            return;
+        }
         this.model = ClientSkinManager.isSlim(entity.getId()) ? slimModel : classicModel;
         super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
     }

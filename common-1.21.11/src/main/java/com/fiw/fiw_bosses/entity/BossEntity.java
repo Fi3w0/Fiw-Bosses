@@ -9,6 +9,9 @@ import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -48,6 +51,9 @@ import java.util.stream.Collectors;
 
 public class BossEntity extends Monster {
 
+    private static final EntityDataAccessor<String> DATA_DISGUISE_ENTITY =
+            SynchedEntityData.defineId(BossEntity.class, EntityDataSerializers.STRING);
+
     // ── Boss state ────────────────────────────────────────────────────────────
     public enum BossState { INACTIVE, PRE_FIGHT, ACTIVE, PRE_DEATH }
     private BossState bossState = BossState.ACTIVE;
@@ -56,6 +62,8 @@ public class BossEntity extends Monster {
     private BossDefinition definition;
     private BossPhaseManager phaseManager;
     private final ServerBossEvent bossBar;
+    private String movementMode = "side";
+    private final SmartMovementController movementController = new SmartMovementController(this);
 
     // Dialogue
     private int dialogueTimer = 0;
@@ -71,10 +79,6 @@ public class BossEntity extends Monster {
 
     // ── Minion tracking ───────────────────────────────────────────────────────
     private final Set<UUID> minionUuids = new HashSet<>();
-
-    // ── Strafing ──────────────────────────────────────────────────────────────
-    private int strafeTimer = 0;
-    private int strafeDir   = 1;
 
     // ── Damage tracking (for GuardianShieldGoal) ──────────────────────────────
     private long   lastDamageTick     = -1L;
@@ -93,6 +97,9 @@ public class BossEntity extends Monster {
 
     // ── Deferred goal-selector actions ───────────────────────────────────────
     private final Queue<Runnable> pendingGoalActions = new ArrayDeque<>();
+
+    // ── Per-boss named ability cooldowns (survive phase/goal rebuilds) ────────
+    private final java.util.Map<String, Integer> namedCooldowns = new java.util.HashMap<>();
 
     public BossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -123,6 +130,8 @@ public class BossEntity extends Monster {
     public void applyDefinition(BossDefinition def) {
         this.definition = def;
         this.bossId     = def.id;
+        setMovementMode(def.movement);
+        setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
 
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);
@@ -176,6 +185,12 @@ public class BossEntity extends Monster {
         // Goals are set dynamically by BossPhaseManager.
     }
 
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_DISGUISE_ENTITY, "");
+    }
+
     // ── Tick ─────────────────────────────────────────────────────────────────
 
     @Override
@@ -188,9 +203,14 @@ public class BossEntity extends Monster {
 
         super.customServerAiStep(level);
 
+        if (!namedCooldowns.isEmpty()) {
+            namedCooldowns.replaceAll((k, v) -> v - 1);
+            namedCooldowns.values().removeIf(v -> v <= 0);
+        }
+
         tickBossBar();
         tickAggroSwitch();
-        tickStrafing();
+        movementController.tick();
         tickIdleSystem();
         tickDialogueSystem();
 
@@ -412,6 +432,8 @@ public class BossEntity extends Monster {
             output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
         output.putString("BossState", bossState.name());
         output.putBoolean("PreDeathTriggered", preDeathTriggered);
+        String disguise = getDisguiseEntity();
+        if (!disguise.isEmpty()) output.putString("DisguiseEntity", disguise);
     }
 
     @Override
@@ -461,11 +483,18 @@ public class BossEntity extends Monster {
         }
 
         this.preDeathTriggered = input.getBooleanOr("PreDeathTriggered", false);
+        input.getString("DisguiseEntity").ifPresent(this::setDisguiseEntity);
 
         if (this.bossState == BossState.INACTIVE) clearGoalsForInactive();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private String resolveDisguiseEntity(String baseEntity, String renderEntity) {
+        String value = renderEntity != null && !renderEntity.isBlank() ? renderEntity : baseEntity;
+        if (value == null || value.isBlank() || "custom".equalsIgnoreCase(value)) return "";
+        return value;
+    }
 
     /** Removes all goals/targets except FloatGoal so INACTIVE boss just stands there. */
     private void clearGoalsForInactive() {
@@ -494,31 +523,6 @@ public class BossEntity extends Monster {
             if (current instanceof Player) nearbyPlayers.remove(current);
             if (!nearbyPlayers.isEmpty())
                 setTarget(nearbyPlayers.get(getRandom().nextInt(nearbyPlayers.size())));
-        }
-    }
-
-    private void tickStrafing() {
-        if (bossState != BossState.ACTIVE) return;
-        LivingEntity target = getTarget();
-        if (target == null || !target.isAlive()) return;
-
-        boolean abilityHoldingMove = goalSelector.getAvailableGoals().stream().anyMatch(pg ->
-                pg.isRunning()
-                && pg.getGoal().getFlags().contains(Goal.Flag.MOVE)
-                && !(pg.getGoal() instanceof MeleeAttackGoal)
-                && !(pg.getGoal() instanceof WaterAvoidingRandomStrollGoal));
-        if (abilityHoldingMove) { strafeTimer = 0; return; }
-
-        double dist = distanceTo(target);
-        if (dist < 7.0 && dist > 2.0) {
-            strafeTimer++;
-            if (strafeTimer % 30 == 0 && getRandom().nextFloat() < 0.5f) strafeDir *= -1;
-            if (strafeTimer % 2 == 0) {
-                getMoveControl().strafe(-0.3f, strafeDir * 0.6f);
-                getLookControl().setLookAt(target, 30.0f, 30.0f);
-            }
-        } else {
-            strafeTimer = 0;
         }
     }
 
@@ -563,6 +567,15 @@ public class BossEntity extends Monster {
     public String getBossId() { return bossId; }
     public BossDefinition getDefinition() { return definition; }
     public BossPhaseManager getPhaseManager() { return phaseManager; }
+    public String getMovementMode() { return movementMode; }
+    public void setMovementMode(String movementMode) {
+        this.movementMode = movementMode != null ? movementMode : "side";
+        movementController.reset();
+    }
+    public String getDisguiseEntity() { return entityData.get(DATA_DISGUISE_ENTITY); }
+    public void setDisguiseEntity(String entityId) {
+        entityData.set(DATA_DISGUISE_ENTITY, entityId != null && !"custom".equalsIgnoreCase(entityId) ? entityId : "");
+    }
     public net.minecraft.world.entity.ai.goal.GoalSelector getGoalSelector() { return this.goalSelector; }
     public net.minecraft.world.entity.ai.goal.GoalSelector getTargetSelector() { return this.targetSelector; }
     public BossState getBossState() { return bossState; }
@@ -578,6 +591,10 @@ public class BossEntity extends Monster {
     public UUID getMarkedTarget() { return markedTarget; }
 
     public void scheduleGoalAction(Runnable action) { pendingGoalActions.add(action); }
+
+    /** Named ability cooldowns that persist across phase/goal rebuilds. */
+    public boolean isOnCooldown(String key) { return namedCooldowns.getOrDefault(key, 0) > 0; }
+    public void setCooldown(String key, int ticks) { if (ticks > 0) namedCooldowns.put(key, ticks); }
 
     public void setDamageReduction(float reduction) { this.damageReduction = reduction; }
     public float getDamageReduction() { return damageReduction; }

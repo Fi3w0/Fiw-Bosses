@@ -58,6 +58,12 @@ public interface BossGoalFactory {
         register("potion_field", PotionFieldGoal::new);
         register("singularity_cannon", SingularityCannonGoal::new);
         register("domain", DomainGoal::new);
+        register("rift_cleave", RiftCleaveGoal::new);
+        register("fear_burst", FearBurstGoal::new);
+        register("mirror_image", MirrorImageGoal::new);
+        register("sacrifice_minion", SacrificeMinionGoal::new);
+        register("last_breath", LastBreathGoal::new);
+        register("wither_crown", WitherCrownGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {

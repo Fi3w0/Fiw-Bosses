@@ -11,6 +11,9 @@ public class BossDefinition {
     public float speed = 0.3f;
     public float knockbackResistance = 0.5f;
     public float attackDamage = 10.0f;
+    public String movement = "side";
+    public String baseEntity = "custom";
+    public String renderEntity;
     public BossBarConfig bossBar = new BossBarConfig();
     public SkinDefinition skin = new SkinDefinition();
     public EquipmentConfig equipment;

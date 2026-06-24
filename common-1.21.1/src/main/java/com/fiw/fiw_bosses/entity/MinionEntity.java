@@ -17,7 +17,7 @@ import java.util.UUID;
 /**
  * A custom minion entity — uses the BossEntity infrastructure (player model, skin,
  * abilities, equipment) but has no boss bar, no phases, no dialogue.
- * Extends BossEntity so all 42 ability goals work unchanged.
+ * Extends BossEntity so all boss ability goals work unchanged.
  */
 public class MinionEntity extends BossEntity {
 
@@ -56,6 +56,8 @@ public class MinionEntity extends BossEntity {
         syntheticDef.speed       = def.speed;
         syntheticDef.knockbackResistance = def.knockbackResistance;
         syntheticDef.attackDamage = def.attackDamage;
+        syntheticDef.movement     = def.movement;
+        syntheticDef.renderEntity = def.renderEntity;
         syntheticDef.equipment   = def.equipment;
         syntheticDef.skin        = def.skin;
 
@@ -181,7 +183,7 @@ public class MinionEntity extends BossEntity {
     public String getMinionId() { return minionId; }
     public MinionDefinition getMinionDefinition() { return minionDef; }
     public UUID getOwnerBossUuid() { return ownerBossUuid; }
-    public String getMovementMode() { return movementMode; }
+    @Override public String getMovementMode() { return movementMode; }
 
     @Override
     public String getBossId() {

@@ -20,7 +20,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `/boss kill <id>` | level 2 | Kill all living bosses with that ID |
 | `/boss kill all` | level 2 | Kill every living boss in all worlds |
 | `/boss list` | level 2 | List all loaded boss IDs |
-| `/boss reload` | level 2 | Reload all boss + minion configs without restart |
+| `/boss reload` | level 3 | Reload all boss + minion configs without restart |
 | `/boss minion list` | level 2 | List all loaded minion definitions |
 | `/boss minion spawn <id>` | level 2 | Spawn a custom minion at your position |
 | `/boss minion kill <id>` | level 2 | Kill all living minions with that ID |
@@ -31,6 +31,8 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 ## Table of Contents
 
 - [Root Fields](#root-fields)
+- [Boss Movement Modes](#boss-movement-modes)
+- [Vanilla Looks vs Vanilla Minions](#vanilla-looks-vs-vanilla-minions)
 - [Color Codes](#color-codes)
 - [Boss Bar](#boss-bar)
 - [Skin](#skin)
@@ -67,6 +69,24 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [crimson_slash](#crimson_slash)
   - [singularity_cannon](#singularity_cannon)
   - [lightning_radial](#lightning_radial)
+  - [orb_throw](#orb_throw)
+  - [tracking_orb](#tracking_orb)
+  - [moving_tornado](#moving_tornado)
+  - [ground_spike](#ground_spike)
+  - [arrow_rain](#arrow_rain)
+  - [potion_field](#potion_field)
+  - [detect_mark](#detect_mark)
+  - [phantom_dash](#phantom_dash)
+  - [guardian_shield](#guardian_shield)
+  - [essence_absorption](#essence_absorption)
+  - [judgment_mark](#judgment_mark)
+  - [divine_execution](#divine_execution)
+  - [rift_cleave](#rift_cleave)
+  - [fear_burst](#fear_burst)
+  - [mirror_image](#mirror_image)
+  - [sacrifice_minion](#sacrifice_minion)
+  - [last_breath](#last_breath)
+  - [wither_crown](#wither_crown)
 - [Minion System](#minion-system)
   - [Minion Definition Fields](#minion-definition-fields)
   - [Movement Modes](#movement-modes)
@@ -84,8 +104,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   "id": "my_boss",
   "displayName": "&6&lMy Boss",
   "health": 300.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:zombie",
   "armor": 8.0,
   "speed": 0.26,
+  "movement": "side",
   "knockbackResistance": 0.6,
   "attackDamage": 10.0,
   "bossBar": { "color": "RED", "overlay": "NOTCHED_10" },
@@ -101,8 +124,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `id` | string | **required** | Unique ID — used in `/boss spawn <id>` |
 | `displayName` | string | **required** | Shown above head and in the boss bar. Supports `&` color codes |
 | `health` | float | 200.0 | Max HP |
+| `baseEntity` | string | `"custom"` | Boss visual base. Bosses always use the custom boss entity for AI/abilities; a registry ID here makes it render like that mob |
+| `renderEntity` | string | null | Optional visual override. Use this when you want to keep `baseEntity: "custom"` but render the boss as a vanilla/modded mob |
 | `armor` | float | 0.0 | Armor points (iron chestplate ≈ 8) |
 | `speed` | float | 0.3 | Move speed (zombie = 0.23, player walk ≈ 0.13) |
+| `movement` | string | `"side"` | Boss movement mode. See [Boss Movement Modes](#boss-movement-modes) |
 | `knockbackResistance` | float | 0.5 | `0.0` = full knockback · `1.0` = immune |
 | `attackDamage` | float | 10.0 | Base melee damage |
 | `bossBar` | object | red/progress | Bar color and style |
@@ -114,6 +140,63 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `idleAction` | string | `"despawn"` | What to do when idle: `"despawn"` removes the boss, `"heal"` gradually restores HP |
 | `idleHealAmount` | float | 2.0 | HP restored per heal tick (only when `idleAction = "heal"`) |
 | `idleHealInterval` | int | 40 | Ticks between each heal tick (only when `idleAction = "heal"`) |
+
+---
+
+## Boss Movement Modes
+
+Bosses use the root `movement` field. Custom minions use the minion `movement` field and support the same smart modes. The default boss mode is `"side"` so old bosses keep their close-range strafing behavior.
+
+| Mode | Behavior |
+|------|----------|
+| `"side"` / `"normal"` | Default smart movement. Chases normally, then strafes at 2–7 blocks from target |
+| `"vanilla"` | Disables the smart movement overlay and leaves normal Minecraft pathing/melee goals in control |
+| `"hit_and_run"` | Closes distance, retreats after reaching melee range, then re-engages |
+| `"guard_point"` | Anchors to its spawn/apply position, fights nearby targets, and returns if pulled too far |
+| `"phase_walk"` | Uses occasional short-range teleport repositioning near the target; every landing is collision-checked so it will not teleport inside blocks |
+| `"hover"` | Enables no-gravity hovering, keeps vertical spacing, circles the target, and avoids moving into collisions |
+| `"sniper"` | Maintains range: retreats when players get close, approaches only if too far, and strafes at ideal distance |
+| `"berserk"` | Uses normal side movement above 35% HP, then switches to direct high-speed chase below 35% HP |
+
+> Smart movement pauses while an ability that locks movement is running, so channelled attacks and dashes are not fought by the movement AI.
+
+---
+
+## Vanilla Looks vs Vanilla Minions
+
+Bosses are always FIW boss entities internally. That is what gives them phases, boss bars, abilities, cooldown memory, smart movement, custom loot, dialogue, and persistence. If you want a boss to look like a vanilla mob, set a visual entity ID:
+
+```json
+{
+  "id": "zombie_warlord",
+  "displayName": "&2Zombie Warlord",
+  "baseEntity": "minecraft:zombie",
+  "health": 350,
+  "phases": [ ... ]
+}
+```
+
+You can also keep `baseEntity: "custom"` and use `renderEntity` as the visual-only override:
+
+```json
+{
+  "id": "warden_cultist",
+  "displayName": "&3Warden Cultist",
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:warden",
+  "movement": "phase_walk",
+  "phases": [ ... ]
+}
+```
+
+For minions, there are two different choices:
+
+| Setup | What you get |
+|-------|--------------|
+| `baseEntity: "custom"` | FIW custom minion entity. Supports abilities, smart movement, skins, equipment, loot, persistence, and `renderEntity` disguises |
+| `baseEntity: "minecraft:zombie"` or another registry ID | A real vanilla/modded mob minion. Good for simple mobs, but it keeps native AI and is much less customizable |
+
+> Recommended for advanced minions: keep `baseEntity: "custom"` and set `renderEntity` if you only want a vanilla mob look.
 
 ---
 
@@ -252,7 +335,7 @@ Each ability entry follows this structure:
 
 - **`cooldownTicks`** — ticks between uses (20 ticks = 1 second)
 - **`params`** — all parameters are optional; defaults are listed below
-- **`taunt`** — available on every ability. Boss sends a chat message when it activates
+- **`taunt`** — available on many abilities. When supported, the boss sends a chat message when the ability activates
 
 Abilities take **priority over basic melee** — they never get interrupted mid-cast.
 
@@ -318,6 +401,7 @@ When the boss takes damage it has a chance to sidestep. Leaves smoke afterimage 
 |-------|---------|-------------|
 | `chance` | 0.3 | Dodge probability per hit (0.0–1.0) |
 | `distance` | 3.0 | Dodge distance in blocks |
+| `taunt` | null | Message sent when the dodge actually triggers |
 
 ```json
 {
@@ -525,14 +609,25 @@ Boss freezes in place, spiraling particles gather, then a dense particle laser f
 | Param | Default | Description |
 |-------|---------|-------------|
 | `damage` | 3.0 | Damage per tick inside the beam |
-| `width` | 0.8 | Beam cylinder half-width in blocks |
-| `duration` | 40 | Ticks the beam fires |
+| `width` | 0.9 | Beam cylinder half-width in blocks |
+| `duration` | 50 | Ticks the beam fires |
+| `particle` | `"minecraft:electric_spark"` | Outer beam particle ID |
+| `coreParticle` | `"minecraft:end_rod"` | Core beam particle ID |
+| `maxLength` | 40.0 | Maximum beam length. Default preserves current behavior because targets are gated to ≤35 blocks |
 
 ```json
 {
   "type": "beam",
   "cooldownTicks": 150,
-  "params": { "damage": 4.0, "width": 1.2, "duration": 50, "taunt": "&3&lFocus beam — incoming!" }
+  "params": {
+    "damage": 4.0,
+    "width": 1.2,
+    "duration": 50,
+    "particle": "minecraft:electric_spark",
+    "coreParticle": "minecraft:end_rod",
+    "maxLength": 40.0,
+    "taunt": "&3&lFocus beam — incoming!"
+  }
 }
 ```
 
@@ -678,16 +773,23 @@ Picks a random message from a list and sends it to nearby players. Useful for ta
 
 ### `particle_tornado`
 
-Summons a rising tornado of particles centered on the boss. Narrow at the base, wide at the top. Rotates every tick. Optional damage pulls players caught inside toward the center. Boss freezes in place while active.
+Summons a rising tornado of particles centered on the boss. Narrow at the base, wide at the top, with per-disk spiral twist so the funnel visibly spins. Optional damage and fire pull players caught inside toward the center. Boss freezes in place while active.
 
 | Param | Default | Description |
 |-------|---------|-------------|
 | `maxRadius` | 4.0 | Radius at the top of the tornado in blocks |
+| `size` | 4.0 | Alias for `maxRadius` |
 | `height` | 6.0 | Total height of the tornado |
 | `duration` | 100 | Ticks the tornado lasts |
-| `rotationSpeed` | 8.0 | Degrees rotated per tick |
-| `disks` | 12 | Number of horizontal rings forming the funnel |
+| `rotationSpeed` | 12.0 | Degrees rotated per tick |
+| `spinSpeed` | 12.0 | Alias for `rotationSpeed` |
+| `twist` | 22.0 | Degrees of spiral offset per disk |
+| `disks` | 14 | Number of horizontal rings forming the funnel |
 | `damage` | 0.0 | Damage per 5 ticks to players inside (`0` = purely visual) |
+| `fire` | false | If true, ignites entities inside the tornado |
+| `fireSeconds` | 4 | Fire duration applied while `fire` is true |
+| `particle` | `"minecraft:flame"` | Main tornado particle ID |
+| `accentParticle` | `"minecraft:smoke"` | Secondary accent particle ID |
 
 ```json
 {
@@ -697,9 +799,14 @@ Summons a rising tornado of particles centered on the boss. Narrow at the base, 
     "maxRadius": 5.0,
     "height": 7.0,
     "duration": 120,
-    "rotationSpeed": 10.0,
+    "spinSpeed": 10.0,
+    "twist": 24.0,
     "disks": 14,
     "damage": 1.5,
+    "fire": true,
+    "fireSeconds": 4,
+    "particle": "minecraft:flame",
+    "accentParticle": "minecraft:smoke",
     "taunt": "&5&lThe vortex consumes you!"
   }
 }
@@ -833,6 +940,7 @@ The boss can run a completely separate set of attacks while the domain is active
 | `pullDamage` | 3.0 | Damage applied to insiders trying to escape |
 | `darkness` | true | Apply Darkness to trapped players every second |
 | `blindness` | false | Apply Blindness to trapped players every second |
+| `cooldown` | `max(cooldownTicks, 1800)` | Domain-specific cooldown in ticks after the domain ends. Stored on the boss, so it survives phase/goal rebuilds |
 | `taunt` | null | Message on activation |
 | `attacks` | [] | Domain-specific abilities (same format as phase abilities). If empty, the boss uses its current phase goals |
 
@@ -848,6 +956,7 @@ The boss can run a completely separate set of attacks while the domain is active
     "pullDamage": 4.0,
     "darkness": true,
     "blindness": false,
+    "cooldown": 2400,
     "taunt": "&5&lDOMAIN EXPANSION",
     "attacks": [
       { "type": "sonic_boom",  "cooldown": 100, "params": { "damage": 20, "radius": 16, "coneAngle": 180, "chargeTime": 30 } },
@@ -861,6 +970,8 @@ The boss can run a completely separate set of attacks while the domain is active
 > **Sound file:** The domain collapse plays `domain_break` — place your sound file at `src/main/resources/assets/fiw_bosses/sounds/domain_break.ogg`. Minecraft requires **`.ogg` format** — convert `.mp3` files with Audacity or ffmpeg (`ffmpeg -i domain_break.mp3 domain_break.ogg`).
 
 > `attacks` entries use `"cooldown"` (not `"cooldownTicks"`) inside the domain attacks array.
+
+> The outer ability's `cooldownTicks` still exists, but `params.cooldown` controls the post-domain lockout. If `params.cooldown` is omitted, the lockout is at least 1800 ticks (90 seconds).
 
 ---
 
@@ -982,36 +1093,35 @@ A passive purple orb that follows the boss in a figure-8 pattern and periodicall
 
 | Param | Default | Description |
 |-------|---------|-------------|
-| `orbitRadius` | 2.5 | Radius of the figure-8 orbit around the boss |
-| `fireRate` | 30 | Ticks between projectile shots |
-| `projectileSpeed` | 0.8 | Speed of each fired projectile |
-| `projectileDamage` | 5.0 | Damage per projectile hit |
-| `duration` | 300 | Total ticks the orb stays active |
+| `orbRadius` | 2.0 | Radius of the figure-8 orbit around the boss |
+| `fireRate` | 35 | Ticks between projectile shots |
+| `projectileSpeed` | 1.6 | Speed of each fired projectile |
+| `projectileRange` | 22.0 | Max travel distance for each projectile |
+| `damage` | 10.0 | Damage per projectile hit |
+| `duration` | 220 | Total ticks the orb stays active |
 
 ```json
-{ "type": "tracking_orb", "cooldownTicks": 200, "params": { "orbitRadius": 2.5, "fireRate": 30, "projectileSpeed": 0.8, "projectileDamage": 5, "duration": 300 } }
+{ "type": "tracking_orb", "cooldownTicks": 200, "params": { "orbRadius": 2.5, "fireRate": 30, "projectileSpeed": 1.2, "projectileRange": 22, "damage": 8, "duration": 300 } }
 ```
 
 ---
 
 ### `moving_tornado`
 
-A tornado appears in front of the boss and advances toward the target. Players inside the radius are pulled toward the center and lifted if in the inner vortex core.
+A tornado appears in front of the boss and advances toward the target for a fixed duration. Players inside the radius are pulled toward the center and take damage while caught in the vortex.
 
 | Param | Default | Description |
 |-------|---------|-------------|
 | `radius` | 4.0 | Outer radius of the tornado |
 | `height` | 8.0 | Visual height of the funnel |
-| `speed` | 0.3 | Blocks/tick the tornado moves |
-| `range` | 24.0 | Max travel distance |
-| `pullForce` | 0.15 | Horizontal pull toward vortex center |
-| `liftForce` | 0.2 | Upward lift applied inside inner vortex |
-| `damage` | 4.0 | Damage dealt per hit tick |
-| `damageTick` | 15 | Ticks between damage applications |
-| `windupTicks` | 25 | Ticks of windup swirl before tornado moves |
+| `speed` | 0.4 | Blocks/tick the tornado moves |
+| `duration` | 180 | Total ticks the tornado remains active |
+| `pullStrength` | 0.8 | Pull force toward vortex center |
+| `damage` | 2.0 | Damage dealt while inside the tornado |
+| `windupTicks` | 20 | Ticks of windup swirl before tornado moves |
 
 ```json
-{ "type": "moving_tornado", "cooldownTicks": 160, "params": { "radius": 4, "height": 8, "speed": 0.3, "range": 24, "pullForce": 0.15, "liftForce": 0.2, "damage": 4, "damageTick": 15 } }
+{ "type": "moving_tornado", "cooldownTicks": 160, "params": { "radius": 4, "height": 8, "speed": 0.4, "duration": 180, "pullStrength": 0.8, "damage": 2, "windupTicks": 20 } }
 ```
 
 ---
@@ -1081,19 +1191,20 @@ Marks the player with the most HP. The marked player receives Glowing and the bo
 
 | Param | Default | Description |
 |-------|---------|-------------|
-| `castRange` | 20.0 | Max distance to cast the mark |
+| `markRadius` | 24.0 | Radius to find the highest-HP player |
 | `markDuration` | 200 | Ticks the mark lasts |
-| `damageBonus` | 6.0 | Extra damage the boss deals to the marked player |
+| `markDamageBonus` | 8.0 | Extra damage the boss deals to the marked player |
+| `castTime` | 20 | Ticks of cast animation before the mark applies |
 
 ```json
-{ "type": "detect_mark", "cooldownTicks": 300, "params": { "castRange": 20, "markDuration": 200, "damageBonus": 6 } }
+{ "type": "detect_mark", "cooldownTicks": 300, "params": { "markRadius": 24, "markDuration": 200, "markDamageBonus": 8, "castTime": 20 } }
 ```
 
 ---
 
 ### `phantom_dash`
 
-3 rapid zigzag dashes toward the target. Each dash alternates left/right with a random angle variation for unpredictability. Yellow/white lightning particles trace the path.
+3 rapid zigzag dashes toward the target. Each dash alternates left/right with a random angle variation for unpredictability. Yellow/white lightning particles trace the path. Dash endpoints clip against walls and snap to nearby safe ground; if no safe landing exists, that dash fizzles in place instead of placing the boss inside blocks.
 
 | Param | Default | Description |
 |-------|---------|-------------|
@@ -1185,6 +1296,130 @@ Grabs one nearby player, lifts them 3 blocks above the boss, sends a configurabl
 
 ---
 
+### `rift_cleave`
+
+Boss freezes, marks a straight rift line toward the target with soul/sculk particles, then tears it open. Entities caught in the line take magic damage and knockback. The rift lingers briefly as a visual aftershock.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | 16.0 | Magic damage dealt when the rift opens |
+| `range` | 18.0 | Max length of the cleave line |
+| `width` | 1.4 | Half-width of the line hitbox |
+| `knockback` | 1.2 | Horizontal knockback strength |
+| `windupTicks` | 28 | Warning time before the rift opens |
+| `lingerTicks` | 12 | Ticks the rift remains visible after damage |
+| `taunt` | null | Message sent when the windup begins |
+
+```json
+{ "type": "rift_cleave", "cooldownTicks": 160, "params": { "damage": 18, "range": 20, "width": 1.5, "windupTicks": 30, "taunt": "&5The ground splits beneath you." } }
+```
+
+---
+
+### `fear_burst`
+
+Warden-style fear pulse. The boss charges with soul and sculk particles, then releases a sonic burst that pushes nearby enemies away and applies Darkness, Weakness, and Slowness. Optional direct damage can be set to `0`.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | 10.0 | Burst radius |
+| `damage` | 4.0 | Magic damage on burst (`0` = effects only) |
+| `knockback` | 1.6 | Push force away from the boss |
+| `windupTicks` | 24 | Charge ticks before the burst |
+| `darknessDuration` | 100 | Ticks of Darkness applied |
+| `weaknessDuration` | 120 | Ticks of Weakness applied |
+| `slownessDuration` | 60 | Ticks of Slowness applied |
+| `taunt` | null | Message sent when the windup begins |
+
+```json
+{ "type": "fear_burst", "cooldownTicks": 180, "params": { "radius": 12, "damage": 4, "knockback": 1.8, "darknessDuration": 120, "taunt": "&8Fear the dark." } }
+```
+
+---
+
+### `mirror_image`
+
+Creates particle mirror images around the boss. By default the boss turns invisible, decoys shimmer around the arena, and the boss swaps to a random image every `swapInterval` ticks. When the ability ends the boss reappears with a burst and optional damage.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `cloneCount` | 4 | Number of particle decoys |
+| `radius` | 5.0 | Distance decoys form around the boss |
+| `duration` | 100 | Total active ticks |
+| `swapInterval` | 25 | Ticks between random swaps to a decoy (`0` disables swaps) |
+| `invisibility` | true | Whether the boss becomes invisible while images are active |
+| `reappearDamage` | 0.0 | Magic damage dealt when the boss reappears |
+| `reappearRadius` | 3.0 | Radius for reappear damage |
+| `taunt` | null | Message sent when images appear |
+
+```json
+{ "type": "mirror_image", "cooldownTicks": 220, "params": { "cloneCount": 5, "radius": 6, "duration": 120, "swapInterval": 24, "reappearDamage": 6, "taunt": "&dWhich one is real?" } }
+```
+
+---
+
+### `sacrifice_minion`
+
+Consumes nearby living minions owned by the boss. Each sacrificed minion sends soul particles back to the boss, heals the boss, disappears without dropping loot, and can damage players near the sacrificed minion.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `searchRadius` | 32.0 | Radius to find owned minions |
+| `count` | 1 | Max minions consumed per cast |
+| `healAmount` | 30.0 | HP restored per sacrificed minion |
+| `damage` | 8.0 | Magic damage to players near each sacrificed minion |
+| `explosionRadius` | 4.0 | Damage radius around each sacrificed minion |
+| `belowPercent` | 1.0 | Only casts at or below this boss HP fraction |
+| `taunt` | null | Message sent before sacrifices resolve |
+
+```json
+{ "type": "sacrifice_minion", "cooldownTicks": 300, "params": { "searchRadius": 32, "count": 2, "healAmount": 25, "damage": 8, "explosionRadius": 4, "belowPercent": 0.75, "taunt": "&5Your life returns to me." } }
+```
+
+---
+
+### `last_breath`
+
+Low-health ultimate. The boss freezes and channels a growing soul ring. If players deal at least `interruptDamage` before the channel ends, the cast fizzles. If they fail, the boss releases a large magic blast with knockback and Wither.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `belowPercent` | 0.25 | Only casts at or below this boss HP fraction |
+| `channelTicks` | 80 | Interrupt window before the blast releases |
+| `radius` | 18.0 | Blast radius |
+| `damage` | 24.0 | Magic damage on release |
+| `knockback` | 2.2 | Push force away from the boss |
+| `interruptDamage` | 14.0 | Damage players must deal during the channel to cancel the cast (`0` = cannot interrupt) |
+| `witherDuration` | 120 | Ticks of Wither II applied on release |
+| `taunt` | null | Message sent when the channel begins |
+
+```json
+{ "type": "last_breath", "cooldownTicks": 600, "params": { "belowPercent": 0.25, "channelTicks": 90, "radius": 20, "damage": 26, "interruptDamage": 18, "taunt": "&8This world ends with my final breath." } }
+```
+
+---
+
+### `wither_crown`
+
+Summons a crown of smoky soul skulls above the boss. The skulls orbit during the windup, then fire one by one toward the current target as real wither skull projectiles.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `skulls` | 6 | Number of skulls in the crown |
+| `orbitRadius` | 2.4 | Radius of the orbit around the boss |
+| `windupTicks` | 30 | Ticks before skulls begin firing |
+| `fireInterval` | 8 | Ticks between each fired skull |
+| `speed` | 1.0 | Direction vector scale used by the wither skull |
+| `range` | 36.0 | Max target distance to start the ability |
+| `dangerousChance` | 0.15 | Chance each skull is dangerous/blue |
+| `taunt` | null | Message sent when the crown appears |
+
+```json
+{ "type": "wither_crown", "cooldownTicks": 260, "params": { "skulls": 7, "orbitRadius": 2.6, "windupTicks": 35, "fireInterval": 7, "dangerousChance": 0.25, "taunt": "&8Kneel beneath the wither crown." } }
+```
+
+---
+
 ## Minion System
 
 Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can have their own stats, skins, equipment, abilities, loot, and AI behavior. Bosses reference minions by `minionId` in their phase's `minions` array.
@@ -1196,6 +1431,7 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
   "id": "shadow_guard",
   "displayName": "&8Shadow Guard",
   "baseEntity": "custom",
+  "renderEntity": "minecraft:skeleton",
   "health": 40.0,
   "armor": 4.0,
   "speed": 0.28,
@@ -1220,13 +1456,14 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 |-------|------|---------|-------------|
 | `id` | string | **required** | Unique ID — used in boss phase `minionId` and `/boss minion spawn <id>` |
 | `displayName` | string | id | Name shown above the minion. Supports `&` color codes |
-| `baseEntity` | string | `"custom"` | `"custom"` = player model with skin + abilities. Any registry ID (e.g. `"minecraft:zombie"`) = vanilla mob with stat/equipment overrides |
+| `baseEntity` | string | `"custom"` | `"custom"` = FIW custom minion with abilities/smart movement. Any registry ID (e.g. `"minecraft:zombie"`) = true vanilla/modded mob minion with limited customization |
+| `renderEntity` | string | null | Visual-only disguise for custom minions. Only used when `baseEntity` is `"custom"` |
 | `health` | float | 40.0 | Max HP |
 | `armor` | float | 0.0 | Armor points |
 | `speed` | float | 0.3 | Move speed |
 | `attackDamage` | float | 6.0 | Base melee damage |
 | `knockbackResistance` | float | 0.0 | `0.0` = full knockback · `1.0` = immune |
-| `movement` | string | `"normal"` | AI mode — see below |
+| `movement` | string | `"normal"` | AI mode. Custom minions support the boss movement modes plus `follow_boss` and `static`; vanilla-base minions keep native mob AI |
 | `skin` | object | Steve | Player skin. Only used when `baseEntity` is `"custom"` |
 | `equipment` | object | none | Slots: `mainHand`, `offHand`, `head`, `chest`, `legs`, `feet` |
 | `abilities` | array | [] | Same ability format as boss phases. Only used when `baseEntity` is `"custom"` |
@@ -1236,7 +1473,14 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 
 | Mode | Behavior |
 |------|----------|
-| `"normal"` | Standard AI — chases the boss's current target |
+| `"normal"` / `"side"` | Smart chase + close-range strafing |
+| `"vanilla"` | Normal Minecraft pathing with no smart movement overlay |
+| `"hit_and_run"` | Rushes into melee range, then retreats before re-engaging |
+| `"guard_point"` | Stays near its spawn/apply point and returns if pulled away |
+| `"phase_walk"` | Occasionally teleports to safe nearby ground around the target |
+| `"hover"` | Floats and maintains spacing |
+| `"sniper"` | Keeps range and retreats from close targets |
+| `"berserk"` | Normal movement until low HP, then direct high-speed chase |
 | `"follow_boss"` | Escorts the boss, attacks if enemies get close |
 | `"static"` | Stays in place — only uses abilities (good for turrets/sentries) |
 
@@ -1278,7 +1522,26 @@ In any boss phase, add a `minions` array with `minionId` references:
 }
 ```
 
-> **Note:** Vanilla base minions keep their native AI (zombies still break doors, skeletons still shoot arrows). Custom abilities only work with `baseEntity: "custom"`.
+**Custom minion with vanilla look** — recommended when you want full FIW behavior but a vanilla mob model:
+
+```json
+{
+  "id": "skeleton_duelist",
+  "displayName": "&7Skeleton Duelist",
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:skeleton",
+  "health": 55,
+  "movement": "hit_and_run",
+  "equipment": {
+    "mainHand": { "item": "minecraft:iron_sword" }
+  },
+  "abilities": [
+    { "type": "dodge", "cooldownTicks": 80, "params": { "taunt": "&7Too slow." } }
+  ]
+}
+```
+
+> **Note:** True vanilla base minions keep their native AI (zombies still break doors, skeletons still shoot arrows). They are useful, but they are kinda not customizable compared with `baseEntity: "custom"`. Smart movement modes, skins, and custom abilities only work with custom minions.
 
 ### Minion Behavior
 
@@ -1407,9 +1670,11 @@ Bosses can start **passive and immortal** — they do nothing until a player rig
 - Every 5–15 seconds: 40% chance to switch to a random nearby player
 - When hit by a non-targeted player: 35% chance to switch to them (revenge)
 
-**Strafing**
-- At 2–7 blocks from target the boss circles sideways, changing direction randomly
-- Strafing is automatically suppressed while any ability that locks movement is running (beam, slam, arc_slash, charge, etc.)
+**Movement**
+- Bosses default to `movement: "side"`, which circles sideways at 2–7 blocks from target
+- `movement: "vanilla"` disables the smart movement overlay
+- Smart movement is automatically suppressed while any ability that locks movement is running (beam, slam, arc_slash, charge, etc.)
+- `phase_walk` uses collision-checked landings and fizzles the reposition if no safe space exists
 
 **Goal Priority**
 - Ability goals fire before basic melee — they are never interrupted mid-cast

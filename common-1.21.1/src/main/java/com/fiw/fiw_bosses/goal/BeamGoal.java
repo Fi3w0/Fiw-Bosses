@@ -5,6 +5,7 @@ import com.fiw.fiw_bosses.util.TextUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -26,6 +27,9 @@ public class BeamGoal extends Goal {
     private final int duration;
     private final int cooldown;
     private final String taunt;
+    private final SimpleParticleType outerParticle;
+    private final SimpleParticleType coreParticle;
+    private final double maxLength;
     private int cooldownTimer;
     private int beamTick;
     private Vec3 lockedDest;
@@ -38,6 +42,10 @@ public class BeamGoal extends Goal {
         this.duration = params.has("duration") ? params.get("duration").getAsInt() : 50;
         this.cooldown = cooldownTicks;
         this.taunt = params.has("taunt") ? params.get("taunt").getAsString() : null;
+        this.outerParticle = ParticleTornadoGoal.particleOr(params, "particle", ParticleTypes.ELECTRIC_SPARK);
+        this.coreParticle  = ParticleTornadoGoal.particleOr(params, "coreParticle", ParticleTypes.END_ROD);
+        // Default keeps current behavior (target is gated to <=35 in canUse).
+        this.maxLength     = params.has("maxLength") ? params.get("maxLength").getAsDouble() : 40.0;
         this.cooldownTimer = 0;
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
@@ -126,9 +134,9 @@ public class BeamGoal extends Goal {
 
         if (lockedDest == null) return;
 
-        Vec3 dest = lockedDest;
-        Vec3 dir = dest.subtract(origin).normalize();
-        double beamLen = origin.distanceTo(dest);
+        Vec3 dir = lockedDest.subtract(origin).normalize();
+        double beamLen = Math.min(origin.distanceTo(lockedDest), maxLength);
+        Vec3 dest = origin.add(dir.scale(beamLen));
 
         int outerSteps = (int) Math.ceil(beamLen * 5);
         for (int s = 0; s <= outerSteps; s++) {
@@ -136,7 +144,7 @@ public class BeamGoal extends Goal {
             double px = origin.x + dir.x * beamLen * t;
             double py = origin.y + dir.y * beamLen * t;
             double pz = origin.z + dir.z * beamLen * t;
-            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 2, 0.1, 0.1, 0.1, 0.0);
+            level.sendParticles(outerParticle, px, py, pz, 2, 0.1, 0.1, 0.1, 0.0);
         }
 
         int coreSteps = (int) Math.ceil(beamLen * 10);
@@ -145,7 +153,7 @@ public class BeamGoal extends Goal {
             double px = origin.x + dir.x * beamLen * t;
             double py = origin.y + dir.y * beamLen * t;
             double pz = origin.z + dir.z * beamLen * t;
-            level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 1, 0, 0, 0, 0);
+            level.sendParticles(coreParticle, px, py, pz, 1, 0, 0, 0, 0);
         }
 
         level.sendParticles(ParticleTypes.FLASH, origin.x, origin.y, origin.z, 1, 0, 0, 0, 0);

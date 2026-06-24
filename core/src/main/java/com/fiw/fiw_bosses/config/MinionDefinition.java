@@ -10,6 +10,8 @@ public class MinionDefinition {
     // "custom" = uses MinionEntity with player model + skin.
     // Any registry id (e.g. "minecraft:zombie") = vanilla mob with stat/equipment overrides.
     public String baseEntity = "custom";
+    // Optional visual disguise for custom minions. Example: "minecraft:zombie".
+    public String renderEntity;
 
     // Stats
     public float health = 40.0f;
@@ -18,7 +20,8 @@ public class MinionDefinition {
     public float knockbackResistance = 0.0f;
     public float attackDamage = 6.0f;
 
-    // Movement: "normal" (chase target), "follow_boss" (escort), "static" (stay in place)
+    // Movement: "normal"/"side" (chase + strafe), "vanilla" (no smart movement),
+    // "follow_boss" (escort), "static" (stay in place), or one of the boss movement modes.
     public String movement = "normal";
 
     // Skin (only used when baseEntity = "custom")

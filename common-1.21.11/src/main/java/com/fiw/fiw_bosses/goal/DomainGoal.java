@@ -52,7 +52,6 @@ public class DomainGoal extends Goal {
     private final JsonArray attacksJson;
     private final int cooldown;
 
-    private int cooldownTimer;
     private int tick;
     private double rotation;
 
@@ -75,13 +74,19 @@ public class DomainGoal extends Goal {
         this.blindness   = params.has("blindness")   && params.get("blindness").getAsBoolean();
         this.taunt       = params.has("taunt")       ? params.get("taunt").getAsString()      : null;
         this.attacksJson = params.has("attacks")     ? params.get("attacks").getAsJsonArray() : new JsonArray();
-        this.cooldown    = cooldownTicks;
+        // Domain is an occasional ultimate: long, configurable cooldown so it can't
+        // be re-applied back-to-back. `cooldown` (ticks) overrides; otherwise the
+        // ability's cooldownTicks is used, floored at 1800 (90s) so it stays an ultimate.
+        this.cooldown    = params.has("cooldown")    ? params.get("cooldown").getAsInt()
+                                                     : Math.max(cooldownTicks, 1800);
         this.setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override
     public boolean canUse() {
-        if (cooldownTimer > 0) { cooldownTimer--; return false; }
+        // Boss-level cooldown survives phase/goal rebuilds, so domain can't instantly
+        // re-apply when stop() restores the phase goals.
+        if (boss.isOnCooldown("domain")) return false;
         LivingEntity target = boss.getTarget();
         return target != null && target.isAlive();
     }
@@ -247,7 +252,9 @@ public class DomainGoal extends Goal {
 
     @Override
     public void stop() {
-        cooldownTimer = cooldown;
+        // Persist the cooldown on the boss so a rebuilt DomainGoal stays on cooldown
+        // and the boss continues fighting normally (no domain, no domain speed buff).
+        boss.setCooldown("domain", cooldown);
         if (boss.level().isClientSide()) return;
         ServerLevel level = (ServerLevel) boss.level();
 

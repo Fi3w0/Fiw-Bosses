@@ -12,7 +12,10 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
@@ -116,7 +119,7 @@ public class PhantomDashGoal extends Goal {
         if (tick >= WINDUP_TICKS) {
             state      = STATE_DASHING;
             delayTimer = 0;
-            prepareDash(target, 0);
+            prepareDash(level, target, 0);
         }
     }
 
@@ -133,11 +136,11 @@ public class PhantomDashGoal extends Goal {
             active = false;
         } else {
             delayTimer = dashDelay;
-            prepareDash(target, dashesExecuted);
+            prepareDash(level, target, dashesExecuted);
         }
     }
 
-    private void prepareDash(LivingEntity target, int dashIndex) {
+    private void prepareDash(ServerLevel level, LivingEntity target, int dashIndex) {
         dashStart = boss.position();
 
         Vec3 toTarget;
@@ -157,7 +160,65 @@ public class PhantomDashGoal extends Goal {
         double dirZ = toTarget.x * sinV + toTarget.z * cosV;
         Vec3 dir = new Vec3(dirX + perp.x * 0.5, 0, dirZ + perp.z * 0.5).normalize();
 
-        dashEnd = dashStart.add(dir.scale(dashDistance));
+        Vec3 desired = dashStart.add(dir.scale(dashDistance));
+        // Resolve a destination that won't bury the boss in terrain: stop short of
+        // walls, then snap onto safe ground near the destination.
+        dashEnd = resolveSafeDashEnd(level, dashStart, desired);
+    }
+
+    /** Clips the dash against walls and snaps the landing to a standable spot, so the boss never ends inside blocks. */
+    private Vec3 resolveSafeDashEnd(ServerLevel level, Vec3 start, Vec3 desired) {
+        double eyeY = boss.getBbHeight() * 0.5;
+        Vec3 from = start.add(0, eyeY, 0);
+        Vec3 to   = desired.add(0, eyeY, 0);
+
+        // 1. Don't dash through walls — stop ~1 block before the first collider hit.
+        BlockHitResult clip = level.clip(new ClipContext(
+                from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, boss));
+        Vec3 horiz;
+        if (clip.getType() != HitResult.Type.MISS) {
+            Vec3 d = to.subtract(from);
+            double len = d.length();
+            Vec3 hit = clip.getLocation();
+            // back off so the boss body fits in front of the wall
+            Vec3 back = len > 0.01 ? d.scale(1.0 / len) : dir0(start, desired);
+            horiz = hit.subtract(back.scale(1.0));
+        } else {
+            horiz = to;
+        }
+        horiz = new Vec3(horiz.x, start.y, horiz.z);
+
+        // 2. Snap to safe ground near the start height (handles slopes/steps).
+        Vec3 safe = findStandableY(level, horiz, start.y);
+        // 3. If nothing is standable, fizzle in place rather than teleport into blocks.
+        return safe != null ? safe : start;
+    }
+
+    private Vec3 dir0(Vec3 a, Vec3 b) {
+        Vec3 d = new Vec3(b.x - a.x, 0, b.z - a.z);
+        return d.lengthSqr() < 1.0e-6 ? new Vec3(0, 0, 1) : d.normalize();
+    }
+
+    private Vec3 findStandableY(ServerLevel level, Vec3 pos, double preferredY) {
+        int base = (int) Math.floor(preferredY);
+        // Search the preferred Y first, then expand outward (up to 4 up / 4 down).
+        for (int dy = 0; dy <= 4; dy++) {
+            for (int s : (dy == 0 ? new int[]{0} : new int[]{1, -1})) {
+                Vec3 candidate = new Vec3(pos.x, base + s * dy, pos.z);
+                if (canStandAt(level, candidate)) return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean canStandAt(ServerLevel level, Vec3 feet) {
+        // Boss body must fit (no block collisions) at the candidate position...
+        AABB body = boss.getBoundingBox().move(feet.subtract(boss.position()));
+        if (!level.noCollision(boss, body)) return false;
+        // ...and there must be solid ground just beneath it.
+        AABB below = new AABB(feet.x - 0.3, feet.y - 0.25, feet.z - 0.3,
+                              feet.x + 0.3, feet.y,        feet.z + 0.3);
+        return !level.noCollision(boss, below);
     }
 
     private void executeDash(ServerLevel level) {
