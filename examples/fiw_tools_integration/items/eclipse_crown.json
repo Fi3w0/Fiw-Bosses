@@ -1,0 +1,24 @@
+{
+  "id": "eclipse_crown",
+  "base": "minecraft:golden_helmet",
+  "displayName": "&d&lEclipse Crown",
+  "lore": [
+    "&7A crown used by the integration boss.",
+    "&7Good for testing Tools armor in Bosses equipment."
+  ],
+  "rarity": "epic",
+  "unbreakable": true,
+  "enchantmentGlint": true,
+  "enchantments": {
+    "minecraft:protection": 5,
+    "minecraft:respiration": 3,
+    "minecraft:unbreaking": 10
+  },
+  "attributes": [
+    { "type": "minecraft:generic.armor", "slot": "head", "amount": 5.0, "operation": "add_value" },
+    { "type": "minecraft:generic.armor_toughness", "slot": "head", "amount": 3.0, "operation": "add_value" },
+    { "type": "minecraft:generic.knockback_resistance", "slot": "head", "amount": 0.15, "operation": "add_value" }
+  ],
+  "keepOnDeath": true,
+  "hideFlags": ["unbreakable"]
+}

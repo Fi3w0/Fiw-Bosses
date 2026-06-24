@@ -1,0 +1,89 @@
+{
+  "id": "void_reaver_boss",
+  "displayName": "&5&lVoid Reaver &7(Fiw Tools Test)",
+  "health": 240.0,
+  "armor": 8.0,
+  "speed": 0.31,
+  "knockbackResistance": 0.55,
+  "attackDamage": 5.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:wither_skeleton",
+  "movement": "phase_walk",
+  "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" },
+  "equipment": {
+    "mainHand": { "toolId": "void_reaver" },
+    "head": { "toolId": "eclipse_crown" },
+    "chest": { "item": "minecraft:netherite_chestplate" },
+    "legs": { "item": "minecraft:netherite_leggings" },
+    "feet": { "item": "minecraft:netherite_boots" }
+  },
+  "preFightDialogue": [
+    "&5[Void Reaver] &fThe rift noticed your inventory.",
+    "&5[Void Reaver] &fWin, and the weapon is yours."
+  ],
+  "dialogueLineDelay": 35,
+  "preDeathDialogue": [
+    "&5[Void Reaver] &fTake the blade. It remembers."
+  ],
+  "preDeathDialogueDelay": 35,
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "speedMultiplier": 1.0,
+      "damageMultiplier": 1.0,
+      "abilities": [
+        { "type": "phantom_dash", "cooldownTicks": 110, "params": { "dashCount": 2, "dashDistance": 5.0, "damage": 3.0, "delayBetweenDashes": 8, "taunt": "&5Blink, or bleed." } },
+        { "type": "rift_cleave", "cooldownTicks": 120, "params": { "damage": 3.0, "range": 12.0, "width": 1.5, "knockback": 0.8, "windupTicks": 24, "taunt": "&5The floor opens." } },
+        { "type": "particle_tornado", "cooldownTicks": 150, "params": { "particle": "minecraft:reverse_portal", "accentParticle": "minecraft:smoke", "damage": 1.5, "maxRadius": 3.8, "height": 5.5, "duration": 90, "spinSpeed": 0.4, "twist": 1.2, "fire": false } },
+        { "type": "dodge", "cooldownTicks": 55, "params": { "chance": 0.25, "distance": 3.0, "taunt": "&7Wrong shadow." } }
+      ],
+      "minions": []
+    },
+    {
+      "hpThresholdPercent": 0.55,
+      "speedMultiplier": 1.12,
+      "damageMultiplier": 1.1,
+      "equipment": {
+        "mainHand": { "toolId": "starfall_halberd" },
+        "head": { "toolId": "eclipse_crown" },
+        "chest": { "item": "minecraft:netherite_chestplate" },
+        "legs": { "item": "minecraft:netherite_leggings" },
+        "feet": { "item": "minecraft:netherite_boots" }
+      },
+      "abilities": [
+        { "type": "mirror_image", "cooldownTicks": 170, "params": { "cloneCount": 4, "radius": 5.0, "duration": 90, "swapInterval": 25, "invisibility": true, "reappearDamage": 2.0, "taunt": "&dChoose the wrong one." } },
+        { "type": "fear_burst", "cooldownTicks": 150, "params": { "damage": 2.0, "radius": 8.0, "knockback": 1.0, "windupTicks": 24, "taunt": "&8The crown whispers." } },
+        { "type": "beam", "cooldownTicks": 130, "params": { "damage": 2.0, "duration": 45, "range": 30.0, "particle": "minecraft:electric_spark", "coreParticle": "minecraft:end_rod", "taunt": "&bStarline." } },
+        { "type": "summon_minions", "cooldownTicks": 220, "params": { "taunt": "&5The rift has hands." } }
+      ],
+      "minions": [
+        { "entityType": "minecraft:endermite", "count": 3, "maxAlive": 5, "spawnRadius": 5.0 }
+      ],
+      "transitionMessage": "&d&lThe Void Reaver pulls down a star!",
+      "transitionSound": "minecraft:entity.enderman.scream",
+      "transitionParticle": "minecraft:reverse_portal"
+    },
+    {
+      "hpThresholdPercent": 0.25,
+      "speedMultiplier": 1.2,
+      "damageMultiplier": 1.25,
+      "abilities": [
+        { "type": "domain", "cooldownTicks": 1800, "params": { "radius": 11.0, "duration": 130, "pushDamage": 1.5, "pullDamage": 1.5, "darkness": true, "cooldown": 1800, "taunt": "&8This is my sky now." } },
+        { "type": "last_breath", "cooldownTicks": 600, "params": { "belowPercent": 0.3, "channelTicks": 70, "radius": 12.0, "damage": 3.0, "interruptDamage": 0, "knockback": 1.0, "taunt": "&8One last cut." } },
+        { "type": "wither_crown", "cooldownTicks": 210, "params": { "skulls": 3, "windupTicks": 30, "fireInterval": 10, "dangerousChance": 0.15, "taunt": "&8A black crown rises." } }
+      ],
+      "minions": [],
+      "transitionMessage": "&4&lThe rift stops pretending to be small.",
+      "transitionSound": "minecraft:entity.wither.spawn",
+      "transitionParticle": "minecraft:soul"
+    }
+  ],
+  "loot": [
+    { "toolId": "void_reaver", "count": 1, "chance": 1.0 },
+    { "toolId": "starfall_halberd", "count": 1, "chance": 0.45 },
+    { "toolId": "eclipse_crown", "count": 1, "chance": 0.35 },
+    { "toolId": "rift_apple", "count": 3, "chance": 1.0 },
+    { "item": "minecraft:nether_star", "count": 1, "chance": 1.0 },
+    { "item": "minecraft:echo_shard", "count": 4, "chance": 0.75 }
+  ]
+}

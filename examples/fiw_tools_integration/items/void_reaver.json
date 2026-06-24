@@ -1,0 +1,58 @@
+{
+  "id": "void_reaver",
+  "base": "minecraft:netherite_sword",
+  "displayName": "&5&lVoid Reaver",
+  "lore": [
+    "&7A boss-grade blade built for integration testing.",
+    "",
+    "&8Right-click: &7rift arc slash",
+    "&8On attack: &7lightning and lifesteal"
+  ],
+  "rarity": "epic",
+  "unbreakable": true,
+  "enchantmentGlint": true,
+  "enchantments": {
+    "minecraft:sharpness": 7,
+    "minecraft:fire_aspect": 2,
+    "minecraft:looting": 4,
+    "minecraft:unbreaking": 10
+  },
+  "attributes": [
+    { "type": "minecraft:generic.attack_damage", "slot": "mainhand", "amount": 12.0, "operation": "add_value" },
+    { "type": "minecraft:generic.attack_speed", "slot": "mainhand", "amount": -2.25, "operation": "add_value" }
+  ],
+  "hideFlags": ["unbreakable"],
+  "abilities": [
+    {
+      "type": "arc_slash",
+      "trigger": "on_right_click",
+      "cooldownTicks": 50,
+      "params": {
+        "damage": 7.0,
+        "range": 5.0,
+        "arc": 135.0,
+        "knockback": 0.8,
+        "particle": "minecraft:reverse_portal"
+      }
+    },
+    {
+      "type": "lightning_strike",
+      "trigger": "on_attack",
+      "chance": 0.25,
+      "cooldownTicks": 35,
+      "params": {
+        "damage": 4.0,
+        "particle": "minecraft:electric_spark"
+      }
+    },
+    {
+      "type": "heal_on_hit",
+      "trigger": "on_attack",
+      "cooldownTicks": 20,
+      "params": {
+        "amount": 1.5,
+        "particle": "minecraft:soul"
+      }
+    }
+  ]
+}

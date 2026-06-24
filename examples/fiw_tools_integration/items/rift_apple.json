@@ -1,0 +1,17 @@
+{
+  "id": "rift_apple",
+  "base": "minecraft:apple",
+  "displayName": "&5&lRift Apple",
+  "lore": [
+    "&7A clean consumable drop for integration testing.",
+    "&8Drops from the Void Reaver boss."
+  ],
+  "rarity": "rare",
+  "stackSize": 16,
+  "enchantmentGlint": true,
+  "food": {
+    "nutrition": 8,
+    "saturation": 10.0,
+    "canAlwaysEat": true
+  }
+}

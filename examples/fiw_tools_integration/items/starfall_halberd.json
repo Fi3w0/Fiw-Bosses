@@ -1,0 +1,50 @@
+{
+  "id": "starfall_halberd",
+  "base": "minecraft:netherite_axe",
+  "displayName": "&b&lStarfall Halberd",
+  "lore": [
+    "&7The phase-two weapon for the integration boss.",
+    "",
+    "&8Right-click: &7shockwave",
+    "&8On attack: &7storm burst"
+  ],
+  "rarity": "epic",
+  "unbreakable": true,
+  "enchantmentGlint": true,
+  "enchantments": {
+    "minecraft:sharpness": 6,
+    "minecraft:knockback": 2,
+    "minecraft:unbreaking": 10
+  },
+  "attributes": [
+    { "type": "minecraft:generic.attack_damage", "slot": "mainhand", "amount": 13.0, "operation": "add_value" },
+    { "type": "minecraft:generic.attack_speed", "slot": "mainhand", "amount": -2.85, "operation": "add_value" }
+  ],
+  "hideFlags": ["unbreakable"],
+  "abilities": [
+    {
+      "type": "shockwave",
+      "trigger": "on_right_click",
+      "cooldownTicks": 80,
+      "params": {
+        "radius": 5.0,
+        "damage": 5.0,
+        "knockback": 1.4,
+        "particle": "minecraft:electric_spark"
+      }
+    },
+    {
+      "type": "projectile_burst",
+      "trigger": "on_attack",
+      "chance": 0.2,
+      "cooldownTicks": 45,
+      "params": {
+        "range": 14.0,
+        "speed": 1.3,
+        "damage": 4.0,
+        "aoeRadius": 1.4,
+        "particle": "minecraft:end_rod"
+      }
+    }
+  ]
+}
