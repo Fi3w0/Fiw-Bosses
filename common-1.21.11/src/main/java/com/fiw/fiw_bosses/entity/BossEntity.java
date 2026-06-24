@@ -166,9 +166,9 @@ public class BossEntity extends Monster {
         Component barName = TextUtil.parseColorCodes(def.displayName);
         bossBar.setName(barName);
         try { bossBar.setColor(BossEvent.BossBarColor.valueOf(def.bossBar.color.toUpperCase())); }
-        catch (IllegalArgumentException ignored) {}
+        catch (IllegalArgumentException e) { FiwBossesCore.LOGGER.warn("Invalid boss bar color '{}' for boss '{}', using default", def.bossBar.color, def.id); }
         try { bossBar.setOverlay(BossEvent.BossBarOverlay.valueOf(def.bossBar.overlay.toUpperCase())); }
-        catch (IllegalArgumentException ignored) {}
+        catch (IllegalArgumentException e) { FiwBossesCore.LOGGER.warn("Invalid boss bar overlay '{}' for boss '{}', using default", def.bossBar.overlay, def.id); }
 
         applyEquipment(def.equipment);
 

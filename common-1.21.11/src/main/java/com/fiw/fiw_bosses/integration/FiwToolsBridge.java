@@ -57,7 +57,7 @@ public final class FiwToolsBridge {
             // Fiw Tools is not installed.
         } catch (NoSuchMethodException e) {
             FiwBossesCore.LOGGER.warn("Fiw Tools is loaded but getItemStack(String, MinecraftServer, int) is missing; toolId integration disabled.");
-        } catch (Throwable t) {
+        } catch (Exception t) {
             FiwBossesCore.LOGGER.warn("Fiw Tools detection failed: {}", t.getMessage());
         }
         PRESENT = present;
@@ -76,7 +76,7 @@ public final class FiwToolsBridge {
         try {
             Object result = GET_ITEMSTACK.invoke(null, id, server, count);
             return result instanceof ItemStack stack ? stack : null;
-        } catch (Throwable t) {
+        } catch (Exception t) {
             FiwBossesCore.LOGGER.warn("Fiw Tools getItemStack failed for id '{}': {}", id, t.getMessage());
             return null;
         }
@@ -156,7 +156,7 @@ public final class FiwToolsBridge {
                 }
                 return out;
             }
-        } catch (Throwable t) {
+        } catch (Exception t) {
             FiwBossesCore.LOGGER.warn("Fiw Tools listIds() failed: {}", t.getMessage());
         }
         return Set.of();

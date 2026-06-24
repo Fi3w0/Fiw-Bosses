@@ -11,6 +11,10 @@ import net.minecraft.network.chat.MutableComponent;
  * done by the loader-neutral {@link TextCodes} in :core; this class only maps the
  * neutral {@link FormatCode}s onto this version's {@link ChatFormatting} and builds
  * the component. ({@code FormatCode} names match {@code ChatFormatting} names.)
+ *
+ * <p>TODO: Extract the 12-line taunt broadcast pattern (repeated in 31+ goal files)
+ * into a static helper here: {@code broadcastTaunt(BossEntity, String)} — builds the
+ * {@code [BossName] message} component and sends it to nearby players.
  */
 public class TextUtil {
 

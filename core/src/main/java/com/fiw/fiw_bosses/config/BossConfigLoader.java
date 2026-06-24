@@ -66,6 +66,12 @@ public class BossConfigLoader {
                     failed++;
                     continue;
                 }
+                if (def.health <= 0) {
+                    FiwBossesCore.LOGGER.warn("Boss '{}' has health {} — boss may die instantly or behave unexpectedly", def.id, def.health);
+                }
+                if (def.phases == null || def.phases.isEmpty()) {
+                    FiwBossesCore.LOGGER.warn("Boss '{}' has no phases defined — boss will have no abilities", def.id);
+                }
                 definitions.put(def.id, def);
                 loaded++;
                 FiwBossesCore.LOGGER.info("Loaded boss definition: {} (baseEntity={}, renderEntity={})",
