@@ -2,11 +2,7 @@
 
 All notable changes to this project are documented here. Each release's section below
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
-matching the tag). The newest version goes on top.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
+matching the tag).
 ## [1.1.0] 
 
 > ⚠️ **Major rewrite — expect bugs.** This is the biggest change since the mod began, and it
@@ -96,4 +92,6 @@ and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2
 - In-game testing is incomplete: configuration loading is verified on every target, but the abilities,
   persistence, vanilla-mob behavior, and Fiw Tools paths are not yet fully play-tested across all eight targets.
 - The shared renderer is a "safe humanoid" model — slim arms and exact player outer layers are not yet matched.
+- On 1.21.1 and 1.20.1, `renderEntity` disguised mobs render with static limbs while moving — limb-swing
+  animation is only copied on 1.21.8 and 1.21.11. Orientation and tick-based idle motion still animate.
 - Player skins require an internet connection at server start (Mojang API lookup).
