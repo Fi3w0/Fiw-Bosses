@@ -4,6 +4,7 @@
 
 **Build custom Minecraft boss fights from JSON — phases, minions, loot, dialogue, skins, and 50+ configurable abilities, no Java required.**
 
+[![Build](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml/badge.svg)](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml)
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)

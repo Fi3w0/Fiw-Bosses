@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. Each release's section below
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
-## [1.1.0] 
+## [1.1.0]
 
 > ⚠️ **Major rewrite — expect bugs.** This is the biggest change since the mod began, and it
 > is still in progress. Because so much was rewritten, it is **not fully tested** — some
