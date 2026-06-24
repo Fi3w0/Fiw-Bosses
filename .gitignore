@@ -59,3 +59,25 @@ docs/NEXT_SESSION_PLAN.md
 /run*/config/
 **/profiles/
 whitelist.json
+
+# Minecraft client/server runtime data (never commit)
+world/
+saves/
+crash-reports/
+resourcepacks/
+options.txt
+servers.dat
+usercache.json
+usernamecache.json
+ops.json
+banned-ips.json
+banned-players.json
+eula.txt
+
+# Environment & secrets
+.env
+.env.*
+*.token
+*.secret
+credentials.json
+secrets.json
