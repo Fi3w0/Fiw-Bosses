@@ -61,24 +61,3 @@ jobs:
           files: release/*.jar
           body_path: RELEASE_NOTES.md
           fail_on_unmatched_files: true
-
-      - name: Publish to Modrinth
-        if: ${{ secrets.MODRINTH_TOKEN != '' }}
-        uses: modrinth/actions/publish@v1
-        with:
-          token: ${{ secrets.MODRINTH_TOKEN }}
-          project: ${{ secrets.MODRINTH_ID }}
-          version: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          changelog: |
-            See [GitHub Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}) for full changelog.
-          files: release/*.jar
-          loaders: |
-            fabric
-            neoforge
-            forge
-          game_versions: |
-            1.21.11
-            1.21.8
-            1.21.1
-            1.20.1
