@@ -1494,6 +1494,50 @@ Continuously records the boss's position and health. When the boss drops to/belo
 
 ---
 
+### `gravity_well`
+
+Sucks nearby players toward the well center and lifts them with Levitation for the
+channel duration; when it ends, Levitation expires and players drop, taking optional
+impact damage.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `radius` | `8` | Radius (blocks) of the gravity well. |
+| `pullStrength` | `0.5` | Horizontal pull force applied per tick. |
+| `levitationAmplifier` | `2` | Levitation amplifier (0 = I, 2 = III). |
+| `duration` | `50` | Channel duration in ticks (20 = 1 second). |
+| `impactDamage` | `0` | Damage dealt to players still inside when the well ends. |
+| `taunt` | — | Optional taunt message sent to players in range on activation. |
+
+```json
+{ "type": "gravity_well", "cooldownTicks": 200, "params": { "radius": 8, "pullStrength": 0.5, "levitationAmplifier": 2, "duration": 50, "impactDamage": 0, "taunt": "&5Come closer!" } }
+```
+
+---
+
+### `shadow_clone`
+
+Spawns fake copies of the boss (real `MinionEntity` entities that mirror the boss's
+disguise and skin). Clones follow the boss, have 1 HP and deal 1 damage by default.
+When a clone dies it bursts into black smoke and can optionally apply a debuff to
+its killer. Re-summons when all clones are dead and the cooldown has elapsed.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `count` | `3` | Number of clones per wave. Re-summons once all are dead. |
+| `health` | `1` | Health per clone. |
+| `damage` | `1` | Attack damage per clone. |
+| `debuff` | — | Optional effect ID (e.g. `minecraft:wither`) applied to the killer on clone death. |
+| `debuffSeconds` | `5` | Duration in seconds of the on-death debuff. |
+| `debuffAmplifier` | `0` | Amplifier of the on-death debuff. |
+| `taunt` | — | Optional taunt message sent to players in range on activation. |
+
+```json
+{ "type": "shadow_clone", "cooldownTicks": 300, "params": { "count": 3, "health": 1, "damage": 1, "debuff": "minecraft:wither", "debuffSeconds": 5, "debuffAmplifier": 0, "taunt": "&8Who is real?" } }
+```
+
+---
+
 ## Minion System
 
 Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can have their own stats, skins, equipment, abilities, loot, and AI behavior. Bosses reference minions by `minionId` in their phase's `minions` array.

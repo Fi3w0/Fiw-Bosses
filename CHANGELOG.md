@@ -25,6 +25,9 @@ matching the tag).
   - `sacrifice_minion`: consumes owned minions to heal the boss and damage nearby players at the sacrificed minion location.
   - `last_breath`: low-health interruptible channel that releases a large soul blast if players do not deal enough damage.
   - `wither_crown`: orbiting wither skull crown that fires real wither skull projectiles one by one.
+- Two new crowd-control abilities:
+  - `gravity_well`: sucks players into a swirling well, lifts them with Levitation, then drops them with optional impact damage.
+  - `shadow_clone`: spawns fake boss copies that mirror the boss's disguise and skin, follow the boss, and apply an optional debuff on death.
 - Four new defensive/survival abilities:
   - `cleanse`: strips all harmful effects off the boss and briefly blocks new debuffs.
   - `second_wind`: one-shot auto-revive that negates a fatal blow and restores partial health, then re-arms after its cooldown.

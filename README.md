@@ -162,7 +162,7 @@ lightning_radial, orb_throw, tracking_orb, moving_tornado, ground_spike,
 arrow_rain, potion_field, detect_mark, phantom_dash, guardian_shield,
 essence_absorption, judgment_mark, divine_execution, rift_cleave, fear_burst,
 mirror_image, sacrifice_minion, last_breath, wither_crown, cleanse, second_wind,
-adaptation, rewind
+adaptation, rewind, gravity_well, shadow_clone
 ```
 
 </details>
