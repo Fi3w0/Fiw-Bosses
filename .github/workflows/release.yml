@@ -2,6 +2,10 @@ name: release
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag or version to publish (for example v1.1.1 or 1.1.1)'
+        required: true
 
 permissions:
   contents: write
@@ -25,16 +29,37 @@ jobs:
       - name: Setup Gradle (with caching)
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Read mod version
+      - name: Resolve requested version
         id: version
         run: |
-          VERSION="$(awk -F= '$1 == "mod_version" { print $2 }' gradle.properties)"
+          RAW="${{ inputs.tag }}"
+          TAG="${RAW#refs/tags/}"
+          VERSION="${TAG#v}"
+          TAG="v$VERSION"
           if [ -z "$VERSION" ]; then
-            echo "mod_version not found in gradle.properties" >&2
+            echo "A tag or version is required" >&2
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check out requested tag if it exists
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            git checkout --detach "$TAG"
+          else
+            echo "$TAG does not exist yet; building the checked-out ref"
+          fi
+
+      - name: Validate project version
+        run: |
+          EXPECTED="${{ steps.version.outputs.version }}"
+          ACTUAL="$(awk -F= '$1 == "mod_version" { print $2 }' gradle.properties)"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "gradle.properties mod_version is $ACTUAL, expected $EXPECTED" >&2
+            exit 1
+          fi
 
       - name: Build all targets
         run: ./gradlew build --stacktrace
@@ -91,7 +116,7 @@ jobs:
               --latest
           fi
 
-      - name: Publish Modrinth release
+      - name: Publish Modrinth release with loader dependencies
         env:
           VERSION: ${{ steps.version.outputs.version }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

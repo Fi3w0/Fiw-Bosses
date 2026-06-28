@@ -122,7 +122,7 @@ jobs:
             --verify-tag \
             --latest
 
-      - name: Publish Modrinth release
+      - name: Publish Modrinth release with loader dependencies
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
         env:
           VERSION: ${{ steps.version.outputs.version }}

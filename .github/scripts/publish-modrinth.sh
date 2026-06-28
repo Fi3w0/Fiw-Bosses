@@ -22,25 +22,22 @@ tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 auth_header="Authorization: $MODRINTH_TOKEN"
+versions_file="$tmp_dir/project-versions.json"
 
 modrinth_version_exists() {
   local version_number="$1"
-  local status
+  local game_version="$2"
+  local loader="$3"
 
-  status="$(
-    curl -sS -o /dev/null -w '%{http_code}' \
-      -H "$auth_header" \
-      "$API_BASE/project/$PROJECT_ID/version/$version_number"
-  )"
-
-  case "$status" in
-    200) return 0 ;;
-    404) return 1 ;;
-    *)
-      echo "Unexpected Modrinth status $status while checking $version_number" >&2
-      exit 1
-      ;;
-  esac
+  jq -e \
+    --arg version_number "$version_number" \
+    --arg game_version "$game_version" \
+    --arg loader "$loader" \
+    '.[] | select(
+      .version_number == $version_number
+      and (.game_versions | index($game_version))
+      and (.loaders | index($loader))
+    )' "$versions_file" >/dev/null
 }
 
 publish_version() {
@@ -49,7 +46,7 @@ publish_version() {
   local game_version="$3"
   local loader="$4"
   local dependencies_json="$5"
-  local version_number="$VERSION-$loader-$game_version"
+  local version_number="$VERSION"
   local data_file="$tmp_dir/$loader-$game_version.json"
 
   if [ ! -f "$jar_path" ]; then
@@ -57,8 +54,8 @@ publish_version() {
     exit 1
   fi
 
-  if modrinth_version_exists "$version_number"; then
-    echo "Modrinth version $version_number already exists; skipping"
+  if modrinth_version_exists "$version_number" "$game_version" "$loader"; then
+    echo "Modrinth version $version_number ($loader $game_version) already exists; skipping"
     return
   fi
 
@@ -93,17 +90,20 @@ publish_version() {
     -F "file=@$jar_path"
 }
 
+curl -fsS -H "$auth_header" "$API_BASE/project/$PROJECT_ID/version" > "$versions_file"
+
+# Fabric API, required on every Fabric upload.
 fabric_dependencies='[{"project_id":"P7dR8mSH","dependency_type":"required"}]'
 no_dependencies='[]'
 
-publish_version "Fabric 1.20.1" "fabric-1.20.1/build/libs/fiw-bosses-fabric-1.20.1-$VERSION.jar" "1.20.1" "fabric" "$fabric_dependencies"
-publish_version "Fabric 1.21.1" "fabric-1.21.1/build/libs/fiw-bosses-fabric-1.21.1-$VERSION.jar" "1.21.1" "fabric" "$fabric_dependencies"
-publish_version "Fabric 1.21.8" "fabric-1.21.8/build/libs/fiw-bosses-fabric-1.21.8-$VERSION.jar" "1.21.8" "fabric" "$fabric_dependencies"
 publish_version "Fabric 1.21.11" "fabric-1.21.11/build/libs/fiw-bosses-fabric-1.21.11-$VERSION.jar" "1.21.11" "fabric" "$fabric_dependencies"
-publish_version "Forge 1.20.1" "forge-1.20.1/build/libs/fiw-bosses-forge-1.20.1-$VERSION.jar" "1.20.1" "forge" "$no_dependencies"
-publish_version "NeoForge 1.21.1" "neoforge-1.21.1/build/libs/fiw-bosses-neoforge-1.21.1-$VERSION.jar" "1.21.1" "neoforge" "$no_dependencies"
-publish_version "NeoForge 1.21.8" "neoforge-1.21.8/build/libs/fiw-bosses-neoforge-1.21.8-$VERSION.jar" "1.21.8" "neoforge" "$no_dependencies"
 publish_version "NeoForge 1.21.11" "neoforge-1.21.11/build/libs/fiw-bosses-neoforge-1.21.11-$VERSION.jar" "1.21.11" "neoforge" "$no_dependencies"
+publish_version "Fabric 1.21.8" "fabric-1.21.8/build/libs/fiw-bosses-fabric-1.21.8-$VERSION.jar" "1.21.8" "fabric" "$fabric_dependencies"
+publish_version "NeoForge 1.21.8" "neoforge-1.21.8/build/libs/fiw-bosses-neoforge-1.21.8-$VERSION.jar" "1.21.8" "neoforge" "$no_dependencies"
+publish_version "Fabric 1.21.1" "fabric-1.21.1/build/libs/fiw-bosses-fabric-1.21.1-$VERSION.jar" "1.21.1" "fabric" "$fabric_dependencies"
+publish_version "NeoForge 1.21.1" "neoforge-1.21.1/build/libs/fiw-bosses-neoforge-1.21.1-$VERSION.jar" "1.21.1" "neoforge" "$no_dependencies"
+publish_version "Fabric 1.20.1" "fabric-1.20.1/build/libs/fiw-bosses-fabric-1.20.1-$VERSION.jar" "1.20.1" "fabric" "$fabric_dependencies"
+publish_version "Forge 1.20.1" "forge-1.20.1/build/libs/fiw-bosses-forge-1.20.1-$VERSION.jar" "1.20.1" "forge" "$no_dependencies"
 
 if [ -s "$DESCRIPTION_FILE" ]; then
   description_payload="$tmp_dir/project-description.json"
