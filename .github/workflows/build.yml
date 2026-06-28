@@ -6,11 +6,16 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Install both JDKs. Loom requires the Gradle daemon to run on Java 21 for
       # the 1.21.x targets; the 1.20.1 targets compile against Java 17 via Gradle
@@ -38,3 +43,88 @@ jobs:
           name: fiw-bosses-jars
           path: '**/build/libs/*.jar'
           if-no-files-found: warn
+
+      - name: Read mod version
+        id: version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          VERSION="$(awk -F= '$1 == "mod_version" { print $2 }' gradle.properties)"
+          if [ -z "$VERSION" ]; then
+            echo "mod_version not found in gradle.properties" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check release tag
+        id: release_tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git tag --list "$TAG" | grep -qx "$TAG"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$TAG already exists; skipping publish"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify publish secrets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          if [ -z "$MODRINTH_TOKEN" ]; then
+            echo "MODRINTH_TOKEN is required to publish a new version" >&2
+            exit 1
+          fi
+
+      - name: Collect release jars
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        run: |
+          mkdir -p release
+          find . -path '*/build/libs/*.jar' \
+            ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-shadow.jar' \
+            ! -name 'fiw-bosses-core-*.jar' -exec cp -v {} release/ \;
+          test "$(find release -name '*.jar' | wc -l)" -eq 8
+          ls -la release
+
+      - name: Extract release notes
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v ver="$VERSION" '
+            /^## \[/ { if (p) exit; if ($0 ~ ("^## \\[" ver "\\]")) p=1 }
+            p { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "FIW Bosses $VERSION" > RELEASE_NOTES.md
+          fi
+
+      - name: Create release tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          git config user.name "Fi3w0"
+          git config user.email "fi3w0@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release create "$TAG" release/*.jar \
+            --title "FIW Bosses $VERSION" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag \
+            --latest
+
+      - name: Publish Modrinth release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.release_tag.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: bash .github/scripts/publish-modrinth.sh
