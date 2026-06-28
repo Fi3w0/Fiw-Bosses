@@ -71,6 +71,9 @@ public interface BossGoalFactory {
         register("rewind", RewindGoal::new);
         register("gravity_well", GravityWellGoal::new);
         register("shadow_clone", ShadowCloneGoal::new);
+        register("blink_strike", BlinkStrikeGoal::new);
+        register("curse_bomb", CurseBombGoal::new);
+        register("soul_tether", SoulTetherGoal::new);
     }
 
     static void register(String key, BossGoalFactory factory) {

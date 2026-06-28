@@ -87,6 +87,15 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [sacrifice_minion](#sacrifice_minion)
   - [last_breath](#last_breath)
   - [wither_crown](#wither_crown)
+  - [cleanse](#cleanse)
+  - [second_wind](#second_wind)
+  - [adaptation](#adaptation)
+  - [rewind](#rewind)
+  - [gravity_well](#gravity_well)
+  - [shadow_clone](#shadow_clone)
+  - [blink_strike](#blink_strike)
+  - [curse_bomb](#curse_bomb)
+  - [soul_tether](#soul_tether)
 - [Minion System](#minion-system)
   - [Minion Definition Fields](#minion-definition-fields)
   - [Movement Modes](#movement-modes)
@@ -1534,6 +1543,66 @@ its killer. Re-summons when all clones are dead and the cooldown has elapsed.
 
 ```json
 { "type": "shadow_clone", "cooldownTicks": 300, "params": { "count": 3, "health": 1, "damage": 1, "debuff": "minecraft:wither", "debuffSeconds": 5, "debuffAmplifier": 0, "taunt": "&8Who is real?" } }
+```
+
+---
+
+### `blink_strike`
+
+Telegraphs a target with portal particles, then the boss blinks behind or near that target and performs a sweep strike. Good for bosses that should punish stationary ranged players.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `maxRange` | `18.0` | Max target distance to start the blink. |
+| `backstepDistance` | `2.2` | Preferred landing distance behind/near the target. |
+| `strikeRadius` | `2.8` | Radius around the marked target position that takes damage. |
+| `damage` | `10.0` | Melee damage dealt by the sweep. |
+| `knockback` | `0.9` | Horizontal knockback from the landing point. |
+| `windupTicks` | `16` | Warning time before the blink lands. |
+
+```json
+{ "type": "blink_strike", "cooldownTicks": 120, "params": { "damage": 12, "maxRange": 20, "strikeRadius": 3, "windupTicks": 18 } }
+```
+
+---
+
+### `curse_bomb`
+
+Marks nearby players with glowing delayed soul bombs. When the timer ends, each marked player explodes in a configurable radius, encouraging players to spread out before the detonation.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `targetRadius` | `24.0` | Search radius for players to mark. |
+| `blastRadius` | `4.0` | Explosion radius around each marked player. |
+| `damage` | `9.0` | Magic damage dealt by each blast. |
+| `knockback` | `0.8` | Horizontal knockback from each blast center. |
+| `markTicks` | `60` | Warning time before detonation. |
+| `maxTargets` | `2` | Maximum players marked per cast. |
+| `hitMarkedPlayer` | `true` | Whether a marked player is damaged by their own bomb. |
+
+```json
+{ "type": "curse_bomb", "cooldownTicks": 180, "params": { "maxTargets": 3, "markTicks": 70, "blastRadius": 4.5, "damage": 10 } }
+```
+
+---
+
+### `soul_tether`
+
+Chains one or more players to the boss with visible soul tethers. Tethered players are pulled inward and take pulse damage; if they stretch the tether past `breakDistance`, it snaps for heavier damage and a hard pull.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `targetRadius` | `22.0` | Search radius for players to tether. |
+| `breakDistance` | `16.0` | Distance where the tether snaps. |
+| `pullStrength` | `0.16` | Pull force applied each tick. |
+| `pulseDamage` | `2.0` | Magic damage dealt each pulse while tethered. |
+| `snapDamage` | `8.0` | Magic damage when the tether snaps. |
+| `durationTicks` | `90` | Max tether duration. |
+| `damageInterval` | `20` | Ticks between pulse damage. |
+| `maxTargets` | `2` | Maximum players tethered per cast. |
+
+```json
+{ "type": "soul_tether", "cooldownTicks": 200, "params": { "maxTargets": 2, "breakDistance": 15, "pullStrength": 0.18, "snapDamage": 9 } }
 ```
 
 ---

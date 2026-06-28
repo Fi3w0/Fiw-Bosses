@@ -150,6 +150,9 @@ Abilities are small, configurable attack modules. Add them to a phase, set a coo
 | `second_wind`       | One-shot auto-revive: negates a fatal blow and restores partial health           |
 | `adaptation`        | Grows resistant to whichever damage type has recently hurt it most               |
 | `cleanse`           | Strips all debuffs off the boss and briefly blocks new ones                      |
+| `blink_strike`      | Telegraphs a target, blinks in, and punishes nearby players                      |
+| `curse_bomb`        | Delayed player bombs that force the group to spread out                          |
+| `soul_tether`       | Chains players to the boss, pulls them inward, and punishes broken tethers        |
 
 <details>
 <summary><strong>All ability IDs</strong></summary>
@@ -163,7 +166,8 @@ lightning_radial, orb_throw, tracking_orb, moving_tornado, ground_spike,
 arrow_rain, potion_field, detect_mark, phantom_dash, guardian_shield,
 essence_absorption, judgment_mark, divine_execution, rift_cleave, fear_burst,
 mirror_image, sacrifice_minion, last_breath, wither_crown, cleanse, second_wind,
-adaptation, rewind, gravity_well, shadow_clone
+adaptation, rewind, gravity_well, shadow_clone, blink_strike, curse_bomb,
+soul_tether
 ```
 
 </details>

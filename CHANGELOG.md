@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Each release's section below
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
+
+## [1.1.1]
+
+### Added
+- Added three new configurable boss abilities on every supported Minecraft version and loader:
+  - `blink_strike`: telegraphs a target, blinks behind or near them, then hits nearby players with a sweep strike.
+  - `curse_bomb`: marks one or more players with delayed soul bombs that explode around them, rewarding spread-out positioning.
+  - `soul_tether`: chains players to the boss with visible soul tethers, pulls them inward, pulses damage, and punishes players who stretch the tether too far.
+
+### Changed
+- Updated the release workflow fallback to accept an explicit tag/version and keep Modrinth Fabric API dependencies in the shared publish path.
+
 ## [1.1.0]
 
 > ⚠️ **Major rewrite — expect bugs.** This is the biggest change since the mod began, and it
