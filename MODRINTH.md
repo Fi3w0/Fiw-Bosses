@@ -117,7 +117,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 
 Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all eight targets.
 
-**Optional:** [Fiw Custom Items](https://modrinth.com/mod/fiw-tools) — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are skipped and nothing breaks.
+**Optional:** [Fiw Custom Items](https://modrinth.com/mod/fiw-custom-items) — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are skipped and nothing breaks.
 
 ---
 

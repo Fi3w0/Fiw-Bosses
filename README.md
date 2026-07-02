@@ -79,7 +79,7 @@ Full JSON reference → **[BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)**
 | Fabric   | 1.20.1    | `fabric-1.20.1`    | 17   |
 | Forge    | 1.20.1    | `forge-1.20.1`     | 17   |
 
-Fabric builds require **[Fabric API](https://modrinth.com/mod/fabric-api)**. **[Fiw Custom Items](https://modrinth.com/mod/fiw-tools)** is optional — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are simply skipped.
+Fabric builds require **[Fabric API](https://modrinth.com/mod/fabric-api)**. **[Fiw Custom Items](https://modrinth.com/mod/fiw-custom-items)** is optional — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are simply skipped.
 
 ---
 
