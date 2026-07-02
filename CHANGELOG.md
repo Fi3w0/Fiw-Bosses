@@ -51,8 +51,8 @@ matching the tag).
 - **Vanilla mobs as simple minions** — minions can still use true vanilla/modded entity types
   (e.g. `baseEntity: "minecraft:zombie"`) for simple summons with custom stats, equipment, and loot.
   These keep native mob AI and are intentionally less customizable than FIW custom minions.
-- Optional **Fiw Tools** integration — reference Fiw Tools items by `toolId` in boss/phase/minion
-  equipment and loot. Reflection-only, no hard dependency; skipped if Fiw Tools is absent.
+- Optional **Fiw Custom Items** integration — reference Fiw Custom Items entries by `toolId` in boss/phase/minion
+  equipment and loot. Reflection-only, no hard dependency; skipped if Fiw Custom Items is absent.
   - Example configs under `examples/fiw_tools_integration/` (Void Reaver boss plus its custom items).
 
 ### Changed
@@ -105,7 +105,7 @@ matching the tag).
 - Because this is a rewrite, some abilities/mechanics may be broken, untested, or inconsistent between
   loaders — bugs are expected, and fixes will follow in small updates.
 - In-game testing is incomplete: configuration loading is verified on every target, but the abilities,
-  persistence, vanilla-mob behavior, and Fiw Tools paths are not yet fully play-tested across all eight targets.
+  persistence, vanilla-mob behavior, and Fiw Custom Items paths are not yet fully play-tested across all eight targets.
 - The shared renderer is a "safe humanoid" model — slim arms and exact player outer layers are not yet matched.
 - On 1.21.1 and 1.20.1, `renderEntity` disguised mobs render with static limbs while moving — limb-swing
   animation is only copied on 1.21.8 and 1.21.11. Orientation and tick-based idle motion still animate.
