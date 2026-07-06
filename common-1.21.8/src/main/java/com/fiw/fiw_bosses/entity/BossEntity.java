@@ -391,6 +391,12 @@ public class BossEntity extends Monster {
         Entity attacker = source.getEntity();
         if (attacker != null && blocksFriendlyDamageFrom(attacker)) return false;
 
+        // Config-driven damage protection (item id > damage type id > category).
+        // Runs before adaptation so fully-blocked damage is never recorded there.
+        float protMult = protectionMultiplier(source);
+        if (protMult <= 0.0f) return false;
+        if (protMult != 1.0f) amount *= protMult;
+
         // Adaptation: remember what hit us, and soften the type we've adapted to
         String damageType = classifyDamage(source);
         recentDamageByType.merge(damageType, amount, Float::sum);
@@ -399,11 +405,6 @@ public class BossEntity extends Monster {
                 && level().getGameTime() < adaptationUntilTick) {
             amount *= (1.0f - adaptationResist);
         }
-
-        // Config-driven damage protection (item id > damage type id > category)
-        float protMult = protectionMultiplier(source);
-        if (protMult <= 0.0f) return false;
-        if (protMult != 1.0f) amount *= protMult;
 
         if (damageReduction > 0) amount *= (1.0f - damageReduction);
 
