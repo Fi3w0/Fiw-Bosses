@@ -50,15 +50,16 @@ public class HealGoal extends Goal {
             level.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.EVOKER_PREPARE_WOLOLO, SoundSource.HOSTILE, 2.0f, 1.0f);
 
-            String msg = taunt != null ? taunt : "&a&lYou cannot stop me!";
-            var bossName = boss.getCustomName();
-            Component tauntText = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
-                    .append(bossName != null ? bossName.copy() : Component.literal("Boss"))
-                    .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
-                    .append(TextUtil.parseColorCodes(msg));
-            for (var player : level.players()) {
-                if (player.distanceToSqr(boss) <= 48 * 48) {
-                    player.sendSystemMessage(tauntText);
+            if (taunt != null) {
+                var bossName = boss.getCustomName();
+                Component tauntText = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
+                        .append(bossName != null ? bossName.copy() : Component.literal("Boss"))
+                        .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
+                        .append(TextUtil.parseColorCodes(taunt));
+                for (var player : level.players()) {
+                    if (player.distanceToSqr(boss) <= 48 * 48) {
+                        player.sendSystemMessage(tauntText);
+                    }
                 }
             }
         }

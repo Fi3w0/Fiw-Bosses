@@ -107,13 +107,12 @@ public class TeleportGoal extends Goal {
             level.playSound(null, boss.getX(), boss.getY(), boss.getZ(),
                     SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.5f, 1.2f);
 
-            String msg = taunt != null ? taunt : "&5Behind you...";
-            if (boss.getRandom().nextFloat() < 0.4f) {
+            if (taunt != null && boss.getRandom().nextFloat() < 0.4f) {
                 var bossName = boss.getCustomName();
                 Component tauntText = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
                         .append(bossName != null ? bossName.copy() : Component.literal("Boss"))
                         .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
-                        .append(TextUtil.parseColorCodes(msg));
+                        .append(TextUtil.parseColorCodes(taunt));
                 for (var player : level.players()) {
                     if (player.distanceToSqr(boss) <= 48 * 48) {
                         player.sendSystemMessage(tauntText);
