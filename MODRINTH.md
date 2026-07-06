@@ -73,7 +73,15 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 🎭 **Disguises** — keep full FIW logic but render a boss or minion as *any* vanilla or modded mob with `renderEntity`, or use a real player skin. Your "zombie" can cast meteors.
 
-💬 **Fight flow & dialogue** — start a boss dormant and invulnerable until a player right-clicks it; play pre-fight lines, then begin. Hold it at 1 HP for last words before it falls.
+💬 **Fight flow & dialogue** — start a boss dormant and invulnerable until a player right-clicks it; play pre-fight lines, then begin. Hold it at 1 HP for last words before it falls. Every chat message is optional — silent bosses are one omitted param away.
+
+🛡️ **Damage protection** — per-boss, per-phase, and per-minion damage multipliers keyed by weapon item, damage type, or category. Tame the overpowered mace/spear (`"minecraft:mace": 0.2`), resist potions (`"magic": 0.3`), or grant true immunities (`"fall": 0`) — made for servers with custom weapons.
+
+⚔️ **Factions** — allied bosses and minions never turn on each other and their AoE can't hurt allies, with per-entity switches (`damageFactionAllies`, `targetFactionAllies`, `damageOwnGroup`) when you *want* infighting.
+
+🌊 **Water & lava handling** — no more river cheese: bosses can chase players into water (`canSwim`), never drown, sink and fight underwater (`floats: false`), swim faster, ignore currents, and shrug off lava (`fireImmune`).
+
+🎲 **Loot ranges** — roll random drop amounts with `minCount`/`maxCount` (10–120 diamonds at 50% chance); big rolls split into stacks automatically.
 
 ♻️ **Hot reload & persistence** — `/boss reload` re-reads everything live, deleted configs are removed from the world, and a boss's phase survives server restarts.
 ---
@@ -126,8 +134,8 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 `/boss` needs op level 2; `/boss reload` needs op level 3.
 
 ```
-/boss spawn <id> [x y z]      /boss list        /boss kill <id> | all
-/boss minion spawn <id>       /boss minion list /boss minion kill <id> | all
+/boss spawn <id> [x y z] [count]   /boss list        /boss kill <id> | all
+/boss minion spawn <id> [count]    /boss minion list /boss minion kill <id> | all
 /boss reload
 ```
 

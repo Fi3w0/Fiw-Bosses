@@ -9,6 +9,13 @@
   "baseEntity": "custom",
   "renderEntity": "minecraft:wither_skeleton",
   "movement": "phase_walk",
+  "protection": {
+    "minecraft:mace": 0.2,
+    "magic": 0.5,
+    "fall": 0
+  },
+  "faction": "constructs",
+  "fluid": { "drownImmune": true, "canSwim": true },
   "bossBar": { "color": "BLUE", "overlay": "NOTCHED_6" },
   "skin": { "type": "player", "value": "Steve" },
   "equipment": {
@@ -60,6 +67,7 @@
       "hpThresholdPercent": 0.3,
       "speedMultiplier": 1.2,
       "damageMultiplier": 1.0,
+      "protection": { "melee": 0.6 },
       "abilities": [
         { "type": "second_wind", "cooldownTicks": 1200, "params": { "revivePercent": 0.5, "taunt": "&c...not finished." } },
         { "type": "melee_slash", "cooldownTicks": 40, "params": { "range": 4.0, "arc": 110.0, "damage": 2.0 } }
@@ -71,6 +79,7 @@
     }
   ],
   "loot": [
-    { "item": "minecraft:diamond", "count": 2, "chance": 1.0 }
+    { "item": "minecraft:diamond", "minCount": 2, "maxCount": 12, "chance": 1.0 },
+    { "item": "minecraft:emerald", "minCount": 0, "maxCount": 4, "chance": 0.5 }
   ]
 }

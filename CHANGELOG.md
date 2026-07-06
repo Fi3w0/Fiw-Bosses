@@ -4,6 +4,45 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.1.2]
+
+### Added
+- **Damage protection maps** — new `protection` config on bosses, phases, and custom minions.
+  Scale or block incoming damage per weapon item id (`"minecraft:mace": 0.2`), exact damage type id
+  (`"minecraft:mace_smash"`, `"minecraft:spear"`), or category (`melee`, `projectile`, `magic`, `fire`,
+  `explosion`, `fall`, `lightning`, `freezing`, `drowning`). `0` = fully immune. Phase maps override the
+  boss map key-by-key. Built to tame the overpowered vanilla mace/spear and custom server weapons —
+  on versions without the dedicated damage types (mace_smash is 1.21.8+, spear is 1.21.11 only), the
+  item-id key works instead.
+- **Faction system** — optional `faction` id on bosses and custom minions. Allies (same faction, or a
+  boss and its own minions) don't retaliate against each other and their abilities/AoE can't hurt each
+  other. Fully configurable per entity via `damageFactionAllies`, `targetFactionAllies`, and
+  `damageOwnGroup` (all default `false`, preserving previous behavior).
+- **Spawn counts** — `/boss spawn <id> [count]`, `/boss spawn <id> <pos> [count]`, and
+  `/boss minion spawn <id> [count]` can now spawn multiple entities at once (default 1, no cap;
+  extra spawns are slightly scattered).
+- **Loot count ranges** — loot entries support `minCount`/`maxCount` for random drop amounts
+  (e.g. 10–120 diamonds at 50% chance). Oversized amounts split into multiple stacks automatically.
+- **Water/lava handling** — new optional `fluid` block on bosses and custom minions:
+  `drownImmune`, `fireImmune`, `floats` (false = sinks and fights underwater), `swimSpeed`,
+  `pushedByFluids`, and `canSwim` (pathfinding stops avoiding water so bosses chase players into
+  rivers instead of being cheesed from the shore).
+
+### Changed
+- **All ability chat messages are now optional.** The `shield`, `heal`, `teleport`, and
+  `summon_minions` abilities no longer print built-in fallback taunts ("Your attacks are futile!",
+  "You cannot stop me!", "Behind you...", "Rise, my servants!") when no `taunt` is configured —
+  omit the param and the ability is silent. Configure `taunt` to restore a message.
+- Ability target filtering was unified across all AoE/melee abilities using the new ally rules. Abilities
+  that previously could never hit another boss (aoe_smash, melee_slash, slam, shockwave, charge) can now
+  hit **non-allied** bosses, so rival boss fights behave consistently across all abilities.
+
+### Notes
+- Vanilla-base minions (`baseEntity` set to a real mob id) can't use `protection`, `faction`, or `fluid`
+  — those apply to bosses and custom minions only.
+- All features are available on every supported version and loader (1.21.11, 1.21.8, 1.21.1, 1.20.1 —
+  Fabric, NeoForge, Forge).
+
 ## [1.1.1]
 
 ### Added

@@ -15,14 +15,14 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 
 | Command | Permission | Description |
 |---------|-----------|-------------|
-| `/boss spawn <id>` | level 2 | Spawn boss at your position |
-| `/boss spawn <id> <x> <y> <z>` | level 2 | Spawn at coordinates |
+| `/boss spawn <id> [count]` | level 2 | Spawn one or more bosses at your position |
+| `/boss spawn <id> <x> <y> <z> [count]` | level 2 | Spawn one or more at coordinates |
 | `/boss kill <id>` | level 2 | Kill all living bosses with that ID |
 | `/boss kill all` | level 2 | Kill every living boss in all worlds |
 | `/boss list` | level 2 | List all loaded boss IDs |
 | `/boss reload` | level 3 | Reload all boss + minion configs without restart |
 | `/boss minion list` | level 2 | List all loaded minion definitions |
-| `/boss minion spawn <id>` | level 2 | Spawn a custom minion at your position |
+| `/boss minion spawn <id> [count]` | level 2 | Spawn one or more custom minions at your position |
 | `/boss minion kill <id>` | level 2 | Kill all living minions with that ID |
 | `/boss minion kill all` | level 2 | Kill every living minion in all worlds |
 
@@ -38,6 +38,9 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Skin](#skin)
 - [Equipment](#equipment)
 - [Phases](#phases)
+- [Damage Protection](#damage-protection)
+- [Factions](#factions)
+- [Water & Lava Behavior](#water--lava-behavior)
 - [Abilities](#abilities)
   - [melee_slash](#melee_slash)
   - [arc_slash](#arc_slash)
@@ -124,7 +127,10 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   "skin": { "type": "player", "value": "Notch" },
   "equipment": { ... },
   "phases": [ ... ],
-  "loot": [ ... ]
+  "loot": [ ... ],
+  "protection": { "minecraft:mace": 0.2, "projectile": 0.8 },
+  "faction": "undead",
+  "fluid": { "drownImmune": true, "canSwim": true }
 }
 ```
 
@@ -145,6 +151,12 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `equipment` | object | null | Items and armor |
 | `phases` | array | [] | Phase definitions |
 | `loot` | array | [] | Death drops |
+| `protection` | object | null | Incoming damage multipliers per weapon/damage type. See [Damage Protection](#damage-protection) |
+| `faction` | string | null | Faction id — entities sharing it are allies. See [Factions](#factions) |
+| `damageFactionAllies` | bool | false | Whether this boss's attacks/abilities can damage same-faction allies |
+| `targetFactionAllies` | bool | false | Whether this boss's AI may target/retaliate against same-faction allies |
+| `damageOwnGroup` | bool | false | Whether this boss's attacks can damage its own summoned minions |
+| `fluid` | object | null | Water/lava behavior overrides. See [Water & Lava Behavior](#water--lava-behavior) |
 | `idleTimeout` | int | -1 | Ticks with no nearby player before idle action triggers. `-1` disables (default) |
 | `idleAction` | string | `"despawn"` | What to do when idle: `"despawn"` removes the boss, `"heal"` gradually restores HP |
 | `idleHealAmount` | float | 2.0 | HP restored per heal tick (only when `idleAction = "heal"`) |
@@ -309,6 +321,7 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
     "damageMultiplier": 1.5,
     "abilities": [ ... ],
     "minions": [ ... ],
+    "protection": { "melee": 0.5 },
     "transitionMessage": "&c&lThe boss enters a rage!",
     "transitionSound": "minecraft:entity.wither.spawn",
     "transitionParticle": "minecraft:explosion"
@@ -324,11 +337,133 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 | `abilities` | array | [] | Active abilities in this phase |
 | `minions` | array | [] | Minion types available for `summon_minions` |
 | `equipment` | object | null | Override gear for this phase |
+| `protection` | object | null | Per-phase damage protection overrides — merged key-by-key over the boss-level `protection` map |
 | `transitionMessage` | string | null | Chat message sent to nearby players |
 | `transitionSound` | string | null | Sound ID played on transition |
 | `transitionParticle` | string | null | Particle effect burst on transition |
 
 > The boss's current phase is stored in NBT — it survives server restarts.
+
+---
+
+## Damage Protection
+
+Scale or block incoming damage per weapon, damage type, or category — the tool for taming
+over-tuned vanilla weapons (mace, spear) and custom modded weapons on servers.
+
+```json
+"protection": {
+  "minecraft:mace": 0.2,
+  "minecraft:mace_smash": 0.2,
+  "minecraft:spear": 0.3,
+  "mymod:legendary_blade": 0.5,
+  "projectile": 0.8,
+  "magic": 0.3,
+  "fall": 0
+}
+```
+
+Each entry maps a **key** to a **damage multiplier**: `0.3` = the boss takes 30% of that
+damage, `1.0` = unchanged, `0` (or negative) = fully immune (no hit animation, no knockback).
+Values above `1.0` work too (`2.0` = takes double damage — a weakness).
+
+Three kinds of keys are supported, checked in this order (first match wins):
+
+1. **Weapon item id** — the item that dealt the hit: the attacker's held weapon or the
+   weapon a projectile was fired from (e.g. `minecraft:mace`, `minecraft:bow`, any modded id).
+2. **Damage type id** — the exact vanilla/modded damage type (e.g. `minecraft:mace_smash`,
+   `minecraft:arrow`, `minecraft:sonic_boom`, `minecraft:lava`).
+3. **Category** — a broad group: `melee`, `projectile`, `magic`, `fire`, `explosion`,
+   `fall`, `lightning`, `freezing`, `drowning`.
+
+Phase-level `protection` maps override the boss-level map **key by key** — keys missing from
+the phase map fall through to the boss map.
+
+**Per-version notes:**
+
+| Damage type | 1.21.11 | 1.21.8 | 1.21.1 | 1.20.1 |
+|-------------|---------|--------|--------|--------|
+| `minecraft:mace_smash` | ✔ | ✔ | ✖ | ✖ (no mace) |
+| `minecraft:spear` | ✔ | ✖ | ✖ | ✖ (no spear) |
+
+On versions without a dedicated damage type, use the **item id** key instead
+(`"minecraft:mace": 0.2` works everywhere the mace exists). On 1.20.1, projectiles
+resolve their weapon from whatever the shooter currently holds.
+
+> `protection` also works on custom minions (`baseEntity: "custom"`), at the top level of
+> the minion definition. Vanilla-base minions are unaffected.
+
+---
+
+## Factions
+
+Give bosses and custom minions a shared `faction` id to make them allies: allies never
+retaliate against each other, and their abilities/AoE damage can't hurt each other.
+Everything is opt-out via flags:
+
+```json
+{
+  "faction": "undead",
+  "damageFactionAllies": false,
+  "targetFactionAllies": false,
+  "damageOwnGroup": false
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `faction` | null | Faction id. Entities sharing a non-empty id are allies. `null`/empty = no faction |
+| `damageFactionAllies` | false | `true`: this entity's attacks and abilities can damage same-faction allies |
+| `targetFactionAllies` | false | `true`: this entity's AI may target/retaliate against same-faction allies |
+| `damageOwnGroup` | false | `true`: this entity can damage its **own group** — a boss's own summoned minions, or (for minions) the owner boss and sibling minions |
+
+Notes:
+
+- A boss and its own summoned minions are always a group — even without a faction —
+  exactly like previous versions. Set `damageOwnGroup: true` to allow friendly fire inside
+  the group.
+- Two bosses **without** factions can hurt each other — rival boss fights work out of the box.
+- The flags are read from the **attacker's** config: a boss with `damageFactionAllies: true`
+  can hurt its allies, even if those allies keep the default `false`.
+- Vanilla-base minions can't read faction config; only the built-in owner-group immunity
+  applies to them.
+
+---
+
+## Water & Lava Behavior
+
+By default bosses behave like vanilla land mobs: they float to the surface, drown, burn in
+lava, and avoid water when pathing — easy to cheese from a river. The optional `fluid`
+block fixes that per boss/minion:
+
+```json
+"fluid": {
+  "drownImmune": true,
+  "fireImmune": false,
+  "floats": false,
+  "swimSpeed": 1.6,
+  "pushedByFluids": false,
+  "canSwim": true
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `drownImmune` | false | Never loses air — can fight underwater forever |
+| `fireImmune` | false | Immune to fire/lava/burning damage (also never displays burning) |
+| `floats` | true | `false`: sinks instead of bobbing to the surface — combine with `drownImmune` for a true underwater fighter |
+| `swimSpeed` | 1.0 | Movement multiplier while in water/lava. `1.6` = 60% faster; values below `1.0` slow it down |
+| `pushedByFluids` | true | `false`: currents and flowing water/lava don't move it |
+| `canSwim` | false | `true`: pathfinding stops avoiding water — the boss follows players into rivers instead of pacing on the shore |
+
+Typical presets:
+
+- **River hunter:** `{ "canSwim": true, "drownImmune": true, "swimSpeed": 1.5 }`
+- **Deep-sea boss:** `{ "canSwim": true, "drownImmune": true, "floats": false, "pushedByFluids": false }`
+- **Lava fiend:** `{ "fireImmune": true, "pushedByFluids": false }`
+
+> Works on bosses and custom minions (`baseEntity: "custom"`). Omit the whole block for
+> vanilla behavior.
 
 ---
 
@@ -346,7 +481,7 @@ Each ability entry follows this structure:
 
 - **`cooldownTicks`** — ticks between uses (20 ticks = 1 second)
 - **`params`** — all parameters are optional; defaults are listed below
-- **`taunt`** — available on many abilities. When supported, the boss sends a chat message when the ability activates
+- **`taunt`** — available on many abilities. When supported, the boss sends a chat message when the ability activates. **All taunts are optional:** omit the param and the ability is completely silent (since 1.1.2 no ability has a built-in default message)
 
 Abilities take **priority over basic melee** — they never get interrupted mid-cast.
 
@@ -1654,7 +1789,13 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 | `skin` | object | Steve | Player skin. Only used when `baseEntity` is `"custom"` |
 | `equipment` | object | none | Slots: `mainHand`, `offHand`, `head`, `chest`, `legs`, `feet` |
 | `abilities` | array | [] | Same ability format as boss phases. Only used when `baseEntity` is `"custom"` |
-| `loot` | array | [] | Drops on death. Same format as boss loot |
+| `loot` | array | [] | Drops on death. Same format as boss loot (including `minCount`/`maxCount` ranges) |
+| `protection` | object | null | Incoming damage multipliers — same format as boss [Damage Protection](#damage-protection). Custom minions only |
+| `faction` | string | null | Faction id — see [Factions](#factions). Custom minions only |
+| `damageFactionAllies` | bool | false | Whether this minion's attacks can damage same-faction allies |
+| `targetFactionAllies` | bool | false | Whether this minion's AI may target same-faction allies |
+| `damageOwnGroup` | bool | false | Whether this minion can damage its owner boss and sibling minions |
+| `fluid` | object | null | Water/lava behavior — see [Water & Lava Behavior](#water--lava-behavior). Custom minions only |
 
 ### Movement Modes
 
@@ -1732,7 +1873,8 @@ In any boss phase, add a `minions` array with `minionId` references:
 
 ### Minion Behavior
 
-- Minions **never attack their owner boss** or sibling minions from the same boss
+- Minions **never attack their owner boss** or sibling minions from the same boss (unless the attacker sets `damageOwnGroup: true`)
+- Minions with a `faction` also **never hurt same-faction allies** (see [Factions](#factions))
 - Minions **don't have a boss bar**
 - Minions **don't auto-despawn** but can be killed with `/boss minion kill`
 - Minions **drop their own loot** (not the boss's loot table)
@@ -1787,7 +1929,7 @@ Idle timer is reset when:
     "count": 1,
     "chance": 0.15
   },
-  { "item": "minecraft:diamond", "count": 8,  "chance": 1.0 },
+  { "item": "minecraft:diamond", "minCount": 10, "maxCount": 120, "chance": 0.5 },
   { "item": "minecraft:nether_star", "count": 1, "chance": 0.05 }
 ]
 ```
@@ -1796,8 +1938,16 @@ Idle timer is reset when:
 |-------|---------|-------------|
 | `item` | **required** | Registry ID (`"minecraft:diamond"`, `"mymod:item"`) |
 | `nbt` | null | SNBT string for enchantments, custom names, etc. |
-| `count` | 1 | Stack size |
+| `count` | 1 | Fixed drop count (ignored when a range is set) |
+| `minCount` | null | Lower bound of a random drop count range |
+| `maxCount` | null | Upper bound of a random drop count range |
 | `chance` | 1.0 | Drop chance (`1.0` = always, `0.05` = 5%) |
+
+**Count ranges:** set `minCount`/`maxCount` to roll a random amount each kill —
+`"minCount": 10, "maxCount": 120` drops anywhere from 10 to 120 items. If only one bound is
+given the other defaults to it. A `minCount` of `0` means the roll can drop nothing at all.
+Amounts above a stack size are split into multiple stacks automatically (120 diamonds
+drop as 64 + 56).
 
 ---
 

@@ -119,8 +119,20 @@ Use true vanilla mobs for simple summons, or **FIW custom minions** with skins, 
 
 Custom minions also support `follow_boss` (escort) and `static` (hold position). Vanilla-base minions like `"baseEntity": "minecraft:zombie"` keep native AI and are intentionally less customizable. Bosses follow the same idea: always the FIW boss entity internally, but `baseEntity` / `renderEntity` can render them as any vanilla or modded mob.
 
+### Damage protection
+Per-boss (and per-phase, per-minion) incoming damage multipliers keyed by weapon item id, damage type id, or category — nerf the overpowered vanilla mace/spear or any custom server weapon (`"minecraft:mace": 0.2`), make potion damage tick for 30% (`"magic": 0.3`), or grant full immunities (`"fall": 0`).
+
+### Factions
+Give bosses and custom minions a shared `faction` id to make them allies: no retaliation, no friendly AoE damage. Opt back in per entity with `damageFactionAllies`, `targetFactionAllies`, and `damageOwnGroup`.
+
+### Water & lava handling
+The optional `fluid` block stops river cheese: `canSwim` (pathfinding follows players into water), `drownImmune`, `fireImmune`, `floats: false` (sinks and fights underwater), `swimSpeed`, and `pushedByFluids`.
+
+### Loot ranges
+Loot entries roll random amounts with `minCount`/`maxCount` (e.g. 10–120 diamonds at 50% chance) — oversized amounts split into multiple stacks automatically.
+
 ### Dialogue & fight flow
-Bosses can start inactive and immortal until a player right-clicks them — pre-fight dialogue plays, then combat begins. Pre-death dialogue can hold the boss at 1 HP for final lines before it dies.
+Bosses can start inactive and immortal until a player right-clicks them — pre-fight dialogue plays, then combat begins. Pre-death dialogue can hold the boss at 1 HP for final lines before it dies. Every ability chat message is optional — configure a `taunt` or the ability stays silent.
 
 ### Persistence & reloading
 Bosses persist by default, with phase index saved to NBT. `/boss reload` re-reads configs live, and configs you delete are removed from the world on reload.
@@ -179,10 +191,10 @@ soul_tether
 `/boss` requires op level 2; `/boss reload` requires op level 3.
 
 ```text
-/boss spawn <id> [x y z]      /boss minion list
-/boss list                    /boss minion spawn <id>
-/boss reload                  /boss minion kill <id>
-/boss kill <id> | all         /boss minion kill all
+/boss spawn <id> [x y z] [count]      /boss minion list
+/boss list                            /boss minion spawn <id> [count]
+/boss reload                          /boss minion kill <id>
+/boss kill <id> | all                 /boss minion kill all
 ```
 
 **Config folders**
