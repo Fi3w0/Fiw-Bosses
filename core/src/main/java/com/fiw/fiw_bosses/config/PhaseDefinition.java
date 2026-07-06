@@ -2,11 +2,15 @@ package com.fiw.fiw_bosses.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PhaseDefinition {
     public float hpThresholdPercent = 1.0f;
     public float speedMultiplier = 1.0f;
     public float damageMultiplier = 1.0f;
+    // Per-phase damage protection overrides; key-by-key over the boss-level map.
+    // Same key format as BossDefinition.protection.
+    public Map<String, Float> protection;
     public List<AbilityEntry> abilities = new ArrayList<>();
     public List<MinionEntry> minions = new ArrayList<>();
     public EquipmentConfig equipment;

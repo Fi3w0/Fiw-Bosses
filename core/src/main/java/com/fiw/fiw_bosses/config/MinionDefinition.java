@@ -2,6 +2,7 @@ package com.fiw.fiw_bosses.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MinionDefinition {
     public String id;
@@ -35,6 +36,10 @@ public class MinionDefinition {
 
     // Loot dropped on death
     public List<LootEntry> loot = new ArrayList<>();
+
+    // Incoming damage multipliers (same key format as BossDefinition.protection).
+    // Only used when baseEntity = "custom".
+    public Map<String, Float> protection;
 
     public boolean isCustom() {
         return "custom".equalsIgnoreCase(baseEntity);

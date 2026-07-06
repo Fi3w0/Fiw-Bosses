@@ -5,10 +5,12 @@ import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
+import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.sounds.SoundEvents;
@@ -48,6 +50,7 @@ import net.minecraft.server.level.ServerBossEvent;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
@@ -389,6 +392,11 @@ public class BossEntity extends Monster {
             amount *= (1.0f - adaptationResist);
         }
 
+        // Config-driven damage protection (item id > damage type id > category)
+        float protMult = protectionMultiplier(source);
+        if (protMult <= 0.0f) return false;
+        if (protMult != 1.0f) amount *= protMult;
+
         if (damageReduction > 0) amount *= (1.0f - damageReduction);
 
         // Second Wind: survive one otherwise-fatal blow, then disarm
@@ -696,6 +704,70 @@ public class BossEntity extends Monster {
         if (source.is(DamageTypeTags.IS_PROJECTILE)) return "projectile";
         if (source.is(DamageTypeTags.WITCH_RESISTANT_TO)) return "magic";
         return "melee";
+    }
+
+    // ── Damage protection (config-driven per-type multipliers) ──────────────
+
+    /** Protection multiplier for this damage; 1.0 = unchanged, <= 0 = fully immune. */
+    protected float protectionMultiplier(DamageSource source) {
+        if (currentPhaseProtection() == null
+                && (definition == null || definition.protection == null)) {
+            return 1.0f;
+        }
+        ItemStack weapon = resolveWeaponItem(source);
+        if (weapon != null && !weapon.isEmpty()) {
+            Float v = protectionValue(BuiltInRegistries.ITEM.getKey(weapon.getItem()).toString());
+            if (v != null) return v;
+        }
+        String typeId = source.typeHolder().unwrapKey()
+                .map(key -> key.identifier().toString()).orElse(null);
+        if (typeId != null) {
+            Float v = protectionValue(typeId);
+            if (v != null) return v;
+        }
+        String category = protectionCategory(source);
+        if (category != null) {
+            Float v = protectionValue(category);
+            if (v != null) return v;
+        }
+        return 1.0f;
+    }
+
+    /** Phase-map entry wins over the boss-level entry for the same key. */
+    private Float protectionValue(String key) {
+        Map<String, Float> phaseMap = currentPhaseProtection();
+        if (phaseMap != null) {
+            Float v = phaseMap.get(key);
+            if (v != null) return v;
+        }
+        Map<String, Float> bossMap = definition != null ? definition.protection : null;
+        return bossMap != null ? bossMap.get(key) : null;
+    }
+
+    private Map<String, Float> currentPhaseProtection() {
+        PhaseDefinition phase = phaseManager != null ? phaseManager.getCurrentPhase() : null;
+        return phase != null ? phase.protection : null;
+    }
+
+    /** The weapon behind this damage: tracked weapon if any, else the attacker's main hand. */
+    private static ItemStack resolveWeaponItem(DamageSource source) {
+        ItemStack weapon = source.getWeaponItem();
+        if (weapon != null && !weapon.isEmpty()) return weapon;
+        if (source.getEntity() instanceof LivingEntity attacker) return attacker.getMainHandItem();
+        return null;
+    }
+
+    /** Category key for protection lookups; "melee" only for direct living hits. */
+    private static String protectionCategory(DamageSource source) {
+        if (source.is(DamageTypeTags.IS_FIRE))            return "fire";
+        if (source.is(DamageTypeTags.IS_EXPLOSION))       return "explosion";
+        if (source.is(DamageTypeTags.IS_PROJECTILE))      return "projectile";
+        if (source.is(DamageTypeTags.WITCH_RESISTANT_TO)) return "magic";
+        if (source.is(DamageTypeTags.IS_LIGHTNING))       return "lightning";
+        if (source.is(DamageTypeTags.IS_FREEZING))        return "freezing";
+        if (source.is(DamageTypeTags.IS_DROWNING))        return "drowning";
+        if (source.is(DamageTypeTags.IS_FALL))            return "fall";
+        return source.getDirectEntity() instanceof LivingEntity ? "melee" : null;
     }
 
     // ── Cleanse debuff immunity (used by CleanseGoal) ────────────────────────

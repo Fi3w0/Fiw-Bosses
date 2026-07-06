@@ -2,6 +2,7 @@ package com.fiw.fiw_bosses.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BossDefinition {
     public String id;
@@ -19,6 +20,13 @@ public class BossDefinition {
     public EquipmentConfig equipment;
     public List<PhaseDefinition> phases = new ArrayList<>();
     public List<LootEntry> loot = new ArrayList<>();
+
+    // ── Damage protection ────────────────────────────────────────────────────
+    // Incoming damage multipliers. Keys: weapon item id ("minecraft:mace"),
+    // damage type id ("minecraft:mace_smash"), or category ("melee", "projectile",
+    // "magic", "fire", "explosion", "fall", "lightning", "freezing", "drowning").
+    // Value 0.3 = takes 30% damage, 0 = immune. Precedence: item > type > category.
+    public Map<String, Float> protection;
 
     // ── Idle system ──────────────────────────────────────────────────────────
     // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.

@@ -60,6 +60,7 @@ public class MinionEntity extends BossEntity {
         syntheticDef.renderEntity = def.renderEntity;
         syntheticDef.equipment   = def.equipment;
         syntheticDef.skin        = def.skin;
+        syntheticDef.protection  = def.protection;
 
         // Single phase with all the minion's abilities
         PhaseDefinition phase = new PhaseDefinition();
