@@ -56,15 +56,16 @@ public class ShieldGoal extends Goal {
                     boss.getX(), boss.getY() + 1.0, boss.getZ(),
                     20, 1.0, 1.0, 1.0, 0.1);
 
-            String msg = taunt != null ? taunt : "&b&lYour attacks are futile!";
-            var bossName = boss.getCustomName();
-            Component tauntText = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
-                    .append(bossName != null ? bossName.copy() : Component.literal("Boss"))
-                    .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
-                    .append(TextUtil.parseColorCodes(msg));
-            for (var player : level.players()) {
-                if (player.distanceToSqr(boss) <= 48 * 48) {
-                    player.sendSystemMessage(tauntText);
+            if (taunt != null) {
+                var bossName = boss.getCustomName();
+                Component tauntText = Component.literal("[").withStyle(ChatFormatting.DARK_GRAY)
+                        .append(bossName != null ? bossName.copy() : Component.literal("Boss"))
+                        .append(Component.literal("] ").withStyle(ChatFormatting.DARK_GRAY))
+                        .append(TextUtil.parseColorCodes(taunt));
+                for (var player : level.players()) {
+                    if (player.distanceToSqr(boss) <= 48 * 48) {
+                        player.sendSystemMessage(tauntText);
+                    }
                 }
             }
         }
