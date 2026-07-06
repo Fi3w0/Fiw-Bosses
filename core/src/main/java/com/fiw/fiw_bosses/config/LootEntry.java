@@ -6,5 +6,9 @@ public class LootEntry {
     /** Optional Fiw Tools item id. When set, takes precedence over {@link #item} and {@link #nbt}. */
     public String toolId;
     public int count = 1;
+    // Optional random count range. When either is set it overrides {@link #count};
+    // a missing bound defaults to the other one. A rolled 0 drops nothing.
+    public Integer minCount;
+    public Integer maxCount;
     public float chance = 1.0f;
 }

@@ -28,9 +28,9 @@ public final class ConfiguredItemStacks {
         return vanilla(entry.item, entry.nbt, 1, lookup, "equipment slot " + slotName);
     }
 
-    public static ItemStack loot(LootEntry entry, MinecraftServer server, HolderLookup.Provider lookup) {
+    public static ItemStack loot(LootEntry entry, int count, MinecraftServer server, HolderLookup.Provider lookup) {
         if (entry == null) return ItemStack.EMPTY;
-        int count = Math.max(1, entry.count);
+        count = Math.max(1, count);
         if (entry.toolId != null && !entry.toolId.isEmpty()) {
             ItemStack stack = FiwToolsBridge.getItemStack(entry.toolId, server, count);
             if (stack != null && !stack.isEmpty()) return stack;
