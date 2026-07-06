@@ -11,6 +11,7 @@ import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -48,11 +49,20 @@ public final class BossCommand {
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawnBoss(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "boss_id"), null))
+                                        StringArgumentType.getString(ctx, "boss_id"), null, 1))
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .executes(ctx -> spawnBoss(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "boss_id"),
-                                                BlockPosArgument.getBlockPos(ctx, "pos"))))))
+                                                BlockPosArgument.getBlockPos(ctx, "pos"), 1))
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> spawnBoss(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "boss_id"),
+                                                        BlockPosArgument.getBlockPos(ctx, "pos"),
+                                                        IntegerArgumentType.getInteger(ctx, "count")))))
+                                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                        .executes(ctx -> spawnBoss(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "boss_id"), null,
+                                                IntegerArgumentType.getInteger(ctx, "count"))))))
                 .then(Commands.literal("kill")
                         .then(Commands.literal("all")
                                 .executes(ctx -> killAllBosses(ctx.getSource())))
@@ -78,7 +88,11 @@ public final class BossCommand {
                                             return builder.buildFuture();
                                         })
                                         .executes(ctx -> spawnMinion(ctx.getSource(),
-                                                StringArgumentType.getString(ctx, "minion_id")))))
+                                                StringArgumentType.getString(ctx, "minion_id"), 1))
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> spawnMinion(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "minion_id"),
+                                                        IntegerArgumentType.getInteger(ctx, "count"))))))
                         .then(Commands.literal("kill")
                                 .then(Commands.literal("all")
                                         .executes(ctx -> killAllMinions(ctx.getSource())))
@@ -93,7 +107,7 @@ public final class BossCommand {
 
     // ── Boss commands ────────────────────────────────────────────────────────
 
-    private static int spawnBoss(CommandSourceStack source, String bossId, BlockPos pos) {
+    private static int spawnBoss(CommandSourceStack source, String bossId, BlockPos pos, int count) {
         BossDefinition def = BossConfigLoader.getDefinition(bossId);
         if (def == null) {
             source.sendFailure(Component.literal("Unknown boss: " + bossId));
@@ -112,24 +126,32 @@ public final class BossCommand {
             z = source.getPosition().z;
         }
 
-        BossEntity boss = ModRefs.BOSS.create(level);
-        if (boss == null) {
-            source.sendFailure(Component.literal("Failed to create boss entity"));
-            return 0;
+        int spawned = 0;
+        for (int i = 0; i < count; i++) {
+            BossEntity boss = ModRefs.BOSS.create(level);
+            if (boss == null) {
+                source.sendFailure(Component.literal("Failed to create boss entity"));
+                return spawned;
+            }
+
+            // Jitter extra spawns slightly so they don't stack on one point
+            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            boss.moveTo(x + ox, y, z + oz, 0, 0);
+            boss.applyDefinition(def);
+            boss.finalizeSpawn(level, level.getCurrentDifficultyAt(boss.blockPosition()),
+                    MobSpawnType.COMMAND, null, null);
+            level.addFreshEntity(boss);
+            sendSkinToNearbyPlayers(level, boss);
+            spawned++;
         }
 
-        boss.moveTo(x, y, z, 0, 0);
-        boss.applyDefinition(def);
-        boss.finalizeSpawn(level, level.getCurrentDifficultyAt(boss.blockPosition()),
-                MobSpawnType.COMMAND, null, null);
-        level.addFreshEntity(boss);
-        sendSkinToNearbyPlayers(level, boss);
-
+        final int n = spawned;
         final double fx = x, fy = y, fz = z;
-        source.sendSuccess(() -> Component.literal("Spawned boss ")
+        source.sendSuccess(() -> Component.literal(n > 1 ? "Spawned " + n + "x boss " : "Spawned boss ")
                 .append(Component.literal(bossId).withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(" at " + (int) fx + ", " + (int) fy + ", " + (int) fz)), true);
-        return 1;
+        return n;
     }
 
     private static int listBosses(CommandSourceStack source) {
@@ -215,7 +237,7 @@ public final class BossCommand {
         return definitions.size();
     }
 
-    private static int spawnMinion(CommandSourceStack source, String minionId) {
+    private static int spawnMinion(CommandSourceStack source, String minionId, int count) {
         MinionDefinition def = MinionConfigLoader.getDefinition(minionId);
         if (def == null) {
             source.sendFailure(Component.literal("Unknown minion: " + minionId));
@@ -232,23 +254,31 @@ public final class BossCommand {
         double y = source.getPosition().y;
         double z = source.getPosition().z;
 
-        MinionEntity minion = ModRefs.MINION.create(level);
-        if (minion == null) {
-            source.sendFailure(Component.literal("Failed to create minion entity"));
-            return 0;
+        int spawned = 0;
+        for (int i = 0; i < count; i++) {
+            MinionEntity minion = ModRefs.MINION.create(level);
+            if (minion == null) {
+                source.sendFailure(Component.literal("Failed to create minion entity"));
+                return spawned;
+            }
+
+            // Jitter extra spawns slightly so they don't stack on one point
+            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            minion.moveTo(x + ox, y, z + oz, 0, 0);
+            minion.applyMinionDefinition(def, null);
+            minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
+                    MobSpawnType.COMMAND, null, null);
+            level.addFreshEntity(minion);
+            sendSkinToNearbyPlayers(level, minion);
+            spawned++;
         }
 
-        minion.moveTo(x, y, z, 0, 0);
-        minion.applyMinionDefinition(def, null);
-        minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
-                MobSpawnType.COMMAND, null, null);
-        level.addFreshEntity(minion);
-        sendSkinToNearbyPlayers(level, minion);
-
-        source.sendSuccess(() -> Component.literal("Spawned minion ")
+        final int n = spawned;
+        source.sendSuccess(() -> Component.literal(n > 1 ? "Spawned " + n + "x minion " : "Spawned minion ")
                 .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(" at " + (int) x + ", " + (int) y + ", " + (int) z)), true);
-        return 1;
+        return n;
     }
 
     private static int killMinion(CommandSourceStack source, String minionId) {
