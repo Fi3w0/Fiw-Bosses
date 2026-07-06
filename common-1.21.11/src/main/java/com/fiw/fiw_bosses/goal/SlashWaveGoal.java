@@ -164,7 +164,7 @@ public class SlashWaveGoal extends Goal {
                 slashPos.x + width + 0.3, slashPos.y + BLADE_HEIGHT * 0.65 + 0.5, slashPos.z + width + 0.3);
 
         List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, hitBox,
-                e -> e != boss && e.isAlive() && !boss.isMinion(e) && !alreadyHit.contains(e.getUUID()));
+                e -> boss.canAbilityHit(e) && !alreadyHit.contains(e.getUUID()));
 
         for (LivingEntity victim : victims) {
             victim.hurtServer(level, boss.damageSources().mobAttack(boss), damage);

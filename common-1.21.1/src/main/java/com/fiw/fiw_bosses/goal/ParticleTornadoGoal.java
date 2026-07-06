@@ -137,7 +137,7 @@ public class ParticleTornadoGoal extends Goal {
             AABB funnel = new AABB(origin.x - maxRadius, origin.y, origin.z - maxRadius,
                                    origin.x + maxRadius, origin.y + height, origin.z + maxRadius);
             List<LivingEntity> inside = level.getEntitiesOfClass(LivingEntity.class, funnel,
-                    e -> e != boss && e.isAlive() && !boss.isMinion(e)
+                    e -> boss.canAbilityHit(e)
                          && isInsideTornado(e));
             for (LivingEntity entity : inside) {
                 if (damage > 0) entity.hurt(boss.damageSources().mobAttack(boss), damage);

@@ -28,6 +28,17 @@ public class BossDefinition {
     // Value 0.3 = takes 30% damage, 0 = immune. Precedence: item > type > category.
     public Map<String, Float> protection;
 
+    // ── Factions ─────────────────────────────────────────────────────────────
+    // Optional faction id. Entities sharing a non-empty faction are allies.
+    public String faction;
+    // Whether this entity's attacks/abilities can damage same-faction allies.
+    public boolean damageFactionAllies = false;
+    // Whether this entity's AI may target/retaliate against same-faction allies.
+    public boolean targetFactionAllies = false;
+    // Whether this entity's attacks can damage its own minion group
+    // (boss -> its summoned minions; minion -> its owner boss and siblings).
+    public boolean damageOwnGroup = false;
+
     // ── Idle system ──────────────────────────────────────────────────────────
     // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.
     public int idleTimeout = -1;

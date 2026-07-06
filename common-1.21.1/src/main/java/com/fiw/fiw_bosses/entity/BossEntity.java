@@ -378,9 +378,9 @@ public class BossEntity extends Monster {
             return false;
         }
 
-        // Immune to own minions
+        // Faction / own-group friendly-fire gate
         Entity attacker = source.getEntity();
-        if (attacker != null && isMinion(attacker)) return false;
+        if (attacker != null && blocksFriendlyDamageFrom(attacker)) return false;
 
         // Adaptation: remember what hit us, and soften the type we've adapted to
         String damageType = classifyDamage(source);
@@ -618,6 +618,56 @@ public class BossEntity extends Monster {
     public void registerMinion(UUID minionUuid) { minionUuids.add(minionUuid); }
     public boolean isMinion(Entity entity) { return minionUuids.contains(entity.getUUID()); }
     public Set<UUID> getMinionUuids() { return minionUuids; }
+
+    // ── Factions / allies ────────────────────────────────────────────────────
+
+    public String getFaction() {
+        String f = definition != null ? definition.faction : null;
+        return f != null && !f.isEmpty() ? f : null;
+    }
+
+    public boolean canDamageFactionAllies() { return definition != null && definition.damageFactionAllies; }
+    public boolean canTargetFactionAllies() { return definition != null && definition.targetFactionAllies; }
+    public boolean canDamageOwnGroup()      { return definition != null && definition.damageOwnGroup; }
+
+    /** Own-group = this boss's registered minions. MinionEntity adds owner + siblings. */
+    protected boolean isOwnGroup(Entity other) {
+        return isMinion(other);
+    }
+
+    /** Same non-empty faction on both sides. */
+    protected boolean isSameFaction(Entity other) {
+        String faction = getFaction();
+        return faction != null && other instanceof BossEntity be && faction.equals(be.getFaction());
+    }
+
+    /** Allies: own minion group (either direction) or same faction. */
+    public boolean isAlly(Entity other) {
+        return isOwnGroup(other)
+                || (other instanceof BossEntity be && be.isOwnGroup(this))
+                || isSameFaction(other);
+    }
+
+    /** Central gate used by ability/AoE goals: may this entity's abilities hit e? */
+    public boolean canAbilityHit(Entity e) {
+        if (e == this || !e.isAlive()) return false;
+        boolean ownGroup = isOwnGroup(e) || (e instanceof BossEntity be && be.isOwnGroup(this));
+        if (ownGroup) return canDamageOwnGroup();
+        if (isSameFaction(e)) return canDamageFactionAllies();
+        return true;
+    }
+
+    /** Victim-side friendly-fire gate: true when damage from attacker must be cancelled. */
+    private boolean blocksFriendlyDamageFrom(Entity attacker) {
+        BossEntity attackerBoss = attacker instanceof BossEntity be ? be : null;
+        boolean ownGroup = isOwnGroup(attacker)
+                || (attackerBoss != null && attackerBoss.isOwnGroup(this));
+        if (ownGroup) {
+            return attackerBoss == null || !attackerBoss.canDamageOwnGroup();
+        }
+        return attackerBoss != null && isSameFaction(attackerBoss)
+                && !attackerBoss.canDamageFactionAllies();
+    }
 
     // ── Accessors ────────────────────────────────────────────────────────────
 

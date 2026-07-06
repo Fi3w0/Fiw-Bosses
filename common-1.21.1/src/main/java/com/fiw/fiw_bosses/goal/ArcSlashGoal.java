@@ -164,7 +164,7 @@ public class ArcSlashGoal extends Goal {
                     pos.x + hitRadius, pos.y + hitRadius + 0.5, pos.z + hitRadius);
 
             List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, hitBox,
-                    e -> e != boss && e.isAlive() && !boss.isMinion(e)
+                    e -> boss.canAbilityHit(e)
                             && !alreadyHit.contains(e.getUUID()));
 
             for (LivingEntity victim : victims) {

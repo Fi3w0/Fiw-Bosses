@@ -95,7 +95,7 @@ public class MeleeSlashAttackGoal extends Goal {
 
         AABB searchBox = boss.getBoundingBox().inflate(range);
         List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, searchBox,
-                e -> e != boss && e.isAlive() && !(e instanceof BossEntity) && !boss.isMinion(e));
+                e -> boss.canAbilityHit(e));
 
         int hitCount = 0;
         for (LivingEntity entity : entities) {

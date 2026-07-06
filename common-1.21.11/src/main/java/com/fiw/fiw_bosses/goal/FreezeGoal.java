@@ -63,7 +63,7 @@ public class FreezeGoal extends Goal {
 
         AABB area = boss.getBoundingBox().inflate(radius);
         frozenTargets = level.getEntitiesOfClass(LivingEntity.class, area,
-                e -> e != boss && e.isAlive() && !boss.isMinion(e)
+                e -> boss.canAbilityHit(e)
                      && boss.distanceToSqr(e) <= radius * radius);
 
         if (frozenTargets.isEmpty()) return;

@@ -173,7 +173,7 @@ public class RiftCleaveGoal extends Goal {
                 Math.max(start.x, end.x) + width + 1.0, start.y + 3.0, Math.max(start.z, end.z) + width + 1.0);
 
         List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area,
-                e -> e != boss && e.isAlive() && !boss.isMinion(e) && isOnRift(e.position().add(0, e.getBbHeight() * 0.5, 0)));
+                e -> boss.canAbilityHit(e) && isOnRift(e.position().add(0, e.getBbHeight() * 0.5, 0)));
 
         for (LivingEntity victim : victims) {
             if (!hitEntities.add(victim.getUUID())) continue;

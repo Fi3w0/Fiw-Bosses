@@ -135,7 +135,7 @@ public class FearBurstGoal extends Goal {
 
         AABB area = boss.getBoundingBox().inflate(radius);
         List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area,
-                e -> e != boss && e.isAlive() && !boss.isMinion(e) && boss.distanceToSqr(e) <= radius * radius);
+                e -> boss.canAbilityHit(e) && boss.distanceToSqr(e) <= radius * radius);
 
         for (LivingEntity victim : victims) {
             if (damage > 0) {

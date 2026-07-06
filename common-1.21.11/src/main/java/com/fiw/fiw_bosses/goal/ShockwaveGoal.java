@@ -159,7 +159,7 @@ public class ShockwaveGoal extends Goal {
                     slamOrigin.x + r + 1, slamOrigin.y + 3.0, slamOrigin.z + r + 1);
 
             List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class, scanBox,
-                    e -> e != boss && e.isAlive() && !(e instanceof BossEntity) && !boss.isMinion(e));
+                    e -> boss.canAbilityHit(e));
 
             for (LivingEntity entity : nearby) {
                 if (waveHit[w].contains(entity.getUUID())) continue;

@@ -148,7 +148,7 @@ public class SonicBoomGoal extends Goal {
                 boss.getX() + radius, boss.getY() + 4, boss.getZ() + radius);
 
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, scanBox,
-                e -> e != boss && e.isAlive() && !boss.isMinion(e));
+                e -> boss.canAbilityHit(e));
 
         for (LivingEntity entity : targets) {
             Vec3 toEntity = entity.position().subtract(boss.position());

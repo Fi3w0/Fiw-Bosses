@@ -65,6 +65,10 @@ public class MinionEntity extends BossEntity {
         syntheticDef.equipment   = def.equipment;
         syntheticDef.skin        = def.skin;
         syntheticDef.protection  = def.protection;
+        syntheticDef.faction     = def.faction;
+        syntheticDef.damageFactionAllies = def.damageFactionAllies;
+        syntheticDef.targetFactionAllies = def.targetFactionAllies;
+        syntheticDef.damageOwnGroup      = def.damageOwnGroup;
 
         // Single phase with all the minion's abilities
         PhaseDefinition phase = new PhaseDefinition();
@@ -123,21 +127,14 @@ public class MinionEntity extends BossEntity {
         super.die(damageSource);
     }
 
-    // ── Damage: immune to owner boss ─────────────────────────────────────────
+    // ── Factions: own group = owner boss + sibling minions ──────────────────
 
     @Override
-    public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
-        Entity attacker = source.getEntity();
-        // Immune to the owner boss
-        if (attacker != null && ownerBossUuid != null && attacker.getUUID().equals(ownerBossUuid)) {
-            return false;
-        }
-        // Immune to sibling minions of the same boss
-        if (attacker instanceof MinionEntity other && ownerBossUuid != null
-                && ownerBossUuid.equals(other.ownerBossUuid)) {
-            return false;
-        }
-        return super.hurtServer(world, source, amount);
+    protected boolean isOwnGroup(Entity other) {
+        if (super.isOwnGroup(other)) return true;
+        if (ownerBossUuid == null) return false;
+        if (other.getUUID().equals(ownerBossUuid)) return true;
+        return other instanceof MinionEntity m && ownerBossUuid.equals(m.getOwnerBossUuid());
     }
 
     // ── Never auto-despawn, but despawn when owner dies ──────────────────────

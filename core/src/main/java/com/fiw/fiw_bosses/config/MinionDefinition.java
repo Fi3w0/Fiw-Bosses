@@ -41,6 +41,17 @@ public class MinionDefinition {
     // Only used when baseEntity = "custom".
     public Map<String, Float> protection;
 
+    // ── Factions (only used when baseEntity = "custom") ──────────────────────
+    // Optional faction id. Entities sharing a non-empty faction are allies.
+    public String faction;
+    // Whether this minion's attacks/abilities can damage same-faction allies.
+    public boolean damageFactionAllies = false;
+    // Whether this minion's AI may target/retaliate against same-faction allies.
+    public boolean targetFactionAllies = false;
+    // Whether this minion's attacks can damage its own group
+    // (owner boss and sibling minions).
+    public boolean damageOwnGroup = false;
+
     public boolean isCustom() {
         return "custom".equalsIgnoreCase(baseEntity);
     }

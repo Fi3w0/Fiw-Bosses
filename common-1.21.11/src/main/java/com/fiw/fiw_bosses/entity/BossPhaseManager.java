@@ -12,6 +12,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -116,7 +117,7 @@ public class BossPhaseManager {
         boss.getGoalSelector().addGoal(10, new RandomLookAroundGoal(boss));
 
         // === TARGETING ===
-        boss.getTargetSelector().addGoal(1, new HurtByTargetGoal(boss));
+        boss.getTargetSelector().addGoal(1, new AllyAwareHurtByTargetGoal(boss));
         boss.getTargetSelector().addGoal(2, new NearestAttackableTargetGoal<>(boss, Player.class, true));
 
         // === ABILITY GOALS ===
@@ -131,6 +132,23 @@ public class BossPhaseManager {
                 FiwBossesCore.LOGGER.error("Failed to create ability '{}' for boss '{}': {}",
                         ability.type, boss.getBossId(), e.getMessage());
             }
+        }
+    }
+
+    /** HurtByTargetGoal that refuses to retaliate against allies unless configured to. */
+    private static class AllyAwareHurtByTargetGoal extends HurtByTargetGoal {
+        private final BossEntity boss;
+
+        AllyAwareHurtByTargetGoal(BossEntity boss) {
+            super(boss);
+            this.boss = boss;
+        }
+
+        @Override
+        public boolean canUse() {
+            if (!super.canUse()) return false;
+            LivingEntity attacker = boss.getLastHurtByMob();
+            return attacker == null || boss.canTargetFactionAllies() || !boss.isAlly(attacker);
         }
     }
 

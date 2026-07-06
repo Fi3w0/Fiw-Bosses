@@ -116,8 +116,7 @@ public class ChargeGoal extends Goal {
 
             AABB hitbox = boss.getBoundingBox().inflate(0.8);
             List<LivingEntity> hit = level.getEntitiesOfClass(LivingEntity.class, hitbox,
-                    e -> e != boss && e.isAlive() && !(e instanceof BossEntity)
-                            && !boss.isMinion(e) && !alreadyHit.contains(e.getUUID()));
+                    e -> boss.canAbilityHit(e) && !alreadyHit.contains(e.getUUID()));
 
             for (LivingEntity entity : hit) {
                 entity.hurt(boss.damageSources().mobAttack(boss), damage);

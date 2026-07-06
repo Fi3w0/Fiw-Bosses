@@ -192,7 +192,7 @@ public class SlamGoal extends Goal {
 
         AABB aoeBox = boss.getBoundingBox().inflate(radius);
         List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, aoeBox,
-                e -> e != boss && e.isAlive() && !(e instanceof BossEntity) && !boss.isMinion(e));
+                e -> boss.canAbilityHit(e));
 
         for (LivingEntity entity : entities) {
             double dist = entity.distanceTo(boss);
