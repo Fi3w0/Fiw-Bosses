@@ -5,6 +5,7 @@ import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
+import com.fiw.fiw_bosses.config.FluidSettings;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
@@ -44,6 +45,8 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.server.level.ServerBossEvent;
 
@@ -166,6 +169,10 @@ public class BossEntity extends Monster {
         Objects.requireNonNull(getAttribute(Attributes.KNOCKBACK_RESISTANCE)).setBaseValue(def.knockbackResistance);
         Objects.requireNonNull(getAttribute(Attributes.ATTACK_DAMAGE)).setBaseValue(def.attackDamage);
 
+        if (def.fluid != null && def.fluid.canSwim) {
+            setPathfindingMalus(PathType.WATER, 0.0f);
+        }
+
         Component barName = TextUtil.parseColorCodes(def.displayName);
         bossBar.setName(barName);
         try { bossBar.setColor(BossEvent.BossBarColor.valueOf(def.bossBar.color.toUpperCase())); }
@@ -241,6 +248,7 @@ public class BossEntity extends Monster {
         tickBossBar();
         tickAggroSwitch();
         movementController.tick();
+        tickFluidHandling();
         tickIdleSystem();
         tickDialogueSystem();
 
@@ -317,7 +325,7 @@ public class BossEntity extends Monster {
             var targets = targetSelector.getAvailableGoals().stream()
                     .map(WrappedGoal::getGoal).collect(Collectors.toList());
             targets.forEach(targetSelector::removeGoal);
-            goalSelector.addGoal(0, new FloatGoal(this));
+            if (shouldFloat()) goalSelector.addGoal(0, new FloatGoal(this));
             goalSelector.addGoal(9, new RandomLookAroundGoal(this));
         });
     }
@@ -565,7 +573,7 @@ public class BossEntity extends Monster {
             var targets = targetSelector.getAvailableGoals().stream()
                     .map(WrappedGoal::getGoal).collect(Collectors.toList());
             targets.forEach(targetSelector::removeGoal);
-            goalSelector.addGoal(0, new FloatGoal(this));
+            if (shouldFloat()) goalSelector.addGoal(0, new FloatGoal(this));
         });
     }
 
@@ -818,6 +826,56 @@ public class BossEntity extends Monster {
         if (source.is(DamageTypeTags.IS_DROWNING))        return "drowning";
         if (source.is(DamageTypeTags.IS_FALL))            return "fall";
         return source.getDirectEntity() instanceof LivingEntity ? "melee" : null;
+    }
+
+    // ── Fluid handling (config-driven water/lava behavior) ──────────────────
+
+    private FluidSettings fluidSettings() {
+        return definition != null ? definition.fluid : null;
+    }
+
+    /** Whether the swim-up FloatGoal should be installed for this entity. */
+    public boolean shouldFloat() {
+        FluidSettings fluid = fluidSettings();
+        return fluid == null || fluid.floats;
+    }
+
+    @Override
+    public boolean fireImmune() {
+        FluidSettings fluid = fluidSettings();
+        return (fluid != null && fluid.fireImmune) || super.fireImmune();
+    }
+
+    @Override
+    public boolean isPushedByFluid() {
+        FluidSettings fluid = fluidSettings();
+        if (fluid != null && !fluid.pushedByFluids) return false;
+        return super.isPushedByFluid();
+    }
+
+    private void tickFluidHandling() {
+        FluidSettings fluid = fluidSettings();
+        if (fluid == null) return;
+        if (fluid.drownImmune && getAirSupply() < getMaxAirSupply()) {
+            setAirSupply(getMaxAirSupply());
+        }
+        if (fluid.fireImmune && getRemainingFireTicks() > 0) {
+            clearFire();
+        }
+        if (fluid.swimSpeed != 1.0f && (isInWater() || isInLava())) {
+            Vec3 dm = getDeltaMovement();
+            if (fluid.swimSpeed < 1.0f) {
+                setDeltaMovement(dm.x * fluid.swimSpeed, dm.y, dm.z * fluid.swimSpeed);
+            } else {
+                // Boost horizontal speed toward a cap so it can't grow unbounded.
+                double h = Math.sqrt(dm.x * dm.x + dm.z * dm.z);
+                double cap = getAttributeValue(Attributes.MOVEMENT_SPEED) * fluid.swimSpeed;
+                if (h > 1.0e-4 && h < cap) {
+                    double scale = Math.min(fluid.swimSpeed, cap / h);
+                    setDeltaMovement(dm.x * scale, dm.y, dm.z * scale);
+                }
+            }
+        }
     }
 
     // ── Cleanse debuff immunity (used by CleanseGoal) ────────────────────────

@@ -69,6 +69,7 @@ public class MinionEntity extends BossEntity {
         syntheticDef.damageFactionAllies = def.damageFactionAllies;
         syntheticDef.targetFactionAllies = def.targetFactionAllies;
         syntheticDef.damageOwnGroup      = def.damageOwnGroup;
+        syntheticDef.fluid       = def.fluid;
 
         // Single phase with all the minion's abilities
         PhaseDefinition phase = new PhaseDefinition();

@@ -39,6 +39,11 @@ public class BossDefinition {
     // (boss -> its summoned minions; minion -> its owner boss and siblings).
     public boolean damageOwnGroup = false;
 
+    // ── Water / lava behavior ────────────────────────────────────────────────
+    // Optional. See FluidSettings: drownImmune, fireImmune, floats, swimSpeed,
+    // pushedByFluids, canSwim. Absent = vanilla behavior.
+    public FluidSettings fluid;
+
     // ── Idle system ──────────────────────────────────────────────────────────
     // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.
     public int idleTimeout = -1;

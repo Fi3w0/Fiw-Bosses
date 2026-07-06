@@ -108,7 +108,7 @@ public class BossPhaseManager {
         targets.forEach(boss.getTargetSelector()::removeGoal);
 
         // === BASE MOVEMENT ===
-        boss.getGoalSelector().addGoal(0, new FloatGoal(boss));
+        if (boss.shouldFloat()) boss.getGoalSelector().addGoal(0, new FloatGoal(boss));
         // Ability goals (priority 1-5) run BEFORE MeleeAttackGoal (priority 6)
         // so a casting boss won't have its animation interrupted by basic melee.
         boss.getGoalSelector().addGoal(6, new MeleeAttackGoal(boss, 1.2, false));

@@ -52,6 +52,11 @@ public class MinionDefinition {
     // (owner boss and sibling minions).
     public boolean damageOwnGroup = false;
 
+    // ── Water / lava behavior (only used when baseEntity = "custom") ────────
+    // Optional. See FluidSettings: drownImmune, fireImmune, floats, swimSpeed,
+    // pushedByFluids, canSwim. Absent = vanilla behavior.
+    public FluidSettings fluid;
+
     public boolean isCustom() {
         return "custom".equalsIgnoreCase(baseEntity);
     }
