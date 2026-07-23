@@ -11,7 +11,7 @@
   "bossBar": { "color": "PURPLE", "overlay": "PROGRESS" },
   "skin": { "type": "player", "value": "Dinnerbone" },
   "equipment": {
-    "mainHand": { "item": "minecraft:iron_sword" }
+    "mainHand": { "item": "minecraft:mace" }
   },
   "preFightDialogue": [
     "&5[Echo Wraith] &fI am every moment you failed to land.",
@@ -32,7 +32,8 @@
         { "type": "phantom_dash", "cooldownTicks": 120, "params": { "dashCount": 3, "dashDistance": 4.0, "damage": 2.0, "delayBetweenDashes": 8 } },
         { "type": "particle_tornado", "cooldownTicks": 140, "params": { "damage": 1.0, "maxRadius": 3.5, "height": 5.0, "duration": 80, "fire": false } },
         { "type": "arc_slash", "cooldownTicks": 70, "params": { "arc": 170.0, "radius": 4.5, "damage": 2.0, "duration": 9 } },
-        { "type": "dodge", "cooldownTicks": 50, "params": { "chance": 0.35, "distance": 3.0, "taunt": "&7Too slow." } }
+        { "type": "dodge", "cooldownTicks": 50, "params": { "chance": 0.35, "distance": 3.0, "taunt": "&7Too slow." } },
+        { "type": "wind_charge", "cooldownTicks": 100, "params": { "damage": 2.0, "radius": 3.5, "knockback": 1.2, "launchPower": 0.8, "jumpPower": 1.1, "taunt": "&bLooks scary, doesn't it?" } }
       ],
       "minions": []
     },

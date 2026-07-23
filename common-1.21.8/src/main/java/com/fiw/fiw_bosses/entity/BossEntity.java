@@ -460,6 +460,19 @@ public class BossEntity extends Monster {
         return result;
     }
 
+    /** One-shot self fall-damage waiver, consumed by the next landing (e.g. after a jump ability). */
+    private boolean ignoreNextFallDamage = false;
+    public void ignoreNextFallDamage() { this.ignoreNextFallDamage = true; }
+
+    @Override
+    public boolean causeFallDamage(double fallDistance, float damageMultiplier, DamageSource source) {
+        if (ignoreNextFallDamage) {
+            ignoreNextFallDamage = false;
+            return false;
+        }
+        return super.causeFallDamage(fallDistance, damageMultiplier, source);
+    }
+
     // ── Death / removal ───────────────────────────────────────────────────────
 
     @Override
