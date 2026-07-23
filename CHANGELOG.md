@@ -4,6 +4,37 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.1.3]
+
+### Added
+- **`wind_charge` boss/minion ability** — leaps toward the target and slams down on landing
+  (no fall damage to the boss itself). This is a fully custom, config-driven mace-style
+  jump-slam: `damage`, `radius`, `knockback`, `launchPower`, `jumpPower`, `horizontalSpeed`,
+  `minRange`/`maxRange`, and an optional `fallDamagePerBlock` (capped by `maxFallBonus`) for a
+  vanilla-flavored fall-scaling bonus — entirely independent of whatever is actually equipped.
+  A boss can visibly wield a `minecraft:mace` and still hit for 1 damage here, or the reverse.
+  See `BOSS_CONFIG_DOCS.md` for the full param table.
+- **Note on real maces:** equipping `"minecraft:mace"` in `equipment.mainHand` already gives any
+  boss/minion the authentic vanilla smash-attack mechanic for free (mobs holding a mace get it
+  automatically, same as players) — no new code was needed for that. `wind_charge` is the
+  separate, tunable alternative; the two can be combined or used independently.
+- On 1.20.1 (pre-1.21, no mace item or Gust particles), `wind_charge` behaves identically —
+  jump/slam/knockback are entirely our own code — with period-appropriate particles/sounds.
+
+### Fixed
+- `/boss minion spawn` used to reject any minion definition with a non-`"custom"` `baseEntity`
+  ("uses a vanilla base entity — spawn it via a boss with summon_minions"), even though the identical
+  definition worked fine when dropped in the `bosses/` folder and spawned with `/boss spawn`. Vanilla-base
+  minions can now be spawned directly by command — the same stat/equipment-override logic
+  `summon_minions` already used is now shared by the command path.
+- Damage protection (`protection` maps) is now applied before adaptation tracking records the hit,
+  so fully-blocked damage is never recorded and partial protection is reflected in what adaptation
+  actually resists.
+
+### Notes
+- All features are available on every supported version and loader (1.21.11, 1.21.8, 1.21.1, 1.20.1 —
+  Fabric, NeoForge, Forge).
+
 ## [1.1.2]
 
 ### Added
@@ -36,6 +67,13 @@ matching the tag).
 - Ability target filtering was unified across all AoE/melee abilities using the new ally rules. Abilities
   that previously could never hit another boss (aoe_smash, melee_slash, slam, shockwave, charge) can now
   hit **non-allied** bosses, so rival boss fights behave consistently across all abilities.
+
+### Fixed
+- `/boss minion spawn` used to reject any minion definition with a non-`"custom"` `baseEntity`
+  ("uses a vanilla base entity — spawn it via a boss with summon_minions"), even though the identical
+  definition worked fine when dropped in the `bosses/` folder and spawned with `/boss spawn`. Vanilla-base
+  minions can now be spawned directly by command — the same stat/equipment-override logic
+  `summon_minions` already used is now shared by the command path.
 
 ### Notes
 - Vanilla-base minions (`baseEntity` set to a real mob id) can't use `protection`, `faction`, or `fluid`

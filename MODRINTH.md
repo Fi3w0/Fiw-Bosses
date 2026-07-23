@@ -105,6 +105,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 | `blink_strike` | Telegraphs a target, blinks in, and punishes nearby players |
 | `curse_bomb` | Delayed player bombs that force the group to spread out |
 | `soul_tether` | Chains players to the boss and punishes broken tethers |
+| `wind_charge` | Mace-style jump-slam, no self fall damage, damage fully config-driven regardless of what's equipped |
 
 …and dozens more — slams, beams, meteors, orbital strikes, tornadoes, sonic booms, judgment marks, divine executions, summons, heals, shields, and ultimates. The full list and every parameter live in the [documentation](https://github.com/Fi3w0/Fiw-Bosses/blob/main/BOSS_CONFIG_DOCS.md).
 

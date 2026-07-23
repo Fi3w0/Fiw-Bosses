@@ -99,6 +99,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [blink_strike](#blink_strike)
   - [curse_bomb](#curse_bomb)
   - [soul_tether](#soul_tether)
+  - [wind_charge](#wind_charge)
 - [Minion System](#minion-system)
   - [Minion Definition Fields](#minion-definition-fields)
   - [Movement Modes](#movement-modes)
@@ -1739,6 +1740,59 @@ Chains one or more players to the boss with visible soul tethers. Tethered playe
 ```json
 { "type": "soul_tether", "cooldownTicks": 200, "params": { "maxTargets": 2, "breakDistance": 15, "pullStrength": 0.18, "snapDamage": 9 } }
 ```
+
+---
+
+### `wind_charge`
+
+Leaps toward the target and slams down on landing — no fall damage to the boss itself.
+This is a **fully custom** ability: its damage/knockback are entirely config-defined and
+never read from whatever is actually equipped in the boss's mainhand. That's the point —
+you can equip a real `minecraft:mace` for looks and still set `damage: 1` here, or the
+reverse (a bare-handed boss that hits like a real smash attack).
+
+This is intentionally independent from *real* vanilla mace behavior: equipping
+`"minecraft:mace"` in `equipment.mainHand` already gives the boss/minion the authentic,
+unpredictable vanilla smash-attack mechanic for free (mobs holding a mace get this
+automatically, same as players) — no config needed for that. Use `wind_charge` when you
+want a tunable, safe-by-default jump-slam instead; use a real mace when you want the raw
+vanilla mechanic. The two can be combined (equip a mace *and* use this ability) or used
+independently.
+
+| Param | Default | Description |
+|-------|---------|-------------|
+| `damage` | `8.0` | Flat damage dealt on landing, regardless of held item. |
+| `fallDamagePerBlock` | `0.0` | Optional bonus damage per block fallen (peak height to landing), mimicking vanilla mace fall-scaling without needing the real item. `0` = disabled. |
+| `maxFallBonus` | `20.0` | Cap on the fall-distance bonus above, so `fallDamagePerBlock` can't one-shot players by accident. |
+| `radius` | `3.0` | AoE radius of the landing slam. |
+| `knockback` | `1.1` | Horizontal "wind burst" push on hit entities. |
+| `launchPower` | `0.7` | Vertical "wind burst" launch on hit entities. |
+| `jumpPower` | `1.0` | Vertical velocity of the boss's own leap. |
+| `horizontalSpeed` | `0.5` | Horizontal velocity toward the target while airborne. |
+| `selfNoFallDamage` | `true` | Whether the boss takes no fall damage from its own leap. |
+| `minRange` | `3.0` | Minimum distance to target before this can trigger. |
+| `maxRange` | `12.0` | Maximum distance to target before this can trigger. |
+
+```json
+{
+  "type": "wind_charge",
+  "cooldownTicks": 140,
+  "params": {
+    "damage": 10.0,
+    "fallDamagePerBlock": 1.5,
+    "maxFallBonus": 18.0,
+    "radius": 3.5,
+    "knockback": 1.3,
+    "launchPower": 0.8,
+    "jumpPower": 1.1,
+    "taunt": "&b&lBrace yourself!"
+  }
+}
+```
+
+> **1.20.1 note:** the mace item and its vanilla smash mechanic don't exist on 1.20.1 (added
+> in 1.21). `wind_charge` itself works identically there — jump/slam/knockback are entirely
+> our own code — only the particle/sound flavor differs (no Gust particles pre-1.21).
 
 ---
 
