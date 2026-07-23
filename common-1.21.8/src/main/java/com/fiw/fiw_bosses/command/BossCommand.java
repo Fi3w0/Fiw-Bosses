@@ -10,6 +10,8 @@ import com.fiw.fiw_bosses.entity.MinionEntity;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
+import com.fiw.fiw_bosses.util.TextUtil;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -18,14 +20,22 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public final class BossCommand {
 
@@ -244,11 +254,6 @@ public final class BossCommand {
             return 0;
         }
 
-        if (!def.isCustom()) {
-            source.sendFailure(Component.literal("Minion '" + minionId + "' uses a vanilla base entity — spawn it via a boss with summon_minions."));
-            return 0;
-        }
-
         ServerLevel level = source.getLevel();
         double x = source.getPosition().x;
         double y = source.getPosition().y;
@@ -256,21 +261,23 @@ public final class BossCommand {
 
         int spawned = 0;
         for (int i = 0; i < count; i++) {
-            MinionEntity minion = ModRefs.MINION.create(level, EntitySpawnReason.COMMAND);
-            if (minion == null) {
+            // Jitter extra spawns slightly so they don't stack on one point
+            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+
+            Entity entity = def.isCustom()
+                    ? spawnCustomMinion(level, def, x + ox, y, z + oz)
+                    : spawnVanillaMinion(level, def, x + ox, y, z + oz);
+
+            if (entity == null) {
                 source.sendFailure(Component.literal("Failed to create minion entity"));
                 return spawned;
             }
 
-            // Jitter extra spawns slightly so they don't stack on one point
-            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
-            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
-            minion.snapTo(x + ox, y, z + oz, 0, 0);
-            minion.applyMinionDefinition(def, null);
-            minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
-                    EntitySpawnReason.COMMAND, null);
-            level.addFreshEntity(minion);
-            sendSkinToNearbyPlayers(level, minion);
+            level.addFreshEntity(entity);
+            if (entity instanceof MinionEntity minion) {
+                sendSkinToNearbyPlayers(level, minion);
+            }
             spawned++;
         }
 
@@ -279,6 +286,70 @@ public final class BossCommand {
                 .append(Component.literal(minionId).withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(" at " + (int) x + ", " + (int) y + ", " + (int) z)), true);
         return n;
+    }
+
+    private static MinionEntity spawnCustomMinion(ServerLevel level, MinionDefinition def, double x, double y, double z) {
+        MinionEntity minion = ModRefs.MINION.create(level, EntitySpawnReason.COMMAND);
+        if (minion == null) return null;
+
+        minion.snapTo(x, y, z, 0, 0);
+        minion.applyMinionDefinition(def, null);
+        minion.finalizeSpawn(level, level.getCurrentDifficultyAt(minion.blockPosition()),
+                EntitySpawnReason.COMMAND, null);
+        return minion;
+    }
+
+    // Vanilla-base minion (baseEntity = a real registry id): spawn the raw mob with
+    // this definition's stat/equipment overrides, mirroring SummonMinionsGoal's
+    // spawnVanillaWithOverrides() but without an owner boss to inherit a target from.
+    private static Entity spawnVanillaMinion(ServerLevel level, MinionDefinition def, double x, double y, double z) {
+        ResourceLocation typeId = ResourceLocation.tryParse(def.baseEntity);
+        if (typeId == null) return null;
+
+        Optional<EntityType<?>> entityTypeOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(typeId);
+        if (entityTypeOpt.isEmpty()) return null;
+
+        Entity entity = entityTypeOpt.get().create(level, EntitySpawnReason.COMMAND);
+        if (entity == null) return null;
+
+        entity.snapTo(x, y, z, 0, 0);
+        if (entity instanceof Mob mob) {
+            mob.finalizeSpawn(level, level.getCurrentDifficultyAt(mob.blockPosition()),
+                    EntitySpawnReason.COMMAND, null);
+            mob.setPersistenceRequired();
+
+            var healthAttr = mob.getAttribute(Attributes.MAX_HEALTH);
+            if (healthAttr != null) { healthAttr.setBaseValue(def.health); mob.setHealth(def.health); }
+            var armorAttr = mob.getAttribute(Attributes.ARMOR);
+            if (armorAttr != null) armorAttr.setBaseValue(def.armor);
+            var speedAttr = mob.getAttribute(Attributes.MOVEMENT_SPEED);
+            if (speedAttr != null) speedAttr.setBaseValue(def.speed);
+            var dmgAttr = mob.getAttribute(Attributes.ATTACK_DAMAGE);
+            if (dmgAttr != null) dmgAttr.setBaseValue(def.attackDamage);
+            var kbAttr = mob.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+            if (kbAttr != null) kbAttr.setBaseValue(def.knockbackResistance);
+
+            if (def.displayName != null) {
+                mob.setCustomName(TextUtil.parseColorCodes(def.displayName));
+                mob.setCustomNameVisible(true);
+            }
+
+            if (def.equipment != null) {
+                setSlot(mob, EquipmentSlot.MAINHAND, def.equipment.mainHand);
+                setSlot(mob, EquipmentSlot.OFFHAND, def.equipment.offHand);
+                setSlot(mob, EquipmentSlot.HEAD, def.equipment.head);
+                setSlot(mob, EquipmentSlot.CHEST, def.equipment.chest);
+                setSlot(mob, EquipmentSlot.LEGS, def.equipment.legs);
+                setSlot(mob, EquipmentSlot.FEET, def.equipment.feet);
+            }
+        }
+        return entity;
+    }
+
+    private static void setSlot(Mob mob, EquipmentSlot slot, com.fiw.fiw_bosses.config.EquipmentEntry entry) {
+        if (entry == null) return;
+        var stack = ConfiguredItemStacks.equipment(entry, mob.level().getServer(), mob.registryAccess(), slot.getSerializedName());
+        if (!stack.isEmpty()) mob.setItemSlot(slot, stack);
     }
 
     private static int killMinion(CommandSourceStack source, String minionId) {
