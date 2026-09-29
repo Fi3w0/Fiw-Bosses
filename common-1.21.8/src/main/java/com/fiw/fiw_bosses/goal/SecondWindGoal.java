@@ -36,8 +36,11 @@ public class SecondWindGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        // The re-arm cooldown only runs once the revive has been spent; otherwise a boss that
+        // stayed armed longer than the cooldown would re-arm the instant it was used.
+        if (boss.isSecondWindArmed()) return false;
         if (cooldownTimer > 0) { cooldownTimer--; return false; }
-        return !boss.isSecondWindArmed();
+        return true;
     }
 
     @Override
