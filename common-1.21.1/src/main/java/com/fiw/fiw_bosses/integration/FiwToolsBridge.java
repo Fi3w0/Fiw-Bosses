@@ -10,6 +10,7 @@ import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.Method;
@@ -30,11 +31,13 @@ public final class FiwToolsBridge {
     private static final boolean PRESENT;
     private static final Method GET_ITEMSTACK;
     private static final Method LIST_IDS;
+    private static final Method ON_PHASE_CHANGE;
 
     static {
         boolean present = false;
         Method getItemStack = null;
         Method listIds = null;
+        Method phaseChange = null;
         try {
             Class<?> cls = Class.forName(API_CLASS);
             getItemStack = cls.getMethod("getItemStack", String.class, MinecraftServer.class, int.class);
@@ -42,6 +45,11 @@ public final class FiwToolsBridge {
                 listIds = cls.getMethod("listIds");
             } catch (NoSuchMethodException ignored) {
                 // Older Fiw Tools builds can still provide getItemStack.
+            }
+            try {
+                phaseChange = cls.getMethod("onBossPhaseChange", Entity.class, String.class, int.class, int.class);
+            } catch (NoSuchMethodException ignored) {
+                // Older Fiw Tools builds have no on_boss_phase trigger.
             }
             present = true;
 
@@ -63,6 +71,7 @@ public final class FiwToolsBridge {
         PRESENT = present;
         GET_ITEMSTACK = getItemStack;
         LIST_IDS = listIds;
+        ON_PHASE_CHANGE = phaseChange;
     }
 
     private FiwToolsBridge() {}
@@ -79,6 +88,16 @@ public final class FiwToolsBridge {
         } catch (Exception t) {
             FiwBossesCore.LOGGER.warn("Fiw Tools getItemStack failed for id '{}': {}", id, t.getMessage());
             return null;
+        }
+    }
+
+    /** Tells Fiw Tools a boss changed phase (1-based numbers) for its on_boss_phase trigger. */
+    public static void onBossPhaseChange(Entity boss, String bossId, int phase, int previousPhase) {
+        if (!PRESENT || ON_PHASE_CHANGE == null || boss == null) return;
+        try {
+            ON_PHASE_CHANGE.invoke(null, boss, bossId != null ? bossId : "", phase, previousPhase);
+        } catch (Exception t) {
+            FiwBossesCore.LOGGER.warn("Fiw Tools onBossPhaseChange failed: {}", t.getMessage());
         }
     }
 

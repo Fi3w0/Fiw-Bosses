@@ -4,6 +4,7 @@ import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.AbilityEntry;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
+import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.util.TextUtil;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,6 +41,9 @@ public class BossPhaseManager {
     private final BossEntity boss;
     private final List<PhaseDefinition> phases;
     private int currentPhaseIndex = -1;
+    // Set when an admin forces a phase: HP-driven transitions stay paused until the boss
+    // crosses a threshold past this index, so a forced phase isn't instantly undone.
+    private int phaseFloor = -1;
 
     public BossPhaseManager(BossEntity boss, List<PhaseDefinition> phases) {
         this.boss = boss;
@@ -50,19 +54,41 @@ public class BossPhaseManager {
         if (phases.isEmpty()) return;
         if (!boss.isActive() || !boss.isAlive()) return;
 
-        float hpPercent = boss.getHealth() / boss.getMaxHealth();
+        int targetIndex = hpTargetIndex();
+        // Healed back above the pinned threshold: resume normal HP-driven phases from there.
+        if (phaseFloor > targetIndex) phaseFloor = targetIndex;
 
+        if (currentPhaseIndex < 0 || (targetIndex > currentPhaseIndex && targetIndex > phaseFloor)) {
+            transitionToPhase(targetIndex);
+        }
+    }
+
+    /** The phase the boss's current HP calls for. */
+    private int hpTargetIndex() {
+        float hpPercent = boss.getHealth() / boss.getMaxHealth();
         int targetIndex = 0;
         for (int i = 0; i < phases.size(); i++) {
             if (hpPercent <= phases.get(i).hpThresholdPercent) {
                 targetIndex = i;
             }
         }
-
-        if (targetIndex > currentPhaseIndex || currentPhaseIndex < 0) {
-            transitionToPhase(targetIndex);
-        }
+        return targetIndex;
     }
+
+    /**
+     * Admin override: jump to a phase (0-based) without touching HP. Plays the normal
+     * transition. Later HP thresholds still work; earlier ones won't pull the boss back.
+     */
+    public boolean forcePhase(int newIndex) {
+        if (newIndex < 0 || newIndex >= phases.size() || newIndex == currentPhaseIndex) return false;
+        phaseFloor = hpTargetIndex();
+        transitionToPhase(newIndex);
+        return true;
+    }
+
+    public int getPhaseCount() { return phases.size(); }
+    public int getPhaseFloor() { return phaseFloor; }
+    public void setPhaseFloor(int floor) { this.phaseFloor = floor; }
 
     /** Silently restores a phase on world reload — no transition messages or effects. */
     public void restoreToPhase(int newIndex) {
@@ -80,6 +106,7 @@ public class BossPhaseManager {
 
         PhaseDefinition phase = phases.get(newIndex);
         boolean isInitial = currentPhaseIndex == -1;
+        int previousIndex = currentPhaseIndex;
         currentPhaseIndex = newIndex;
 
         if (!isInitial && !boss.level().isClientSide) {
@@ -91,6 +118,10 @@ public class BossPhaseManager {
 
         if (phase.equipment != null) {
             boss.applyEquipment(phase.equipment);
+        }
+
+        if (!isInitial && !boss.level().isClientSide) {
+            FiwToolsBridge.onBossPhaseChange(boss, boss.getBossId(), newIndex + 1, previousIndex + 1);
         }
 
         FiwBossesCore.LOGGER.debug("Boss {} transitioned to phase {}", boss.getBossId(), newIndex);
