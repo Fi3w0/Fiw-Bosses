@@ -126,6 +126,12 @@ public class BossEntity extends Monster {
     // ── Cleanse debuff immunity (set by CleanseGoal) ─────────────────────────
     private long debuffImmuneUntilTick = -1L;
 
+    // ── Uncapped health ──────────────────────────────────────────────────────
+    // Real HP is capped by the MAX_HEALTH attribute (vanilla: 1024). A configured
+    // health above the cap keeps real max HP at the cap and scales every incoming
+    // damage/heal by cap / configured, so the fight lasts as long as configured.
+    private float healthScale = 1.0f;
+
     public BossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
         this.bossBar = new ServerBossEvent(
@@ -161,8 +167,7 @@ public class BossEntity extends Monster {
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);
 
-        Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH)).setBaseValue(def.health);
-        setHealth((float) def.health);
+        applyConfiguredHealth(def.health);
         Objects.requireNonNull(getAttribute(Attributes.ARMOR)).setBaseValue(def.armor);
         Objects.requireNonNull(getAttribute(Attributes.MOVEMENT_SPEED)).setBaseValue(def.speed);
         Objects.requireNonNull(getAttribute(Attributes.KNOCKBACK_RESISTANCE)).setBaseValue(def.knockbackResistance);
@@ -193,6 +198,27 @@ public class BossEntity extends Monster {
             this.phaseManager.transitionToPhase(0);
         }
     }
+
+    private void applyConfiguredHealth(float configured) {
+        var maxHealth = Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH));
+        maxHealth.setBaseValue(configured);
+        // getValue() is clamped to the attribute's range, so this is the effective cap
+        // (1024 in vanilla, higher if another mod raised it).
+        float cap = (float) maxHealth.getValue();
+        if (configured > cap && cap > 0) {
+            healthScale = cap / configured;
+            maxHealth.setBaseValue(cap);
+        } else {
+            healthScale = 1.0f;
+        }
+        setHealth(getMaxHealth());
+    }
+
+    /** Real-HP per configured-HP; below 1 only when the configured health exceeds the cap. */
+    public float getHealthScale() { return healthScale; }
+
+    /** Heals by an amount in configured-HP units (what a config's heal values mean). */
+    public void healConfigured(float amount) { heal(amount * healthScale); }
 
     public void applyEquipment(EquipmentConfig equipment) {
         if (equipment == null) return;
@@ -406,6 +432,9 @@ public class BossEntity extends Monster {
         }
 
         if (damageReduction > 0) amount *= (1.0f - damageReduction);
+
+        // Uncapped health: convert configured-HP damage into real (attribute-capped) HP.
+        amount *= healthScale;
 
         // Second Wind: survive one otherwise-fatal blow, then disarm
         if (secondWindArmed && bossState == BossState.ACTIVE && getHealth() - amount <= 1.0f) {
@@ -625,7 +654,7 @@ public class BossEntity extends Monster {
             if (idleHealTimer >= definition.idleHealInterval) {
                 idleHealTimer = 0;
                 if (getHealth() < getMaxHealth())
-                    setHealth((float) Math.min(getHealth() + definition.idleHealAmount, getMaxHealth()));
+                    setHealth((float) Math.min(getHealth() + definition.idleHealAmount * healthScale, getMaxHealth()));
             }
         }
     }

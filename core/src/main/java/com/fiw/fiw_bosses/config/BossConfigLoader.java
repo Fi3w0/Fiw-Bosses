@@ -66,6 +66,9 @@ public class BossConfigLoader {
                     failed++;
                     continue;
                 }
+                if (def.health > 10_000_000f) {
+                    FiwBossesCore.LOGGER.warn("Boss '{}' has health {} — above ~10,000,000 very small hits may stop registering (float precision)", def.id, def.health);
+                }
                 if (def.health <= 0) {
                     FiwBossesCore.LOGGER.warn("Boss '{}' has health {} — boss may die instantly or behave unexpectedly", def.id, def.health);
                 }
