@@ -43,6 +43,7 @@ public class BossConfigLoader {
         }
 
         reload();
+        SettingsLoader.reload();
     }
 
     public static int reload() {

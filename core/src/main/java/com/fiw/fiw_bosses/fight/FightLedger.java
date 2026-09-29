@@ -71,6 +71,11 @@ public final class FightLedger {
         return total;
     }
 
+    /** Every tracked player, in the order they joined the fight. */
+    public List<Entry> participants() {
+        return new ArrayList<>(entries.values());
+    }
+
     /** Everyone who dealt damage, highest first. */
     public List<Entry> byDamageDealt() {
         return sorted(e -> e.damageDealt);

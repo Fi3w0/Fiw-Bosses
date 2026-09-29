@@ -40,6 +40,10 @@ public class MinionEntity extends BossEntity {
     @Override
     protected boolean showBossBar() { return false; }
 
+    // Minions never run raid tracking, per-player loot, reward commands or summaries.
+    @Override
+    protected boolean tracksFight() { return false; }
+
     // ── Setup ────────────────────────────────────────────────────────────────
 
     public void applyMinionDefinition(MinionDefinition def, BossEntity owner) {

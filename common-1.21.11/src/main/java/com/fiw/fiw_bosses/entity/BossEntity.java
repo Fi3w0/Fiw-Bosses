@@ -7,6 +7,8 @@ import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.config.FluidSettings;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.fight.BossFightHandler;
+import com.fiw.fiw_bosses.fight.FightLedger;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
@@ -132,6 +134,17 @@ public class BossEntity extends Monster {
     // health above the cap keeps real max HP at the cap and scales every incoming
     // damage/heal by cap / configured, so the fight lasts as long as configured.
     private float healthScale = 1.0f;
+
+    // ── Raid tracking (see BossFightHandler) ────────────────────────────────
+    private FightLedger ledger = new FightLedger();
+    private final Map<UUID, Float> trackedHp = new java.util.HashMap<>();
+    private final Map<UUID, Long> lastTargeted = new java.util.HashMap<>();
+    private boolean rewardsSuppressed = false;
+    private boolean rewardsHandled = false;
+    // Player whose hit is being applied right now, so die() can credit the killing blow.
+    private ServerPlayer pendingHitter = null;
+    private float healthBeforeHit = 0f;
+    private UUID lastPlayerHitter = null;
 
     public BossEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -277,6 +290,7 @@ public class BossEntity extends Monster {
         tickFluidHandling();
         tickIdleSystem();
         tickDialogueSystem();
+        if (tracksFight()) BossFightHandler.trackCombat(this);
 
         if (phaseManager != null) {
             phaseManager.tick();
@@ -440,6 +454,7 @@ public class BossEntity extends Monster {
         // Second Wind: survive one otherwise-fatal blow, then disarm
         if (secondWindArmed && bossState == BossState.ACTIVE && getHealth() - amount <= 1.0f) {
             secondWindArmed = false;
+            creditIntercepted(source);
             setHealth(Math.max(1.0f, getMaxHealth() * secondWindRevivePercent));
             onSecondWind();
             return false;
@@ -451,6 +466,7 @@ public class BossEntity extends Monster {
                 && definition.preDeathDialogue != null
                 && !definition.preDeathDialogue.isEmpty()
                 && getHealth() - amount <= 1.0f) {
+            creditIntercepted(source);
             setHealth(1.0f);
             startPreDeathSequence();
             return false;
@@ -461,7 +477,14 @@ public class BossEntity extends Monster {
             lastDamageAttacker = attacker;
         }
 
+        pendingHitter = tracksFight() ? BossFightHandler.playerFrom(source) : null;
+        healthBeforeHit = getHealth();
         boolean result = super.hurtServer(world, source, amount);
+        if (pendingHitter != null) {
+            // Still pending means the hit didn't kill (die() consumes it on a kill).
+            if (result) creditDamage(pendingHitter, healthBeforeHit - getHealth());
+            pendingHitter = null;
+        }
 
         if (result) idleTimer = 0;
 
@@ -509,9 +532,14 @@ public class BossEntity extends Monster {
 
     @Override
     public void die(DamageSource damageSource) {
+        if (pendingHitter != null) {
+            creditDamage(pendingHitter, healthBeforeHit);
+            pendingHitter = null;
+        }
         super.die(damageSource);
         if (!level().isClientSide() && definition != null) {
-            BossLootHandler.dropLoot(this, definition);
+            if (tracksFight()) BossFightHandler.onBossDeath(this, damageSource);
+            else BossLootHandler.dropLoot(this, definition);
         }
         bossBar.removeAllPlayers();
     }
@@ -540,6 +568,9 @@ public class BossEntity extends Monster {
         output.putBoolean("PreDeathTriggered", preDeathTriggered);
         String disguise = getDisguiseEntity();
         if (!disguise.isEmpty()) output.putString("DisguiseEntity", disguise);
+        if (!ledger.isEmpty()) output.putString("FightLedger", ledger.encode());
+        if (phaseManager != null && phaseManager.getPhaseFloor() >= 0)
+            output.putInt("PhaseFloor", phaseManager.getPhaseFloor());
     }
 
     @Override
@@ -597,6 +628,8 @@ public class BossEntity extends Monster {
         } else if (phaseManager != null && phaseManager.getCurrentPhaseIndex() < 0) {
             phaseManager.restoreToPhase(savedPhase >= 0 ? savedPhase : 0);
         }
+        input.getString("FightLedger").ifPresent(data -> this.ledger = FightLedger.decode(data));
+        if (phaseManager != null) phaseManager.setPhaseFloor(input.getIntOr("PhaseFloor", -1));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -658,6 +691,8 @@ public class BossEntity extends Monster {
                 idleHealTimer = 0;
                 if (getHealth() < getMaxHealth())
                     setHealth((float) Math.min(getHealth() + definition.idleHealAmount * healthScale, getMaxHealth()));
+                // Healed back to full = the attempt is over; earlier damage earns nothing.
+                if (getHealth() >= getMaxHealth()) ledger.clear();
             }
         }
     }
@@ -721,6 +756,39 @@ public class BossEntity extends Monster {
         }
         return attackerBoss != null && isSameFaction(attackerBoss)
                 && !attackerBoss.canDamageFactionAllies();
+    }
+
+    // ── Raid tracking (used by BossFightHandler) ────────────────────────────
+
+    /** Bosses track fights and grant raid rewards; minions don't. */
+    protected boolean tracksFight() { return true; }
+    public FightLedger getLedger() { return ledger; }
+    public Map<UUID, Float> getTrackedHp() { return trackedHp; }
+    public Map<UUID, Long> getLastTargeted() { return lastTargeted; }
+    /** Admin kills (/boss kill) grant no raid rewards, commands or summary. */
+    public void suppressRewards() { rewardsSuppressed = true; }
+    public boolean areRewardsSuppressed() { return rewardsSuppressed; }
+    /** True exactly once per entity, so rewards can never pay out twice. */
+    public boolean claimRewards() {
+        if (rewardsHandled) return false;
+        rewardsHandled = true;
+        return true;
+    }
+    /** The player whose hit started the pre-death monologue (the real finisher). */
+    public UUID getPreDeathFinisher() { return preDeathTriggered ? lastPlayerHitter : null; }
+
+    /** Credits real HP removed by a player, stored in configured-HP units. */
+    private void creditDamage(ServerPlayer player, float realAmount) {
+        if (realAmount <= 0) return;
+        lastPlayerHitter = player.getUUID();
+        ledger.recordDealt(player.getUUID(), player.getName().getString(),
+                realAmount / healthScale, level().getGameTime());
+    }
+
+    /** A lethal hit swallowed by Second Wind / pre-death still counts as the remaining HP. */
+    private void creditIntercepted(DamageSource source) {
+        ServerPlayer player = tracksFight() ? BossFightHandler.playerFrom(source) : null;
+        if (player != null) creditDamage(player, getHealth());
     }
 
     // ── Accessors ────────────────────────────────────────────────────────────

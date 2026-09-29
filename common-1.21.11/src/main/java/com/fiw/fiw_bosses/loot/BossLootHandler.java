@@ -42,7 +42,7 @@ public final class BossLootHandler {
     }
 
     /** Drop count: random in [minCount, maxCount] when a range is set, else fixed count. */
-    private static int resolveCount(LootEntry entry, RandomSource random) {
+    public static int resolveCount(LootEntry entry, RandomSource random) {
         if (entry.minCount == null && entry.maxCount == null) return Math.max(1, entry.count);
         int min = entry.minCount != null ? entry.minCount : entry.maxCount;
         int max = entry.maxCount != null ? entry.maxCount : entry.minCount;

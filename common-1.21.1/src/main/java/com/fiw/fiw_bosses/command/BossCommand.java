@@ -1,6 +1,9 @@
 package com.fiw.fiw_bosses.command;
 
+import com.fiw.fiw_bosses.api.FiwBossesAPI;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.config.FightSummaryConfig;
+import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.MinionConfigLoader;
 import com.fiw.fiw_bosses.config.MinionDefinition;
@@ -13,11 +16,13 @@ import com.fiw.fiw_bosses.skin.SkinCache;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -34,6 +39,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,6 +91,39 @@ public final class BossCommand {
                                         StringArgumentType.getString(ctx, "boss_id")))))
                 .then(Commands.literal("list")
                         .executes(ctx -> listBosses(ctx.getSource())))
+                .then(Commands.literal("phase")
+                        .then(Commands.argument("targets", EntityArgument.entities())
+                                .then(Commands.literal("next")
+                                        .executes(ctx -> changePhase(ctx.getSource(),
+                                                EntityArgument.getEntities(ctx, "targets"), 1, 0)))
+                                .then(Commands.literal("prev")
+                                        .executes(ctx -> changePhase(ctx.getSource(),
+                                                EntityArgument.getEntities(ctx, "targets"), -1, 0)))
+                                .then(Commands.literal("set")
+                                        .then(Commands.argument("phase", IntegerArgumentType.integer(1))
+                                                .executes(ctx -> changePhase(ctx.getSource(),
+                                                        EntityArgument.getEntities(ctx, "targets"), 0,
+                                                        IntegerArgumentType.getInteger(ctx, "phase")))))))
+                .then(Commands.literal("summary")
+                        .executes(ctx -> summaryStatus(ctx.getSource()))
+                        .then(Commands.literal("on")
+                                .executes(ctx -> summaryEnabled(ctx.getSource(), true)))
+                        .then(Commands.literal("off")
+                                .executes(ctx -> summaryEnabled(ctx.getSource(), false)))
+                        .then(Commands.literal("top")
+                                .then(Commands.argument("count", IntegerArgumentType.integer(1, 10))
+                                        .executes(ctx -> summaryTop(ctx.getSource(),
+                                                IntegerArgumentType.getInteger(ctx, "count")))))
+                        .then(Commands.literal("show")
+                                .then(Commands.argument("section", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            for (String section : SUMMARY_SECTIONS) builder.suggest(section);
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("visible", BoolArgumentType.bool())
+                                                .executes(ctx -> summaryShow(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "section"),
+                                                        BoolArgumentType.getBool(ctx, "visible")))))))
                 .then(Commands.literal("reload")
                         .requires(source -> source.hasPermission(Commands.LEVEL_ADMINS))
                         .executes(ctx -> reloadConfigs(ctx.getSource())))
@@ -195,7 +234,7 @@ public final class BossCommand {
             source.sendFailure(Component.literal("No living boss with id '" + bossId + "' found."));
             return 0;
         }
-        found.forEach(BossEntity::kill);
+        found.forEach(b -> { b.suppressRewards(); b.kill(); });
         final int count = found.size();
         source.sendSuccess(() -> Component.literal("Killed ")
                 .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
@@ -217,7 +256,7 @@ public final class BossCommand {
                     .withStyle(ChatFormatting.YELLOW), false);
             return 0;
         }
-        found.forEach(BossEntity::kill);
+        found.forEach(b -> { b.suppressRewards(); b.kill(); });
         final int count = found.size();
         source.sendSuccess(() -> Component.literal("Killed ")
                 .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
@@ -363,7 +402,7 @@ public final class BossCommand {
             source.sendFailure(Component.literal("No living minion with id '" + minionId + "' found."));
             return 0;
         }
-        found.forEach(BossEntity::kill);
+        found.forEach(b -> { b.suppressRewards(); b.kill(); });
         final int count = found.size();
         source.sendSuccess(() -> Component.literal("Killed ")
                 .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
@@ -384,7 +423,7 @@ public final class BossCommand {
                     .withStyle(ChatFormatting.YELLOW), false);
             return 0;
         }
-        found.forEach(BossEntity::kill);
+        found.forEach(b -> { b.suppressRewards(); b.kill(); });
         final int count = found.size();
         source.sendSuccess(() -> Component.literal("Killed ")
                 .append(Component.literal(String.valueOf(count)).withStyle(ChatFormatting.RED))
@@ -396,11 +435,85 @@ public final class BossCommand {
 
     private static int reloadConfigs(CommandSourceStack source) {
         int bosses = BossConfigLoader.reload();
+        SettingsLoader.reload();
         int minions = MinionConfigLoader.reload();
         SkinCache.fetchAll();
         FiwToolsBridge.reportUnknownToolIds();
         source.sendSuccess(() -> Component.literal("Reloaded " + bosses + " boss + " + minions + " minion definitions.")
                 .withStyle(ChatFormatting.GREEN), true);
         return bosses + minions;
+    }
+    // ── Phase control ────────────────────────────────────────────────────────
+
+    /** delta ±1 steps from the current phase; otherwise jumps to setTo (1-based). */
+    private static int changePhase(CommandSourceStack source, Collection<? extends Entity> targets,
+                                   int delta, int setTo) {
+        int changed = 0;
+        for (Entity entity : targets) {
+            if (!FiwBossesAPI.isBoss(entity)) continue;
+            int wanted = delta != 0 ? FiwBossesAPI.getPhase(entity) + delta : setTo;
+            if (!FiwBossesAPI.setPhase(entity, wanted)) continue;
+            changed++;
+            final String line = FiwBossesAPI.getBossId(entity) + " -> phase " + wanted
+                    + "/" + FiwBossesAPI.getPhaseCount(entity);
+            source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GOLD), true);
+        }
+        if (changed == 0) {
+            source.sendFailure(Component.literal("No boss changed phase. Targets must be active bosses "
+                    + "(fight started) and the phase must exist and differ from the current one."));
+        }
+        return changed;
+    }
+
+    // ── Fight summary settings (global; saved to settings.json) ──────────────
+
+    private static final List<String> SUMMARY_SECTIONS =
+            List.of("damage", "taken", "deaths", "drops", "killer", "duration");
+
+    private static int summaryStatus(CommandSourceStack source) {
+        FightSummaryConfig c = SettingsLoader.get().fightSummary;
+        String text = "Fight summary: " + (Boolean.TRUE.equals(c.enabled) ? "ON" : "OFF")
+                + " | top " + c.topCount + " | range " + c.broadcastRange
+                + " | damage=" + c.showDamageDealt + " taken=" + c.showDamageTaken
+                + " deaths=" + c.showDeaths + " drops=" + c.showUniqueDrops
+                + " killer=" + c.showKillingBlow + " duration=" + c.showDuration
+                + " (a boss's own fightSummary block overrides these)";
+        source.sendSuccess(() -> Component.literal(text).withStyle(ChatFormatting.YELLOW), false);
+        return 1;
+    }
+
+    private static int summaryEnabled(CommandSourceStack source, boolean enabled) {
+        SettingsLoader.get().fightSummary.enabled = enabled;
+        return saveSummary(source);
+    }
+
+    private static int summaryTop(CommandSourceStack source, int count) {
+        SettingsLoader.get().fightSummary.topCount = count;
+        return saveSummary(source);
+    }
+
+    private static int summaryShow(CommandSourceStack source, String section, boolean visible) {
+        FightSummaryConfig c = SettingsLoader.get().fightSummary;
+        switch (section) {
+            case "damage" -> c.showDamageDealt = visible;
+            case "taken" -> c.showDamageTaken = visible;
+            case "deaths" -> c.showDeaths = visible;
+            case "drops" -> c.showUniqueDrops = visible;
+            case "killer" -> c.showKillingBlow = visible;
+            case "duration" -> c.showDuration = visible;
+            default -> {
+                source.sendFailure(Component.literal("Unknown section '" + section + "'. Use: "
+                        + String.join(", ", SUMMARY_SECTIONS)));
+                return 0;
+            }
+        }
+        return saveSummary(source);
+    }
+
+    private static int saveSummary(CommandSourceStack source) {
+        if (!SettingsLoader.save()) {
+            source.sendFailure(Component.literal("Changed for this session, but settings.json could not be saved."));
+        }
+        return summaryStatus(source);
     }
 }
