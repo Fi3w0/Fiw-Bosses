@@ -26,8 +26,7 @@ matching the tag).
 - **Fiw Tools phase hooks** — phase changes are reported to Fiw Tools (its new `on_boss_phase`
   trigger), and a public `FiwBossesAPI` lets its `boss_phase` admin ability change phases.
 - **Real HP on the boss bar** — `bossBar.showHealth` (or the global `showBossBarHealth` in
-  `settings.json`) appends the configured HP to the bar title, e.g. `1,500/1,500 ❤`, so bosses above
-  the 1024 cap show their real health (Jade and similar mods only see the capped value).
+  `settings.json`) appends the HP to the bar title, e.g. `1,500/1,500 ❤`.
 - Example raid boss: `examples/raid/raid_titan.json`.
 
 ### Fixed
@@ -38,9 +37,16 @@ matching the tag).
 - **`second_wind` re-armed instantly after saving the boss** when it had been armed longer than its
   `cooldownTicks`. The re-arm cooldown now starts when the revive is spent, as documented.
 - **Boss/minion `health` above 1024 no longer gets silently capped.** Vanilla clamps max health to
-  1024; bosses and custom minions now keep 1024 real HP and scale every incoming damage and config
-  heal by `1024 / health`, so a 60,000 HP boss takes 60,000 damage to kill. If another mod raises
-  the cap, the real cap is used. Vanilla-base minions are still real vanilla mobs and stay capped.
+  1024; bosses and custom minions now really have their configured HP (a 60,000 HP boss has 60,000
+  HP), and Jade / WTHIT / The One Probe show the true value. The global attribute cap is untouched.
+  Vanilla-base minions are still real vanilla mobs and stay capped.
+- **Bosses near spawn were deleted on every NeoForge/Forge restart.** Configs loaded after spawn and
+  force-loaded chunks had already loaded their entities, so those bosses were removed as
+  "definition not found". Configs now load before the worlds.
+- **A boss's phase wasn't restored after a restart** (it re-entered phase 1 and then re-advanced by
+  HP, losing admin-forced phases). The saved phase is now restored.
+- **A boss that died right before a save came back at full health** after the restart. It now stays
+  dead.
 
 ### Notes
 - Issue #2 (PMMO crash naming `EarthShatterEntity`): that entity belongs to the separate

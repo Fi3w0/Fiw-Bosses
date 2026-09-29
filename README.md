@@ -138,7 +138,7 @@ MMO-style boss loot with `"lootMode": "per_player"`: every player who dealt enou
 Optional post-fight chat recap — killing blow, top damage with share %, most damage taken, who fell, unique drops, fight time. Only players who actually engaged the boss are listed. Global defaults in `config/fiw_bosses/settings.json` (toggle live with `/boss summary`), overridable per boss.
 
 ### Any health value
-`health` isn't capped at vanilla's 1024 — above it, damage and heals are scaled so a 60,000 HP boss really takes 60,000 damage. Phases and the boss bar work as normal, and `bossBar.showHealth` shows the real HP (`60,000/60,000 ❤`) in the bar title.
+`health` isn't capped at vanilla's 1024 — a 60,000 HP boss really has 60,000 HP, and Jade / WTHIT / The One Probe show it. `bossBar.showHealth` also puts the HP (`60,000/60,000 ❤`) in the bar title.
 
 ### Admin phase control
 `/boss phase <targets> next|prev|set <n>` moves a live boss between phases without touching HP — ease a fight players are stuck on, or speed up a stalled one.

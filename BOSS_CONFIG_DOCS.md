@@ -258,8 +258,7 @@ Use `&` prefix in `displayName`, `transitionMessage`, and `taunt` fields.
 **overlay:** `PROGRESS` `NOTCHED_6` `NOTCHED_10` `NOTCHED_12` `NOTCHED_20`
 
 **showHealth:** `true` appends the boss's real HP to the bar title, e.g. `Raid Titan  1,500/1,500 ❤`.
-It always shows the **configured** health, also above the 1024 cap (mods like Jade read the
-capped value and would show 1024). Omit it to use `showBossBarHealth` from
+It shows the real health, also above the 1024 cap. Omit it to use `showBossBarHealth` from
 [`settings.json`](#global-defaults--configfiw_bossessettingsjson) (default `false`).
 
 ---
@@ -375,12 +374,12 @@ nearby players on every phase change.
 ### Health above 1024
 
 Vanilla caps the max-health attribute at **1024**. Bosses and custom minions may use any
-`health` value: above the cap the entity keeps 1024 real HP and every incoming damage and
-config heal is scaled by `1024 / health`, so a `60000` HP boss really takes 60,000 damage to
-kill. Phases, the boss bar and every percentage behave normally. If another mod raises the
-attribute cap, the boss uses the real cap and scales less (or not at all). Vanilla-base
-minions (`"baseEntity": "minecraft:zombie"` etc.) are real vanilla mobs and stay capped.
-Values above ~10,000,000 are logged as a warning: very small hits can stop registering there.
+`health` value: a `60000` HP boss really has 60,000 HP — damage, heals, phases and the boss bar
+use the true numbers, and health-display mods (Jade, WTHIT, The One Probe, ...) show
+`60000 / 60000` too. The global attribute cap is **not** changed; only Fiw bosses/minions report
+their configured max health. Vanilla-base minions (`"baseEntity": "minecraft:zombie"` etc.) are
+real vanilla mobs and stay capped. Values above ~10,000,000 are logged as a warning: health is a
+float, so very small hits can stop registering there.
 
 ---
 
