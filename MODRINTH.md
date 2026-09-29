@@ -85,7 +85,7 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 📜 **Fight summary** — an optional chat recap after the kill: killing blow, damage ranking with share %, who tanked the most, who fell, unique drops, fight time. Only real participants are listed. Global defaults with per-boss overrides, toggled live with `/boss summary`.
 
-❤️ **Any health value** — go past vanilla's 1024 HP cap: a 60,000 HP raid boss really takes 60,000 damage, with phases and boss bar working as normal.
+❤️ **Any health value** — go past vanilla's 1024 HP cap: a 60,000 HP raid boss really takes 60,000 damage, with phases and boss bar working as normal — and the bar can show the real HP (`60,000/60,000 ❤`).
 
 🎚️ **Admin phase control** — `/boss phase` moves a live boss to the next, previous or any phase without touching its HP. Players struggling? Ease it. Fight dragging? Push it.
 

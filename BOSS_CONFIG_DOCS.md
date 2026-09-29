@@ -250,12 +250,17 @@ Use `&` prefix in `displayName`, `transitionMessage`, and `taunt` fields.
 ## Boss Bar
 
 ```json
-"bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10" }
+"bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10", "showHealth": true }
 ```
 
 **color:** `PINK` `BLUE` `RED` `GREEN` `YELLOW` `PURPLE` `WHITE`
 
 **overlay:** `PROGRESS` `NOTCHED_6` `NOTCHED_10` `NOTCHED_12` `NOTCHED_20`
+
+**showHealth:** `true` appends the boss's real HP to the bar title, e.g. `Raid Titan  1,500/1,500 ❤`.
+It always shows the **configured** health, also above the 1024 cap (mods like Jade read the
+capped value and would show 1024). Omit it to use `showBossBarHealth` from
+[`settings.json`](#global-defaults--configfiw_bossessettingsjson) (default `false`).
 
 ---
 
@@ -1624,7 +1629,9 @@ A one-shot auto-revive. While armed, the next blow that would kill the boss is *
 | `revivePercent` | 0.5 | Fraction of max health the boss revives to (clamped 0.05–1.0) |
 | `taunt` | null | Message sent when second wind is (re)armed |
 
-> `cooldownTicks` here is the **re-arm delay** after the revive has been spent. Use a large value (e.g. one revive per phase) to avoid an unkillable boss.
+> `cooldownTicks` here is the **re-arm delay**, counted from the moment the revive is spent. A short
+> value makes the boss nearly unkillable (it re-arms seconds after every save) — use a large value,
+> e.g. `6000` for roughly one save per fight. `/kill` and `/boss kill` always bypass it.
 
 ```json
 { "type": "second_wind", "cooldownTicks": 1200, "params": { "revivePercent": 0.4, "taunt": "&c...not yet." } }
@@ -2128,9 +2135,12 @@ Created on first start. Applies to every boss.
     "topCount": 3,
     "broadcastRange": 64
   },
-  "combatTrackingRange": 48
+  "combatTrackingRange": 48,
+  "showBossBarHealth": false
 }
 ```
+
+`showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
 
 Change it live (saved to `settings.json`, op level 2):
 

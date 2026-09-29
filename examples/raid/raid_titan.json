@@ -8,7 +8,7 @@
   "attackDamage": 14.0,
   "baseEntity": "custom",
   "renderEntity": "minecraft:iron_golem",
-  "bossBar": { "color": "RED", "overlay": "NOTCHED_10" },
+  "bossBar": { "color": "RED", "overlay": "NOTCHED_10", "showHealth": true },
   "equipment": {
     "mainHand": { "item": "minecraft:netherite_axe" }
   },

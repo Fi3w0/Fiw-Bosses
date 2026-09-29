@@ -25,9 +25,18 @@ matching the tag).
   touching its HP. HP thresholds it already passed won't pull it back.
 - **Fiw Tools phase hooks** — phase changes are reported to Fiw Tools (its new `on_boss_phase`
   trigger), and a public `FiwBossesAPI` lets its `boss_phase` admin ability change phases.
+- **Real HP on the boss bar** — `bossBar.showHealth` (or the global `showBossBarHealth` in
+  `settings.json`) appends the configured HP to the bar title, e.g. `1,500/1,500 ❤`, so bosses above
+  the 1024 cap show their real health (Jade and similar mods only see the capped value).
 - Example raid boss: `examples/raid/raid_titan.json`.
 
 ### Fixed
+- **`/boss kill` and `/kill` could fail to kill a boss.** Admin kills went through the boss's damage
+  handling, so an armed `second_wind` or `preDeathDialogue` swallowed them (and `/boss kill` still
+  reported success). Generic-kill damage now bypasses immunity states, protection, Second Wind and
+  the pre-death hold.
+- **`second_wind` re-armed instantly after saving the boss** when it had been armed longer than its
+  `cooldownTicks`. The re-arm cooldown now starts when the revive is spent, as documented.
 - **Boss/minion `health` above 1024 no longer gets silently capped.** Vanilla clamps max health to
   1024; bosses and custom minions now keep 1024 real HP and scale every incoming damage and config
   heal by `1024 / health`, so a 60,000 HP boss takes 60,000 damage to kill. If another mod raises
