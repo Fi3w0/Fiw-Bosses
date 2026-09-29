@@ -44,6 +44,12 @@ public class BossDefinition {
     // pushedByFluids, canSwim. Absent = vanilla behavior.
     public FluidSettings fluid;
 
+    // ── Raid rewards & fight summary ────────────────────────────────────────
+    // Optional. See RewardsConfig (per-player loot, unique drops, damage luck,
+    // reward commands) and FightSummaryConfig (overrides settings.json per boss).
+    public RewardsConfig rewards;
+    public FightSummaryConfig fightSummary;
+
     // ── Idle system ──────────────────────────────────────────────────────────
     // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.
     public int idleTimeout = -1;

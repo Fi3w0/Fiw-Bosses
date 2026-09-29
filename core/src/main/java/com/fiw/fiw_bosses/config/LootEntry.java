@@ -11,4 +11,12 @@ public class LootEntry {
     public Integer minCount;
     public Integer maxCount;
     public float chance = 1.0f;
+    // Per-player loot mode only (see RewardsConfig):
+    // true = rolled once for the whole raid and given to exactly one eligible player,
+    // so there is never a second copy (e.g. a one-of-a-kind Fiw Tools weapon).
+    public boolean unique = false;
+    // Overrides rewards.damageLuck for this entry (0 = equal odds, 1 = fully damage-weighted).
+    public Float damageLuck;
+    // Only the top N damage dealers may receive this entry. 0 = every eligible player.
+    public int topRanks = 0;
 }
