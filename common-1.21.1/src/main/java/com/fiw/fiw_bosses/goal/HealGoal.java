@@ -75,7 +75,7 @@ public class HealGoal extends Goal {
         healTick++;
 
         float healPerTick = amount / HEAL_DURATION;
-        boss.healConfigured(healPerTick);
+        boss.heal(healPerTick);
 
         if (!boss.level().isClientSide) {
             ServerLevel level = (ServerLevel) boss.level();

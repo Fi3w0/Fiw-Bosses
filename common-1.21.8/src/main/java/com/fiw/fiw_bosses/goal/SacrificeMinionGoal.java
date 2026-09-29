@@ -78,7 +78,7 @@ public class SacrificeMinionGoal extends Goal {
         }
 
         if (sacrificed > 0) {
-            boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + healAmount * sacrificed * boss.getHealthScale()));
+            boss.setHealth(Math.min(boss.getMaxHealth(), boss.getHealth() + healAmount * sacrificed));
             level.sendParticles(ParticleTypes.HEART,
                     boss.getX(), boss.getY() + 1.4, boss.getZ(), 4 * sacrificed, 0.5, 0.5, 0.5, 0.05);
             level.playSound(null, boss.getX(), boss.getY(), boss.getZ(),

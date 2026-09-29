@@ -68,6 +68,10 @@ public class BossEntity extends Monster {
 
     private static final EntityDataAccessor<String> DATA_DISGUISE_ENTITY =
             SynchedEntityData.defineId(BossEntity.class, EntityDataSerializers.STRING);
+    // Configured max HP when it exceeds the MAX_HEALTH attribute cap (0 = use the attribute).
+    // Synced so the client (Jade, WTHIT, The One Probe, ...) reads the real max health too.
+    private static final EntityDataAccessor<Float> DATA_CONFIGURED_MAX_HEALTH =
+            SynchedEntityData.defineId(BossEntity.class, EntityDataSerializers.FLOAT);
 
     // ── Boss state ────────────────────────────────────────────────────────────
     public enum BossState { INACTIVE, PRE_FIGHT, ACTIVE, PRE_DEATH }
@@ -130,11 +134,6 @@ public class BossEntity extends Monster {
     // ── Cleanse debuff immunity (set by CleanseGoal) ─────────────────────────
     private long debuffImmuneUntilTick = -1L;
 
-    // ── Uncapped health ──────────────────────────────────────────────────────
-    // Real HP is capped by the MAX_HEALTH attribute (vanilla: 1024). A configured
-    // health above the cap keeps real max HP at the cap and scales every incoming
-    // damage/heal by cap / configured, so the fight lasts as long as configured.
-    private float healthScale = 1.0f;
 
     // ── Raid tracking (see BossFightHandler) ────────────────────────────────
     private FightLedger ledger = new FightLedger();
@@ -216,6 +215,12 @@ public class BossEntity extends Monster {
         }
     }
 
+    /**
+     * Uncapped health: the MAX_HEALTH attribute is clamped to its range (1024 in vanilla).
+     * When the configured health is above that cap, the attribute stays at the cap and
+     * {@link #getMaxHealth()} reports the configured value instead, so real HP, damage,
+     * heals and every health display (boss bar, Jade, ...) use the true numbers.
+     */
     private void applyConfiguredHealth(float configured) {
         var maxHealth = Objects.requireNonNull(getAttribute(Attributes.MAX_HEALTH));
         maxHealth.setBaseValue(configured);
@@ -223,19 +228,23 @@ public class BossEntity extends Monster {
         // (1024 in vanilla, higher if another mod raised it).
         float cap = (float) maxHealth.getValue();
         if (configured > cap && cap > 0) {
-            healthScale = cap / configured;
             maxHealth.setBaseValue(cap);
+            entityData.set(DATA_CONFIGURED_MAX_HEALTH, configured);
         } else {
-            healthScale = 1.0f;
+            entityData.set(DATA_CONFIGURED_MAX_HEALTH, 0.0f);
         }
         setHealth(getMaxHealth());
     }
 
-    /** Real-HP per configured-HP; below 1 only when the configured health exceeds the cap. */
-    public float getHealthScale() { return healthScale; }
-
-    /** Heals by an amount in configured-HP units (what a config's heal values mean). */
-    public void healConfigured(float amount) { heal(amount * healthScale); }
+    // LivingEntity.getMaxHealth() is final but reads MAX_HEALTH through this method.
+    @Override
+    public double getAttributeValue(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute) {
+        if (attribute.value() == Attributes.MAX_HEALTH.value()) {
+            float configured = entityData.get(DATA_CONFIGURED_MAX_HEALTH);
+            if (configured > 0.0f) return configured;
+        }
+        return super.getAttributeValue(attribute);
+    }
 
     public void applyEquipment(EquipmentConfig equipment) {
         if (equipment == null) return;
@@ -262,6 +271,7 @@ public class BossEntity extends Monster {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(DATA_DISGUISE_ENTITY, "");
+        builder.define(DATA_CONFIGURED_MAX_HEALTH, 0.0f);
     }
 
     // ── Tick ─────────────────────────────────────────────────────────────────
@@ -306,7 +316,7 @@ public class BossEntity extends Monster {
     private Component bossBarTitle = null;
     private long shownHealth = -1L;
 
-    /** Appends real (configured-unit) HP to the bar title when enabled for this boss. */
+    /** Appends the boss's HP to the bar title when enabled for this boss. */
     private void updateBossBarHealthText() {
         if (definition == null || bossBarTitle == null) return;
         Boolean perBoss = definition.bossBar != null ? definition.bossBar.showHealth : null;
@@ -315,10 +325,10 @@ public class BossEntity extends Monster {
             if (shownHealth != -1L) { bossBar.setName(bossBarTitle); shownHealth = -1L; }
             return;
         }
-        long current = (long) Math.ceil(getHealth() / healthScale);
+        long current = (long) Math.ceil(getHealth());
         if (current == shownHealth) return;
         shownHealth = current;
-        long max = Math.round(getMaxHealth() / healthScale);
+        long max = Math.round(getMaxHealth());
         bossBar.setName(Component.empty().append(bossBarTitle).append(TextUtil.parseColorCodes(
                 "  &f" + String.format(java.util.Locale.ROOT, "%,d", current)
                         + "&7/&f" + String.format(java.util.Locale.ROOT, "%,d", max) + " &c\u2764")));
@@ -478,9 +488,6 @@ public class BossEntity extends Monster {
 
         if (damageReduction > 0) amount *= (1.0f - damageReduction);
 
-        // Uncapped health: convert configured-HP damage into real (attribute-capped) HP.
-        amount *= healthScale;
-
         // Second Wind: survive one otherwise-fatal blow, then disarm
         if (secondWindArmed && bossState == BossState.ACTIVE && getHealth() - amount <= 1.0f) {
             secondWindArmed = false;
@@ -621,13 +628,14 @@ public class BossEntity extends Monster {
             return;
         }
 
-        float savedHealth = getHealth();
+        // Vanilla's load clamped Health to the attribute cap; read the raw saved value.
+        float savedHealth = tag.contains("Health") ? tag.getFloat("Health") : -1.0f;
 
         applyDefinition(def);
 
-        if (savedHealth > 0 && savedHealth <= getMaxHealth()) {
-            setHealth(savedHealth);
-        }
+        // 0 keeps a boss that died right before the save dead (its death animation then
+        // finishes and removes it) instead of reviving it at full health.
+        if (savedHealth >= 0.0f) setHealth(savedHealth);
 
         // Restore saved phase silently (no transition messages or effects).
         int savedPhase = tag.contains("BossPhase") ? tag.getInt("BossPhase") : -1;
@@ -653,8 +661,12 @@ public class BossEntity extends Monster {
             clearGoalsForInactive();
         } else if (this.bossState == BossState.INACTIVE) {
             clearGoalsForInactive();
-        } else if (phaseManager != null && phaseManager.getCurrentPhaseIndex() < 0) {
-            phaseManager.restoreToPhase(savedPhase >= 0 ? savedPhase : 0);
+        } else if (phaseManager != null) {
+            // applyDefinition() already entered phase 0 for bosses without pre-fight dialogue,
+            // so restore the saved phase whenever it differs (e.g. an admin-forced phase).
+            int current = phaseManager.getCurrentPhaseIndex();
+            if (savedPhase >= 0 && savedPhase != current) phaseManager.restoreToPhase(savedPhase);
+            else if (current < 0) phaseManager.restoreToPhase(0);
         }
         if (tag.contains("FightLedger")) this.ledger = FightLedger.decode(tag.getString("FightLedger"));
         if (phaseManager != null) phaseManager.setPhaseFloor(tag.contains("PhaseFloor") ? tag.getInt("PhaseFloor") : -1);
@@ -718,7 +730,7 @@ public class BossEntity extends Monster {
             if (idleHealTimer >= definition.idleHealInterval) {
                 idleHealTimer = 0;
                 if (getHealth() < getMaxHealth())
-                    setHealth((float) Math.min(getHealth() + definition.idleHealAmount * healthScale, getMaxHealth()));
+                    setHealth((float) Math.min(getHealth() + definition.idleHealAmount, getMaxHealth()));
                 // Healed back to full = the attempt is over; earlier damage earns nothing.
                 if (getHealth() >= getMaxHealth()) ledger.clear();
             }
@@ -805,12 +817,12 @@ public class BossEntity extends Monster {
     /** The player whose hit started the pre-death monologue (the real finisher). */
     public UUID getPreDeathFinisher() { return preDeathTriggered ? lastPlayerHitter : null; }
 
-    /** Credits real HP removed by a player, stored in configured-HP units. */
+    /** Credits HP removed by a player. */
     private void creditDamage(ServerPlayer player, float realAmount) {
         if (realAmount <= 0) return;
         lastPlayerHitter = player.getUUID();
         ledger.recordDealt(player.getUUID(), player.getName().getString(),
-                realAmount / healthScale, level().getGameTime());
+                realAmount, level().getGameTime());
     }
 
     /** A lethal hit swallowed by Second Wind / pre-death still counts as the remaining HP. */

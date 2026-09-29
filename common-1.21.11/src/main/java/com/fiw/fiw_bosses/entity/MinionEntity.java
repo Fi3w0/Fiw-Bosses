@@ -177,11 +177,12 @@ public class MinionEntity extends BossEntity {
             return;
         }
 
-        float savedHealth = getHealth();
+        // Vanilla's load clamped Health to the attribute cap; read the raw saved value.
+        float savedHealth = input.getFloatOr("Health", -1.0f);
         applyMinionDefinition(def, null);
-        if (savedHealth > 0 && savedHealth <= getMaxHealth()) {
-            setHealth(savedHealth);
-        }
+        // 0 keeps a boss that died right before the save dead (its death animation then
+        // finishes and removes it) instead of reviving it at full health.
+        if (savedHealth >= 0.0f) setHealth(savedHealth);
     }
 
     // ── Accessors ────────────────────────────────────────────────────────────

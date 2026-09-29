@@ -94,7 +94,7 @@ public class LastBreathGoal extends Goal {
             boss.getLookControl().setLookAt(target, 30, 30);
         }
 
-        if (interruptDamage > 0 && (startHealth - boss.getHealth()) / boss.getHealthScale() >= interruptDamage) {
+        if (interruptDamage > 0 && startHealth - boss.getHealth() >= interruptDamage) {
             interrupt(level);
             active = false;
             return;
