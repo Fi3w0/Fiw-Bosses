@@ -7,6 +7,7 @@ import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.config.FluidSettings;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.fight.BossFightHandler;
 import com.fiw.fiw_bosses.fight.FightLedger;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
@@ -30,6 +31,7 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -192,6 +194,8 @@ public class BossEntity extends Monster {
 
         Component barName = TextUtil.parseColorCodes(def.displayName);
         bossBar.setName(barName);
+        bossBarTitle = barName;
+        shownHealth = -1L;
         try { bossBar.setColor(BossEvent.BossBarColor.valueOf(def.bossBar.color.toUpperCase())); }
         catch (IllegalArgumentException e) { FiwBossesCore.LOGGER.warn("Invalid boss bar color '{}' for boss '{}', using default", def.bossBar.color, def.id); }
         try { bossBar.setOverlay(BossEvent.BossBarOverlay.valueOf(def.bossBar.overlay.toUpperCase())); }
@@ -298,6 +302,28 @@ public class BossEntity extends Monster {
 
     protected boolean showBossBar() { return true; }
 
+    // Base bar title and the last HP shown, so the title is only resent when the number changes.
+    private Component bossBarTitle = null;
+    private long shownHealth = -1L;
+
+    /** Appends real (configured-unit) HP to the bar title when enabled for this boss. */
+    private void updateBossBarHealthText() {
+        if (definition == null || bossBarTitle == null) return;
+        Boolean perBoss = definition.bossBar != null ? definition.bossBar.showHealth : null;
+        boolean show = perBoss != null ? perBoss : SettingsLoader.get().showBossBarHealth;
+        if (!show) {
+            if (shownHealth != -1L) { bossBar.setName(bossBarTitle); shownHealth = -1L; }
+            return;
+        }
+        long current = (long) Math.ceil(getHealth() / healthScale);
+        if (current == shownHealth) return;
+        shownHealth = current;
+        long max = Math.round(getMaxHealth() / healthScale);
+        bossBar.setName(Component.empty().append(bossBarTitle).append(TextUtil.parseColorCodes(
+                "  &f" + String.format(java.util.Locale.ROOT, "%,d", current)
+                        + "&7/&f" + String.format(java.util.Locale.ROOT, "%,d", max) + " &c\u2764")));
+    }
+
     private void tickBossBar() {
         if (!showBossBar()) {
             bossBar.removeAllPlayers();
@@ -309,6 +335,7 @@ public class BossEntity extends Monster {
             return;
         }
         bossBar.setProgress(getHealth() / getMaxHealth());
+        updateBossBarHealthText();
         bossBar.removeAllPlayers();
         if (level() instanceof ServerLevel sl) {
             for (ServerPlayer sp : sl.players()) {
@@ -419,6 +446,10 @@ public class BossEntity extends Monster {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        // /kill and /boss kill (generic_kill): an admin kill must always land — skip immunity
+        // states, protection, Second Wind and the pre-death hold.
+        if (source.is(DamageTypes.GENERIC_KILL)) return super.hurt(source, amount);
+
         // Fully immune while inactive / mid-dialogue
         if (bossState == BossState.INACTIVE
                 || bossState == BossState.PRE_FIGHT

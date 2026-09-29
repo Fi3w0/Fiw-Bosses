@@ -7,6 +7,8 @@ public class GlobalSettings {
     // A player only counts as being in a fight (damage taken, deaths) while within this
     // many blocks of the boss and actually engaged: they hit it, or it is targeting them.
     public int combatTrackingRange = 48;
+    // Default for every boss's bossBar.showHealth: append real HP to the boss bar title.
+    public boolean showBossBarHealth = false;
 
     /** Fills fields a partial or old settings.json left null. */
     void normalize() {
