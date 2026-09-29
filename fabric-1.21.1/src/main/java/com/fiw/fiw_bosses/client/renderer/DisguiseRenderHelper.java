@@ -59,8 +59,29 @@ final class DisguiseRenderHelper {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 living.setItemSlot(slot, source.getItemBySlot(slot));
             }
+            copyAnimation(source, living);
         }
 
         return fake;
+    }
+
+    /**
+     * The throwaway entity never walks or swings, so without this a disguised boss glides with
+     * frozen limbs. WalkAnimationState only exposes setSpeed/update, so replay the boss's state:
+     * update(f, g) sets speedOld = speed, speed += (f - speed) * g, position += speed.
+     */
+    private static void copyAnimation(BossEntity source, LivingEntity fake) {
+        float position = source.walkAnimation.position();
+        float speed = source.walkAnimation.speed();
+        float speedOld = source.walkAnimation.speed(0.0f);
+        fake.walkAnimation.setSpeed(position - speed);
+        fake.walkAnimation.update(0.0f, 0.0f);   // position = position - speed
+        fake.walkAnimation.setSpeed(speedOld);
+        fake.walkAnimation.update(speed, 1.0f);  // speedOld, speed and position now match
+        fake.attackAnim = source.attackAnim;
+        fake.oAttackAnim = source.oAttackAnim;
+        fake.swinging = source.swinging;
+        fake.swingingArm = source.swingingArm;
+        fake.swingTime = source.swingTime;
     }
 }
