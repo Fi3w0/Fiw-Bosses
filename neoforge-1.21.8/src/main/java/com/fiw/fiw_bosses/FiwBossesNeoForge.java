@@ -21,6 +21,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
 @Mod(FiwBossesCore.MOD_ID)
@@ -54,10 +55,16 @@ public class FiwBossesNeoForge {
         event.put(BossEntityRegistry.MINION.get(), BossEntity.createBossAttributes().build());
     }
 
+    // Configs must be loaded before the worlds are: spawn and force-loaded chunks load their
+    // entities during world load, and a boss whose definition isn't known yet is removed.
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
+    public void onServerAboutToStart(ServerAboutToStartEvent event) {
         BossConfigLoader.loadAll();
         MinionConfigLoader.loadAll();
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
         SkinCache.fetchAll();
         FiwToolsBridge.reportUnknownToolIds();
     }

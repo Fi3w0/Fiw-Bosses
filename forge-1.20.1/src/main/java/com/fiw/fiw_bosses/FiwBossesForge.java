@@ -15,6 +15,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -69,10 +70,16 @@ public class FiwBossesForge {
         }
     }
 
+    // Configs must be loaded before the worlds are: spawn and force-loaded chunks load their
+    // entities during world load, and a boss whose definition isn't known yet is removed.
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
+    public void onServerAboutToStart(ServerAboutToStartEvent event) {
         BossConfigLoader.loadAll();
         MinionConfigLoader.loadAll();
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
         SkinCache.fetchAll();
         FiwToolsBridge.reportUnknownToolIds();
     }
