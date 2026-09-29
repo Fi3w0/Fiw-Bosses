@@ -1,0 +1,70 @@
+{
+  "id": "raid_titan",
+  "displayName": "&4&lRaid Titan",
+  "health": 60000.0,
+  "armor": 10.0,
+  "speed": 0.3,
+  "knockbackResistance": 0.8,
+  "attackDamage": 14.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:iron_golem",
+  "bossBar": { "color": "RED", "overlay": "NOTCHED_10" },
+  "equipment": {
+    "mainHand": { "item": "minecraft:netherite_axe" }
+  },
+  "rewards": {
+    "lootMode": "per_player",
+    "minDamagePercent": 2.0,
+    "damageLuck": 0.5,
+    "maxChance": 0.9,
+    "commands": [
+      "say {killer} landed the final blow on the Raid Titan! {participants} raiders earned rewards."
+    ],
+    "participantCommands": [
+      "xp add {player} 30 levels"
+    ],
+    "mvpCommands": [
+      "title {player} title {\"text\":\"MVP\",\"color\":\"gold\"}",
+      "give {player} minecraft:nether_star 1"
+    ]
+  },
+  "fightSummary": {
+    "enabled": true,
+    "topCount": 5
+  },
+  "loot": [
+    { "item": "minecraft:diamond", "minCount": 4, "maxCount": 12, "chance": 1.0 },
+    { "item": "minecraft:netherite_ingot", "count": 1, "chance": 0.35 },
+    { "item": "minecraft:enchanted_golden_apple", "count": 1, "chance": 0.5, "topRanks": 3, "damageLuck": 1.0 },
+    { "toolId": "void_reaver", "unique": true, "chance": 1.0, "damageLuck": 0.7 }
+  ],
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        { "type": "melee_slash", "cooldownTicks": 40, "params": { "damage": 10.0 } },
+        { "type": "slam", "cooldownTicks": 140, "params": { "damage": 8.0, "radius": 6.0 } }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.6,
+      "speedMultiplier": 1.15,
+      "damageMultiplier": 1.2,
+      "transitionMessage": "&4[Raid Titan] &cYou only made me angry.",
+      "abilities": [
+        { "type": "melee_slash", "cooldownTicks": 30, "params": { "damage": 12.0 } },
+        { "type": "shockwave", "cooldownTicks": 120, "params": { "damage": 8.0, "radius": 10.0 } }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.25,
+      "speedMultiplier": 1.3,
+      "damageMultiplier": 1.4,
+      "transitionMessage": "&4[Raid Titan] &cENOUGH!",
+      "abilities": [
+        { "type": "melee_slash", "cooldownTicks": 25, "params": { "damage": 14.0 } },
+        { "type": "meteor", "cooldownTicks": 160, "params": { "damage": 10.0 } }
+      ]
+    }
+  ]
+}

@@ -131,6 +131,18 @@ The optional `fluid` block stops river cheese: `canSwim` (pathfinding follows pl
 ### Loot ranges
 Loot entries roll random amounts with `minCount`/`maxCount` (e.g. 10–120 diamonds at 50% chance) — oversized amounts split into multiple stacks automatically.
 
+### Raid rewards
+MMO-style boss loot with `"lootMode": "per_player"`: every player who dealt enough damage gets their own roll straight into their inventory. `unique` entries go to exactly one raider (never duplicated — perfect for a one-of-a-kind Fiw Tools weapon), `damageLuck` makes top contributors luckier, `topRanks` gates entries to the top N, and kill/participant/MVP commands hand out anything else. Leechers, offline players and `/boss kill` earn nothing.
+
+### Fight summary
+Optional post-fight chat recap — killing blow, top damage with share %, most damage taken, who fell, unique drops, fight time. Only players who actually engaged the boss are listed. Global defaults in `config/fiw_bosses/settings.json` (toggle live with `/boss summary`), overridable per boss.
+
+### Any health value
+`health` isn't capped at vanilla's 1024 — above it, damage and heals are scaled so a 60,000 HP boss really takes 60,000 damage. Phases and the boss bar work as normal.
+
+### Admin phase control
+`/boss phase <targets> next|prev|set <n>` moves a live boss between phases without touching HP — ease a fight players are stuck on, or speed up a stalled one.
+
 ### Dialogue & fight flow
 Bosses can start inactive and immortal until a player right-clicks them — pre-fight dialogue plays, then combat begins. Pre-death dialogue can hold the boss at 1 HP for final lines before it dies. Every ability chat message is optional — configure a `taunt` or the ability stays silent.
 
@@ -196,6 +208,8 @@ soul_tether, wind_charge
 /boss list                            /boss minion spawn <id> [count]
 /boss reload                          /boss minion kill <id>
 /boss kill <id> | all                 /boss minion kill all
+/boss phase <targets> next | prev | set <n>
+/boss summary [on | off | top <n> | show <section> <true|false>]
 ```
 
 **Config folders**
@@ -204,6 +218,7 @@ soul_tether, wind_charge
 config/fiw_bosses/bosses/    active boss definitions
 config/fiw_bosses/minions/   custom minion definitions
 config/fiw_bosses/skins/     local PNG skins
+config/fiw_bosses/settings.json   global settings (fight summary, combat tracking range)
 ```
 
 ---

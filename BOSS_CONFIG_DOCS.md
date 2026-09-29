@@ -106,6 +106,8 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [Referencing Minions in Boss Phases](#referencing-minions-in-boss-phases)
 - [Idle System](#idle-system)
 - [Loot](#loot)
+- [Raid Rewards (per-player loot)](#raid-rewards-per-player-loot)
+- [Fight Summary](#fight-summary)
 - [Behavior Notes](#behavior-notes)
 
 ---
@@ -139,7 +141,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 |-------|------|---------|-------------|
 | `id` | string | **required** | Unique ID — used in `/boss spawn <id>` |
 | `displayName` | string | **required** | Shown above head and in the boss bar. Supports `&` color codes |
-| `health` | float | 200.0 | Max HP |
+| `health` | float | 200.0 | Max HP. Any value works — see [Health above 1024](#health-above-1024) |
 | `baseEntity` | string | `"custom"` | Boss visual base. Bosses always use the custom boss entity for AI/abilities; a registry ID here makes it render like that mob |
 | `renderEntity` | string | null | Optional visual override. Use this when you want to keep `baseEntity: "custom"` but render the boss as a vanilla/modded mob |
 | `armor` | float | 0.0 | Armor points (iron chestplate ≈ 8) |
@@ -152,6 +154,8 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `equipment` | object | null | Items and armor |
 | `phases` | array | [] | Phase definitions |
 | `loot` | array | [] | Death drops |
+| `rewards` | object | null | Raid-style rewards: per-player loot, unique drops, reward commands. See [Raid Rewards](#raid-rewards-per-player-loot) |
+| `fightSummary` | object | null | Per-boss override of the post-fight chat summary. See [Fight Summary](#fight-summary) |
 | `protection` | object | null | Incoming damage multipliers per weapon/damage type. See [Damage Protection](#damage-protection) |
 | `faction` | string | null | Faction id — entities sharing it are allies. See [Factions](#factions) |
 | `damageFactionAllies` | bool | false | Whether this boss's attacks/abilities can damage same-faction allies |
@@ -344,6 +348,34 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 | `transitionParticle` | string | null | Particle effect burst on transition |
 
 > The boss's current phase is stored in NBT — it survives server restarts.
+
+### Forcing a phase (admins)
+
+Admins can move an active boss to another phase **without touching its HP** — ease a fight
+players are stuck on, or push a stalled one forward:
+
+```text
+/boss phase <targets> next
+/boss phase <targets> prev
+/boss phase <targets> set <phase>        (1 = first phase)
+```
+
+`<targets>` is an entity selector, e.g. `@e[type=fiw_bosses:boss,limit=1,sort=nearest]`.
+The normal transition (message, sound, particles, equipment, abilities) plays. After a forced
+phase, HP thresholds the boss has already passed won't pull it back; crossing a *new* threshold
+further down still triggers that phase as usual. With Fiw Tools installed, the `boss_phase`
+item ability does the same from an admin item, and `on_boss_phase` item abilities fire for
+nearby players on every phase change.
+
+### Health above 1024
+
+Vanilla caps the max-health attribute at **1024**. Bosses and custom minions may use any
+`health` value: above the cap the entity keeps 1024 real HP and every incoming damage and
+config heal is scaled by `1024 / health`, so a `60000` HP boss really takes 60,000 damage to
+kill. Phases, the boss bar and every percentage behave normally. If another mod raises the
+attribute cap, the boss uses the real cap and scales less (or not at all). Vanilla-base
+minions (`"baseEntity": "minecraft:zombie"` etc.) are real vanilla mobs and stay capped.
+Values above ~10,000,000 are logged as a warning: very small hits can stop registering there.
 
 ---
 
@@ -2002,6 +2034,126 @@ Idle timer is reset when:
 given the other defaults to it. A `minCount` of `0` means the roll can drop nothing at all.
 Amounts above a stack size are split into multiple stacks automatically (120 diamonds
 drop as 64 + 56).
+
+Extra fields used only in per-player mode (see [Raid Rewards](#raid-rewards-per-player-loot)):
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `toolId` | null | A Fiw Tools item id instead of `item` (needs Fiw Tools) |
+| `unique` | false | Rolled once for the whole raid and given to **exactly one** player — never duplicated |
+| `damageLuck` | rewards value | Overrides `rewards.damageLuck` for this entry |
+| `topRanks` | 0 | Only the top N damage dealers may get this entry. `0` = every eligible player |
+
+---
+
+## Raid Rewards (per-player loot)
+
+Turns a boss into an MMO-style raid: everyone who really fought gets their **own** loot roll,
+straight into their inventory — no scramble for a ground pile, no one player vacuuming it all.
+
+```json
+"rewards": {
+  "lootMode": "per_player",
+  "minDamagePercent": 2.0,
+  "damageLuck": 0.5,
+  "maxChance": 0.9,
+  "commands": ["say {killer} slew the boss with {participants} raiders!"],
+  "participantCommands": ["xp add {player} 30 levels"],
+  "mvpCommands": ["give {player} minecraft:nether_star 1"]
+},
+"loot": [
+  { "item": "minecraft:diamond", "minCount": 4, "maxCount": 12, "chance": 1.0 },
+  { "item": "minecraft:enchanted_golden_apple", "chance": 0.5, "topRanks": 3, "damageLuck": 1.0 },
+  { "toolId": "void_reaver", "unique": true, "chance": 1.0, "damageLuck": 0.7 }
+]
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `lootMode` | `"shared"` | `"shared"` = classic single ground drop. `"per_player"` = every eligible player rolls the loot table on their own |
+| `minDamagePercent` | 5.0 | Damage (as % of the boss's max health) a player must deal to be eligible. Stops one-hit leeching |
+| `damageLuck` | 0.0 | `0` = equal odds for everyone. `1` = chances scale with contribution (twice the average damage = twice the chance) |
+| `maxChance` | 1.0 | Cap for luck-boosted chances (never lowers an entry's own `chance`) |
+| `commands` | [] | Run once on death. Placeholders: `{boss}` `{killer}` `{mvp}` `{x}` `{y}` `{z}` `{participants}` |
+| `participantCommands` | [] | Run once per eligible player. Placeholders: `{player}` `{damage}` `{percent}` `{rank}` + the above |
+| `mvpCommands` | [] | Run once for the top damage dealer. Same placeholders as `participantCommands` |
+
+**How the rolls work**
+- Normal entries roll **independently for each eligible player** — two players can both get diamonds.
+- `unique` entries roll their `chance` **once**; on success exactly one eligible player receives it
+  (weighted by damage when luck is on). There is never a second copy — ideal for one-of-a-kind
+  Fiw Tools weapons.
+- `topRanks` restricts an entry to the top N damage dealers.
+- Items go into the inventory; anything that doesn't fit drops at that player's feet and only
+  they can pick it up. Each player gets a chat line listing their loot.
+
+**Anti-abuse**
+- Eligibility needs real damage dealt to the boss (`minDamagePercent`); standing nearby earns nothing.
+- Players offline at the moment of death forfeit their roll.
+- Rewards pay out exactly once per boss.
+- `/boss kill` grants no raid rewards, commands or summary (in `shared` mode the classic ground
+  drop still happens, as before).
+- If the boss idle-heals back to full HP, the fight record resets — an abandoned attempt earns nothing.
+- A command whose placeholder can't be filled (e.g. `{killer}` when the boss died to lava) is skipped.
+
+The fight record (damage per player) is saved with the boss, so rewards survive a restart mid-fight.
+
+---
+
+## Fight Summary
+
+An optional chat recap when a boss dies: killing blow, top damage (with share %), most damage
+taken, who fell, unique drops, and fight time. Only real participants appear — a player who
+never engaged the boss is never listed as "0 damage".
+
+**Who counts as a participant:** anyone who damaged the boss, or anyone the boss targeted, while
+within `combatTrackingRange` blocks of it. Damage taken and deaths are only recorded for those players.
+
+**Who sees it:** every participant (wherever they are) plus players within `broadcastRange` of the boss.
+
+### Global defaults — `config/fiw_bosses/settings.json`
+
+Created on first start. Applies to every boss.
+
+```json
+{
+  "fightSummary": {
+    "enabled": false,
+    "showDamageDealt": true,
+    "showDamageTaken": true,
+    "showDeaths": true,
+    "showUniqueDrops": true,
+    "showKillingBlow": true,
+    "showDuration": true,
+    "topCount": 3,
+    "broadcastRange": 64
+  },
+  "combatTrackingRange": 48
+}
+```
+
+Change it live (saved to `settings.json`, op level 2):
+
+```text
+/boss summary                         show current settings
+/boss summary on | off
+/boss summary top <1-10>
+/boss summary show <damage|taken|deaths|drops|killer|duration> <true|false>
+```
+
+### Per-boss override
+
+Any field in a boss's own `fightSummary` block wins over the global value; missing fields fall back
+to it. Example — always on for this boss, damage ranking only:
+
+```json
+"fightSummary": {
+  "enabled": true,
+  "showDamageTaken": false,
+  "showDeaths": false,
+  "topCount": 5
+}
+```
 
 ---
 

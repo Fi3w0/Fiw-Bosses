@@ -81,6 +81,14 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 🌊 **Water & lava handling** — no more river cheese: bosses can chase players into water (`canSwim`), never drown, sink and fight underwater (`floats: false`), swim faster, ignore currents, and shrug off lava (`fireImmune`).
 
+🏆 **Raid rewards** — MMO-style per-player loot: everyone who really fought gets their own roll straight into their inventory. Mark a drop `unique` and exactly one raider gets it — never a second copy. Top damage dealers can be luckier (`damageLuck`) or the only ones eligible (`topRanks`), and kill/participant/MVP commands hand out anything else. Leechers and `/boss kill` earn nothing.
+
+📜 **Fight summary** — an optional chat recap after the kill: killing blow, damage ranking with share %, who tanked the most, who fell, unique drops, fight time. Only real participants are listed. Global defaults with per-boss overrides, toggled live with `/boss summary`.
+
+❤️ **Any health value** — go past vanilla's 1024 HP cap: a 60,000 HP raid boss really takes 60,000 damage, with phases and boss bar working as normal.
+
+🎚️ **Admin phase control** — `/boss phase` moves a live boss to the next, previous or any phase without touching its HP. Players struggling? Ease it. Fight dragging? Push it.
+
 🎲 **Loot ranges** — roll random drop amounts with `minCount`/`maxCount` (10–120 diamonds at 50% chance); big rolls split into stacks automatically.
 
 ♻️ **Hot reload & persistence** — `/boss reload` re-reads everything live, deleted configs are removed from the world, and a boss's phase survives server restarts.
@@ -137,6 +145,8 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 ```
 /boss spawn <id> [x y z] [count]   /boss list        /boss kill <id> | all
 /boss minion spawn <id> [count]    /boss minion list /boss minion kill <id> | all
+/boss phase <targets> next | prev | set <n>
+/boss summary [on | off | top <n> | show <section> <true|false>]
 /boss reload
 ```
 

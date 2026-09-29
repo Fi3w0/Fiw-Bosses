@@ -4,6 +4,44 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.2.0] - Raid rewards, fight summary, uncapped health
+
+### Added
+- **Raid rewards** — new optional `rewards` block. `"lootMode": "per_player"` gives every eligible
+  player their own roll of the loot table, delivered straight to their inventory (overflow drops at
+  their feet and only they can pick it up). Eligibility needs `minDamagePercent` of the boss's max
+  health dealt, so leechers get nothing.
+  - `"unique": true` loot entries roll once and go to exactly one raider — never duplicated. Ideal
+    for one-of-a-kind Fiw Tools weapons (`toolId`).
+  - `damageLuck` (per boss or per entry) makes bigger contributors luckier; `maxChance` caps it.
+  - `topRanks` limits an entry to the top N damage dealers.
+  - `commands`, `participantCommands` and `mvpCommands` with `{boss}` `{killer}` `{mvp}`
+    `{player}` `{damage}` `{percent}` `{rank}` `{participants}` `{x}` `{y}` `{z}` placeholders.
+- **Fight summary** — optional chat recap on death: killing blow, top damage with share %, most
+  damage taken, who fell, unique drops and fight time. Only players who actually engaged the boss
+  are listed. Global defaults in the new `config/fiw_bosses/settings.json`, per-boss overrides via
+  a `fightSummary` block, and live toggles with `/boss summary on|off|top|show`.
+- **`/boss phase <targets> next|prev|set <n>`** — move a live boss to another phase without
+  touching its HP. HP thresholds it already passed won't pull it back.
+- **Fiw Tools phase hooks** — phase changes are reported to Fiw Tools (its new `on_boss_phase`
+  trigger), and a public `FiwBossesAPI` lets its `boss_phase` admin ability change phases.
+- Example raid boss: `examples/raid/raid_titan.json`.
+
+### Fixed
+- **Boss/minion `health` above 1024 no longer gets silently capped.** Vanilla clamps max health to
+  1024; bosses and custom minions now keep 1024 real HP and scale every incoming damage and config
+  heal by `1024 / health`, so a 60,000 HP boss takes 60,000 damage to kill. If another mod raises
+  the cap, the real cap is used. Vanilla-base minions are still real vanilla mobs and stay capped.
+
+### Notes
+- Issue #2 (PMMO crash naming `EarthShatterEntity`): that entity belongs to the separate
+  *FD Bosses* mod, not FIW Bosses. FIW Bosses' entities register full attribute suppliers and are
+  handled by PMMO's scan normally.
+- `/boss kill` never grants raid rewards, commands or a summary; in the default `shared` loot mode
+  the ground drop still happens as before.
+- All features are available on every supported version and loader (1.21.11, 1.21.8, 1.21.1,
+  1.20.1 — Fabric, NeoForge, Forge).
+
 ## [1.1.3]
 
 ### Added
