@@ -45,6 +45,8 @@ matching the tag).
   "definition not found". Configs now load before the worlds.
 - **A boss's phase wasn't restored after a restart** (it re-entered phase 1 and then re-advanced by
   HP, losing admin-forced phases). The saved phase is now restored.
+- **Disguised bosses/minions (`renderEntity`) glided without walking or attack animations** on
+  1.21.1 and 1.20.1. The disguise model now plays the boss's real walk cycle and arm swing.
 - **A boss that died right before a save came back at full health** after the restart. It now stays
   dead.
 
