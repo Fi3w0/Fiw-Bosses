@@ -44,6 +44,7 @@ public class BossConfigLoader {
 
         reload();
         SettingsLoader.reload();
+        com.fiw.fiw_bosses.data.BossData.loadAll();
     }
 
     public static int reload() {
