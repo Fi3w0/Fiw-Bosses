@@ -37,7 +37,7 @@ public final class SpawnRules {
         return null;
     }
 
-    /** Records a successful summon (call before spawning so the boss's own registration follows). */
+    /** Records a successful summon for the cooldowns. */
     public static void record(SpawnData data, String bossId, SummonEntry entry, int entryIndex,
                               String playerUuid, long now) {
         data.lastSummon.put(bossId, now);
