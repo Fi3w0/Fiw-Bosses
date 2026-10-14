@@ -72,6 +72,9 @@ public final class BossFightHandler {
             float hp = player.isDeadOrDying() ? 0f : player.getHealth() + player.getAbsorptionAmount();
             Float last = trackedHp.put(id, hp);
             if (last == null) continue;
+            // Sampled every few ticks: with doImmediateRespawn a player can die and come back as a
+            // fresh entity between two samples. Count that as the death we didn't see.
+            if (player.tickCount < BossEntity.COMBAT_TRACK_TICKS && last > 0f) hp = 0f;
 
             Long targetedAt = lastTargeted.get(id);
             boolean engaged = ledger.hasDealtDamage(id)

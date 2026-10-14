@@ -49,6 +49,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.server.level.ServerBossEvent;
@@ -96,6 +97,10 @@ public class BossEntity extends Monster {
     private int aggroSwitchTimer = 0;
     private static final int AGGRO_SWITCH_MIN = 100;
     private static final int AGGRO_SWITCH_MAX = 300;
+    // Bar membership / idle player checks / combat sampling run on these intervals, not every tick.
+    private static final int BOSS_BAR_REFRESH_TICKS   = 10;
+    private static final int IDLE_CHECK_TICKS         = 20;
+    public  static final int COMBAT_TRACK_TICKS       = 5;
 
     // ── Minion tracking ───────────────────────────────────────────────────────
     private final Set<UUID> minionUuids = new HashSet<>();
@@ -111,6 +116,8 @@ public class BossEntity extends Monster {
     // ── Idle despawn / heal ───────────────────────────────────────────────────
     private int idleTimer      = 0;
     private int idleHealTimer  = 0;
+    // Starts true so a boss can't idle out before the first player check runs.
+    private boolean idlePlayerNearby = true;
 
     // ── Shield damage reduction ───────────────────────────────────────────────
     private float damageReduction = 0.0f;
@@ -303,7 +310,7 @@ public class BossEntity extends Monster {
         tickFluidHandling();
         tickIdleSystem();
         tickDialogueSystem();
-        if (tracksFight()) BossFightHandler.trackCombat(this);
+        if (tracksFight() && tickCount % COMBAT_TRACK_TICKS == 0) BossFightHandler.trackCombat(this);
 
         if (phaseManager != null) {
             phaseManager.tick();
@@ -346,15 +353,27 @@ public class BossEntity extends Monster {
         }
         bossBar.setProgress(getHealth() / getMaxHealth());
         updateBossBarHealthText();
-        bossBar.removeAllPlayers();
-        if (level() instanceof ServerLevel sl) {
-            for (ServerPlayer sp : sl.players()) {
-                if (sp.isAlive() && !sp.isSpectator()
-                        && sp.distanceToSqr(this) <= 64 * 64) {
-                    bossBar.addPlayer(sp);
-                }
+        if (tickCount % BOSS_BAR_REFRESH_TICKS == 0) refreshBossBarPlayers();
+    }
+
+    /**
+     * Adds players who came into range and removes those who left (or died, logged out, changed
+     * dimension). addPlayer/removePlayer only send a packet when membership changes, so players
+     * who stay in range cost nothing — unlike clearing and re-adding everyone each tick.
+     */
+    private void refreshBossBarPlayers() {
+        if (!(level() instanceof ServerLevel sl)) return;
+        List<ServerPlayer> inRange = new java.util.ArrayList<>();
+        for (ServerPlayer sp : sl.players()) {
+            if (sp.isAlive() && !sp.isSpectator()
+                    && sp.distanceToSqr(this) <= 64 * 64) {
+                inRange.add(sp);
             }
         }
+        for (ServerPlayer sp : List.copyOf(bossBar.getPlayers())) {
+            if (!inRange.contains(sp)) bossBar.removePlayer(sp);
+        }
+        for (ServerPlayer sp : inRange) bossBar.addPlayer(sp);
     }
 
     // ── Activation (right-click) ─────────────────────────────────────────────
@@ -714,11 +733,19 @@ public class BossEntity extends Monster {
         if (definition == null || definition.idleTimeout <= 0) return;
         if (bossState != BossState.ACTIVE) return;
 
-        boolean playerNearby = !level().getEntitiesOfClass(
-                Player.class, getBoundingBox().inflate(64),
-                p -> p.isAlive() && !p.isSpectator() && !p.isCreative()).isEmpty();
+        if (tickCount % IDLE_CHECK_TICKS == 0) {
+            AABB area = getBoundingBox().inflate(64);
+            idlePlayerNearby = false;
+            for (Player p : level().players()) {
+                if (p.isAlive() && !p.isSpectator() && !p.isCreative()
+                        && area.intersects(p.getBoundingBox())) {
+                    idlePlayerNearby = true;
+                    break;
+                }
+            }
+        }
 
-        if (playerNearby) { idleTimer = 0; idleHealTimer = 0; return; }
+        if (idlePlayerNearby) { idleTimer = 0; idleHealTimer = 0; return; }
 
         idleTimer++;
         if (idleTimer < definition.idleTimeout) return;
