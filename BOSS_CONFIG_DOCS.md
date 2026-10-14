@@ -1925,6 +1925,7 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 | `targetFactionAllies` | bool | false | Whether this minion's AI may target same-faction allies |
 | `damageOwnGroup` | bool | false | Whether this minion can damage its owner boss and sibling minions |
 | `fluid` | object | null | Water/lava behavior — see [Water & Lava Behavior](#water--lava-behavior). Custom minions only |
+| `pathfinding` | string | settings.json | `"vanilla"` or `"shared"` — see [Path finding](#path-finding) |
 | `teleportWhenStuck` | bool | true | A custom minion that makes no progress toward its target for `stuckSeconds` (blocked, boxed in, running in circles) teleports next to it; with no target it teleports back to its boss when more than 32 blocks away. Not used for `static`, `guard_point` and `sniper` movement |
 | `stuckSeconds` | int | 5 | See `teleportWhenStuck` |
 
@@ -2418,7 +2419,8 @@ Created on first start. Applies to every boss.
   },
   "combatTrackingRange": 48,
   "showBossBarHealth": false,
-  "webhooks": { "discord": "" }
+  "webhooks": { "discord": "" },
+  "pathfinding": "vanilla"
 }
 ```
 
@@ -2435,6 +2437,16 @@ the server. A boss can use its own channel or opt out:
 ```
 
 > Never post a webhook URL in an issue or a log — anyone with it can post to your channel.
+
+### Path finding
+
+`pathfinding` (settings.json default, overridable per boss and per minion) picks how bosses
+and custom minions find their way:
+
+| Mode | Behavior |
+|------|----------|
+| `vanilla` | Default. Plain Minecraft path finding, unchanged |
+| `shared` | For big minion swarms: re-plans less often when the target is far (every ¼ s within 16 blocks, 1 s within 32, 2 s beyond), and entities chasing the same target with the same hitbox and water handling reuse a path a squad-mate found in the last second, joining it at the nearest node. Entities too far from that path search on their own |
 
 ### Kill records
 

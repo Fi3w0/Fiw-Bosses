@@ -15,6 +15,15 @@ public class GlobalSettings {
     // Scheduled world spawns (see ScheduleConfig). A boss file's own "schedule" wins over an
     // entry here for the same boss.
     public java.util.List<ScheduleConfig> schedules = new java.util.ArrayList<>();
+    // Default path finding for bosses and custom minions: "vanilla" or "shared" (squads share
+    // paths and re-plan less often for far targets). A boss/minion's own "pathfinding" wins.
+    public String pathfinding = "vanilla";
+
+    /** True when an entity with this own setting (may be null) should use shared path finding. */
+    public boolean sharedPathfinding(String own) {
+        String mode = own != null && !own.isBlank() ? own : pathfinding;
+        return "shared".equalsIgnoreCase(mode);
+    }
 
     /** Fills fields a partial or old settings.json left null. */
     void normalize() {

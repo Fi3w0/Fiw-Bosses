@@ -47,6 +47,9 @@ matching the tag).
 - **Shield phase (pylons)** — a phase or rage `shield` summons `count` pylons (any custom
   minion) in a ring; the boss takes no damage until all are destroyed, and the boss bar shows
   how many are left. Example: `examples/anticheese/minions/rift_pylon.json`.
+- **Selectable path finding** — `pathfinding` in settings.json (default `"vanilla"`, unchanged)
+  or per boss/minion. `"shared"` lets squads chasing the same target share one path search and
+  re-plans less often for far targets — a big saving for large minion swarms.
 - **Scheduled world spawns** — `schedules` in settings.json or a boss file's `schedule`:
   every `intervalMinutes` or at daily `times`, random pick from `locations`, server-wide
   countdown broadcasts, at most one live boss per schedule. Validated on reload (exactly one

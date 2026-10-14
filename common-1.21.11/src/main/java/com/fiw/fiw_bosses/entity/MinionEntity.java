@@ -61,6 +61,7 @@ public class MinionEntity extends BossEntity {
         syntheticDef.id          = "minion_" + def.id;
         syntheticDef.displayName = def.displayName != null ? def.displayName : def.id;
         syntheticDef.health      = def.health;
+        syntheticDef.pathfinding = def.pathfinding;
         syntheticDef.armor       = def.armor;
         syntheticDef.speed       = def.speed;
         syntheticDef.knockbackResistance = def.knockbackResistance;

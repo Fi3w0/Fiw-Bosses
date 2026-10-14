@@ -99,6 +99,8 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 ⏰ **Scheduled world spawns** — "The Ember Warden awakens in 10 minutes at 120, 70, -40!" Bosses appear every N minutes or at set times of day, with countdowns, never twice while one lives.
 
+⚡ **Swarm-friendly path finding** — optional shared mode: a squad chasing the same player shares one path search. Vanilla stays the default.
+
 📊 **Lockouts, records & Discord** — loot lockouts stop farming, `/boss stats` shows fastest kills and top players, and every kill can post a Discord embed to your community channel.
 
 🎚️ **Admin phase control** — `/boss phase` moves a live boss to the next, previous or any phase without touching its HP. Players struggling? Ease it. Fight dragging? Push it.

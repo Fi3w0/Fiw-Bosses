@@ -155,6 +155,9 @@ A phase or rage can raise a shield: pylons (any custom minion — they can even 
 ### Scheduled world spawns
 Bosses appear on their own every N minutes or at set daily times, at one of several locations, with server-wide countdowns — and never twice while one is still alive.
 
+### Shared path finding
+`"pathfinding": "shared"` lets big minion swarms share one path search per squad and re-plan less often for far targets. Vanilla path finding stays the default.
+
 ### Lockouts, records & Discord
 `rewards.lockoutHours` stops loot farming (shared or per-variant). Every kill updates records — fastest kill, top damage, kills per player — shown with `/boss stats`. A Discord webhook posts a clean embed for each kill.
 

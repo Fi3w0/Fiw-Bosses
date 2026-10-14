@@ -63,6 +63,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -199,6 +200,9 @@ public class BossEntity extends Monster {
         this.bossId     = def.id;
         trackAlive();
         setMovementMode(def.movement);
+        if (getNavigation() instanceof SharedPathNavigation nav) {
+            nav.setMode(SettingsLoader.get().sharedPathfinding(def.pathfinding), def.fluid != null && def.fluid.canSwim);
+        }
         setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
 
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
@@ -1183,6 +1187,13 @@ public class BossEntity extends Monster {
                 triggerRage(e.getKey());
             }
         }
+    }
+
+    // ── Path finding ─────────────────────────────────────────────────────────
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new SharedPathNavigation(this, level);
     }
 
     // ── Ability damage ───────────────────────────────────────────────────────

@@ -66,5 +66,7 @@ public class MinionDefinition {
     // (blocked, boxed, running in circles) teleports next to it; with no target it
     // teleports back to its owner boss when far away.
     public boolean teleportWhenStuck = true;
+    // Optional: "vanilla" or "shared" path finding; absent = settings.json "pathfinding".
+    public String pathfinding;
     public int stuckSeconds = 5;
 }

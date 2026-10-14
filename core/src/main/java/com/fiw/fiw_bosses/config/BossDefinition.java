@@ -13,6 +13,8 @@ public class BossDefinition {
     public float knockbackResistance = 0.5f;
     public float attackDamage = 10.0f;
     public String movement = "side";
+    // Optional: "vanilla" or "shared"; absent = settings.json "pathfinding".
+    public String pathfinding;
     public String baseEntity = "custom";
     public String renderEntity;
     public BossBarConfig bossBar = new BossBarConfig();
