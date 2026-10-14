@@ -1,5 +1,7 @@
 package com.fiw.fiw_bosses.entity;
 
+import com.fiw.fiw_bosses.fight.StuckTracker;
+import net.minecraft.server.level.ServerLevel;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.*;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
@@ -187,6 +189,40 @@ public class MinionEntity extends BossEntity {
     public String getMinionId() { return minionId; }
     public MinionDefinition getMinionDefinition() { return minionDef; }
     public UUID getOwnerBossUuid() { return ownerBossUuid; }
+
+    // ── Anti-cheese: teleport when stuck ────────────────────────────────────
+    private final StuckTracker stuckTracker = new StuckTracker();
+
+    /**
+     * A minion making no progress toward its target for stuckSeconds (blocked, boxed in,
+     * running in circles) teleports next to it; without a target it teleports back to its
+     * owner boss when more than 32 blocks away. Ranged/stationary movement is left alone.
+     */
+    @Override
+    protected void tickAntiCheese(ServerLevel level, long now) {
+        if (minionDef == null || !minionDef.teleportWhenStuck) return;
+        String mode = getMovementMode();
+        if ("static".equals(mode) || "guard_point".equals(mode) || "sniper".equals(mode)) {
+            stuckTracker.reset();
+            return;
+        }
+        LivingEntity target = getTarget();
+        if (target != null && target.isAlive()) {
+            double dist = distanceTo(target);
+            if (dist <= 3.0) {
+                stuckTracker.reset();
+                return;
+            }
+            if (stuckTracker.sampleProgress(now, getX(), getY(), getZ(), dist, 1.5,
+                    Math.max(1, minionDef.stuckSeconds) * 20L)) {
+                teleportNear(target);
+            }
+            return;
+        }
+        stuckTracker.reset();
+        Entity owner = ownerBossUuid != null ? level.getEntity(ownerBossUuid) : null;
+        if (owner != null && owner.isAlive() && distanceToSqr(owner) > 32 * 32) teleportNear(owner);
+    }
     @Override public String getMovementMode() { return movementMode; }
 
     @Override

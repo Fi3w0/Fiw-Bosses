@@ -4,6 +4,8 @@ import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.AbilityEntry;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.config.PhaseOverlay;
+import com.google.gson.JsonObject;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.util.TextUtil;
@@ -45,6 +47,10 @@ public class BossPhaseManager {
     // Set when an admin forces a phase: HP-driven transitions stay paused until the boss
     // crosses a threshold past this index, so a forced phase isn't instantly undone.
     private int phaseFloor = -1;
+    // Active rage: its JSON overrides the current HP phase until cleared.
+    private String activeRage;
+    private JsonObject activeRageJson;
+    private PhaseDefinition effective;
 
     public BossPhaseManager(BossEntity boss, List<PhaseDefinition> phases) {
         this.boss = boss;
@@ -95,11 +101,7 @@ public class BossPhaseManager {
     public void restoreToPhase(int newIndex) {
         if (newIndex < 0 || newIndex >= phases.size()) return;
         currentPhaseIndex = newIndex;
-        rebuildGoals(phases.get(newIndex));
-        applyStatModifiers(phases.get(newIndex));
-        if (phases.get(newIndex).equipment != null) {
-            boss.applyEquipment(phases.get(newIndex).equipment);
-        }
+        applyEffective();
     }
 
     public void transitionToPhase(int newIndex) {
@@ -114,12 +116,7 @@ public class BossPhaseManager {
             playTransitionEffects(phase);
         }
 
-        rebuildGoals(phase);
-        applyStatModifiers(phase);
-
-        if (phase.equipment != null) {
-            boss.applyEquipment(phase.equipment);
-        }
+        applyEffective();
 
         if (!isInitial && !boss.level().isClientSide()) {
             FiwToolsBridge.onBossPhaseChange(boss, boss.getBossId(), newIndex + 1, previousIndex + 1);
@@ -253,10 +250,65 @@ public class BossPhaseManager {
 
     public int getCurrentPhaseIndex() { return currentPhaseIndex; }
 
+    /** The phase in effect: the current HP phase with the active rage merged over it. */
     public PhaseDefinition getCurrentPhase() {
-        if (currentPhaseIndex >= 0 && currentPhaseIndex < phases.size()) {
-            return phases.get(currentPhaseIndex);
+        if (currentPhaseIndex < 0 || currentPhaseIndex >= phases.size()) return null;
+        return effective != null ? effective : phases.get(currentPhaseIndex);
+    }
+
+    public String getActiveRage() { return activeRage; }
+
+    /**
+     * Starts a rage (overlay over the HP phase). {@code playEffects} plays the rage's own
+     * transition message/sound/particle. No-op while the boss has no phase yet.
+     */
+    public void applyRage(String name, JsonObject json, boolean playEffects) {
+        activeRage = name;
+        activeRageJson = json;
+        if (currentPhaseIndex < 0) return;
+        applyEffective();
+        if (playEffects && !boss.level().isClientSide()) {
+            playTransitionEffects(PhaseOverlay.merge(null, json));
         }
-        return null;
+    }
+
+    /** Ends the active rage silently and goes back to the plain HP phase. */
+    public void clearRage() {
+        if (activeRage == null) return;
+        boolean rageGear = effective != null && effective.equipment != null;
+        activeRage = null;
+        activeRageJson = null;
+        if (currentPhaseIndex < 0) return;
+        applyEffective();
+        if (rageGear && phases.get(currentPhaseIndex).equipment == null) {
+            // Put back the gear the boss wore before the rage: the latest HP phase that set
+            // equipment, else the boss's base equipment.
+            for (int i = currentPhaseIndex; i >= 0; i--) {
+                if (phases.get(i).equipment != null) { boss.applyEquipment(phases.get(i).equipment); return; }
+            }
+            if (boss.getDefinition() != null) boss.applyEquipment(boss.getDefinition().equipment);
+        }
+    }
+
+    /** Remembers a saved rage before the phase is restored on load (applied with it). */
+    public void setRageSilently(String name, JsonObject json) {
+        activeRage = name;
+        activeRageJson = json;
+    }
+
+    /** Rebuilds goals/modifiers/equipment for the phase in effect (after load). */
+    public void refresh() {
+        if (currentPhaseIndex >= 0) applyEffective();
+    }
+
+    private void applyEffective() {
+        PhaseDefinition hp = phases.get(currentPhaseIndex);
+        effective = activeRageJson != null ? PhaseOverlay.merge(hp, activeRageJson) : null;
+        PhaseDefinition phase = effective != null ? effective : hp;
+        rebuildGoals(phase);
+        applyStatModifiers(phase);
+        if (phase.equipment != null) {
+            boss.applyEquipment(phase.equipment);
+        }
     }
 }

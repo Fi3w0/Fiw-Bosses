@@ -1,0 +1,73 @@
+{
+  "id": "rift_sentinel",
+  "displayName": "&5&lRift Sentinel",
+  "health": 300.0,
+  "armor": 8.0,
+  "speed": 0.3,
+  "attackDamage": 10.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:enderman",
+  "bossBar": { "color": "PURPLE", "overlay": "NOTCHED_10", "showHealth": true },
+  "arena": {
+    "radius": 32,
+    "resetMessage": "&7{boss}&7 is pulled back into the rift and recovers.",
+    "minionsOnReset": "despawn"
+  },
+  "antiCheese": {
+    "stuck": {
+      "seconds": 8,
+      "escalation": [["teleport_to_target"], ["teleport_attack"], ["teleport_to_target", "rage:trapped"]],
+      "teleportAttackMultiplier": 1.5
+    },
+    "destroyVehicles": true,
+    "vehicleRage": "boated",
+    "ignoreSlowBlocks": { "blocks": { "minecraft:powder_snow": false } }
+  },
+  "rages": {
+    "trapped": {
+      "durationSeconds": 30,
+      "extraHealthPercent": 25,
+      "abilityDamageMultiplier": 1.4,
+      "bossBarColor": "RED",
+      "transitionMessage": "&4You can't hide from the rift!",
+      "abilities": [
+        { "type": "blink_strike", "cooldownTicks": 60, "params": { "damage": 8 } },
+        { "type": "pull", "cooldownTicks": 100, "params": {} }
+      ]
+    },
+    "boated": {
+      "durationSeconds": 20,
+      "speedMultiplier": 1.5,
+      "transitionMessage": "&cA boat? Really?"
+    },
+    "timer": {
+      "afterSeconds": 300,
+      "damageMultiplier": 1.5,
+      "bossBarColor": "WHITE",
+      "transitionMessage": "&5The Sentinel grows impatient!"
+    }
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        { "type": "teleport", "cooldownTicks": 120, "params": {} },
+        { "type": "beam", "cooldownTicks": 160, "params": { "damage": 5, "particle": "minecraft:portal" } }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.4,
+      "speedMultiplier": 1.2,
+      "transitionMessage": "&5The rift tears wider!",
+      "abilities": [
+        { "type": "teleport", "cooldownTicks": 80, "params": {} },
+        { "type": "beam", "cooldownTicks": 120, "params": { "damage": 6, "particle": "minecraft:portal" } },
+        { "type": "gravity_well", "cooldownTicks": 200, "params": {} }
+      ]
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:ender_pearl", "minCount": 4, "maxCount": 12 },
+    { "item": "minecraft:diamond", "minCount": 1, "maxCount": 4, "chance": 0.5 }
+  ]
+}

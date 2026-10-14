@@ -2,19 +2,26 @@ package com.fiw.fiw_bosses.entity;
 
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.config.AntiCheeseConfig;
+import com.fiw.fiw_bosses.config.ArenaConfig;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.BossVariants;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.config.FluidSettings;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
+import com.fiw.fiw_bosses.config.PhaseOverlay;
+import com.fiw.fiw_bosses.config.RageDefinition;
 import com.fiw.fiw_bosses.config.SettingsLoader;
+import com.fiw.fiw_bosses.config.StuckConfig;
 import com.fiw.fiw_bosses.data.BossData;
 import com.fiw.fiw_bosses.fight.BossFightHandler;
 import com.fiw.fiw_bosses.fight.FightLedger;
+import com.fiw.fiw_bosses.fight.StuckTracker;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
 import com.fiw.fiw_bosses.util.ConfiguredItemStacks;
 import com.fiw.fiw_bosses.util.TextUtil;
+import com.google.gson.JsonObject;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -52,12 +59,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.server.level.ServerBossEvent;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -319,6 +328,7 @@ public class BossEntity extends Monster {
         if (phaseManager != null) {
             phaseManager.tick();
         }
+        tickGuards();
     }
 
     protected boolean showBossBar() { return true; }
@@ -633,6 +643,18 @@ public class BossEntity extends Monster {
     protected void writeBossCustomData(ValueOutput output) {
         if (bossId != null) output.putString("BossId", bossId);
         if (definition != null && definition.variantName != null) output.putString("BossVariant", definition.variantName);
+        if (home != null) {
+            output.putDouble("HomeX", home.x);
+            output.putDouble("HomeY", home.y);
+            output.putDouble("HomeZ", home.z);
+        }
+        String rage = getActiveRage();
+        if (rage != null) {
+            output.putString("Rage", rage);
+            if (rageEndTick >= 0) output.putLong("RageTicksLeft", Math.max(0L, rageEndTick - level().getGameTime()));
+            if (rageExtraHealth > 0) output.putFloat("RageExtraHealth", rageExtraHealth);
+        }
+        if (!enragesFired.isEmpty()) output.putString("EnragesFired", String.join(",", enragesFired));
         if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
             output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
         output.putString("BossState", bossState.name());
@@ -672,6 +694,13 @@ public class BossEntity extends Monster {
 
         // 0 keeps a boss that died right before the save dead (its death animation then
         // finishes and removes it) instead of reviving it at full health.
+        // Arena home, fired enrage timers and an active rage (re-applied with the phase below).
+        double homeY = input.getDoubleOr("HomeY", Double.NaN);
+        if (!Double.isNaN(homeY)) home = new Vec3(input.getDoubleOr("HomeX", 0), homeY, input.getDoubleOr("HomeZ", 0));
+        input.getString("EnragesFired").ifPresent(list -> enragesFired.addAll(Arrays.asList(list.split(","))));
+        String savedRage = input.getString("Rage").orElse(null);
+        restoreRage(savedRage, input.getFloatOr("RageExtraHealth", 0f), input.getLongOr("RageTicksLeft", -1L));
+
         if (savedHealth >= 0.0f) setHealth(savedHealth);
 
         // Restore saved phase silently (no transition messages or effects).
@@ -708,6 +737,7 @@ public class BossEntity extends Monster {
         }
         input.getString("FightLedger").ifPresent(data -> this.ledger = FightLedger.decode(data));
         if (phaseManager != null) phaseManager.setPhaseFloor(input.getIntOr("PhaseFloor", -1));
+        if (getActiveRage() != null && phaseManager != null) phaseManager.refresh();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -779,6 +809,256 @@ public class BossEntity extends Monster {
                     setHealth((float) Math.min(getHealth() + definition.idleHealAmount, getMaxHealth()));
                 // Healed back to full = the attempt is over; earlier damage earns nothing.
                 if (getHealth() >= getMaxHealth()) ledger.clear();
+            }
+        }
+    }
+
+    // ── Arena leash, anti-cheese & rages ─────────────────────────────────────
+
+    // Where the boss spawned: arena center and teleport_home target.
+    private Vec3 home;
+    private final StuckTracker stuckTracker = new StuckTracker();
+    private long rageEndTick = -1L;
+    private float rageExtraHealth = 0f;
+    // Enrage-timer rages already fired in this attempt.
+    private final Set<String> enragesFired = new HashSet<>();
+
+    private void tickGuards() {
+        if (definition == null || !(level() instanceof ServerLevel sl)) return;
+        tickVehicle();
+        if (tickCount % 20 != 0) return;
+        if (home == null) home = position();
+        long now = sl.getGameTime();
+        tickRages(now);
+        if (bossState != BossState.ACTIVE) {
+            stuckTracker.reset();
+            return;
+        }
+        tickAntiCheese(sl, now);
+    }
+
+    /** Bosses: arena leash and stuck detection, every 20 ticks. Minions override this. */
+    protected void tickAntiCheese(ServerLevel level, long now) {
+        ArenaConfig arena = definition.arena;
+        if (arena != null && arena.enabled() && distanceToSqr(home) > arena.radius * arena.radius) {
+            resetFight();
+            return;
+        }
+        StuckConfig sc = definition.antiCheese != null ? definition.antiCheese.stuck : null;
+        if (sc == null || !sc.enabled) return;
+        LivingEntity target = getTarget();
+        if (target == null || !target.isAlive() || isStationaryMovement() || distanceToSqr(target) <= 9.0) {
+            stuckTracker.reset();
+            return;
+        }
+        if (stuckTracker.samplePosition(now, getX(), getY(), getZ(), sc.radius, Math.max(1, sc.seconds) * 20L)) {
+            for (String action : sc.actionsFor(stuckTracker.occurrences())) {
+                if (isRemoved()) return;
+                runStuckAction(level, action, sc, target);
+            }
+        }
+    }
+
+    protected boolean isStationaryMovement() {
+        return "guard_point".equals(movementMode) || "static".equals(movementMode);
+    }
+
+    private void runStuckAction(ServerLevel level, String action, StuckConfig sc, LivingEntity target) {
+        switch (action) {
+            case "teleport_to_target" -> teleportNear(target);
+            case "teleport_attack" -> {
+                teleportNear(target);
+                float dmg = (float) getAttributeValue(Attributes.ATTACK_DAMAGE) * sc.teleportAttackMultiplier;
+                target.hurtServer(level, damageSources().mobAttack(this), dmg);
+            }
+            case "teleport_home" -> {
+                if (home != null) teleportTo(home.x, home.y, home.z);
+            }
+            case "heal" -> setHealth(getMaxHealth());
+            case "reset" -> resetFight();
+            case "despawn" -> {
+                broadcastNearby(sc.despawnMessage);
+                suppressRewards();
+                discard();
+            }
+            default -> {
+                if (action.startsWith("rage:")) triggerRage(action.substring(5));
+                else FiwBossesCore.LOGGER.warn("Unknown stuck action '{}' for boss '{}'", action, bossId);
+            }
+        }
+    }
+
+    /** Teleports onto free ground within ~3 blocks of the entity, or onto it when there's none. */
+    protected void teleportNear(Entity target) {
+        for (int i = 0; i < 16; i++) {
+            double x = target.getX() + (getRandom().nextDouble() - 0.5) * 6.0;
+            double z = target.getZ() + (getRandom().nextDouble() - 0.5) * 6.0;
+            if (randomTeleport(x, target.getY() + 1.0, z, true)) {
+                getNavigation().stop();
+                return;
+            }
+        }
+        teleportTo(target.getX(), target.getY(), target.getZ());
+        getNavigation().stop();
+    }
+
+    /**
+     * A fresh attempt: back home at full health in phase 1, rage ended, fight ledger cleared
+     * (nobody is owed loot for the abandoned attempt), minions despawned or brought home.
+     */
+    public void resetFight() {
+        if (!(level() instanceof ServerLevel sl) || definition == null) return;
+        endRage();
+        enragesFired.clear();
+        stuckTracker.resetAll();
+        ledger.clear();
+        trackedHp.clear();
+        lastTargeted.clear();
+        setTarget(null);
+        getNavigation().stop();
+        if (home != null) teleportTo(home.x, home.y, home.z);
+        setHealth(getMaxHealth());
+        if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0) {
+            phaseManager.setPhaseFloor(-1);
+            phaseManager.restoreToPhase(0);
+        }
+        ArenaConfig arena = definition.arena;
+        boolean bringHome = arena != null && arena.teleportMinions();
+        for (MinionEntity m : sl.getEntitiesOfClass(MinionEntity.class, getBoundingBox().inflate(128),
+                m -> getUUID().equals(m.getOwnerBossUuid()))) {
+            if (bringHome) {
+                m.teleportTo(getX() + (getRandom().nextDouble() - 0.5) * 4.0, getY(),
+                        getZ() + (getRandom().nextDouble() - 0.5) * 4.0);
+                m.setTarget(null);
+            } else {
+                m.discard();
+            }
+        }
+        broadcastNearby(arena != null ? arena.resetMessage : null);
+    }
+
+    private void broadcastNearby(String template) {
+        if (template == null || template.isEmpty() || !(level() instanceof ServerLevel sl)) return;
+        String name = definition != null && definition.displayName != null ? definition.displayName : String.valueOf(bossId);
+        Component msg = TextUtil.parseColorCodes(template.replace("{boss}", name));
+        for (ServerPlayer p : sl.players()) {
+            if (p.distanceToSqr(this) <= 64 * 64) p.sendSystemMessage(msg);
+        }
+    }
+
+    /** A boss in a boat or minecart destroys it right away (optionally raging). */
+    private void tickVehicle() {
+        AntiCheeseConfig ac = definition.antiCheese;
+        if (ac == null || !ac.destroyVehicles || !isPassenger()) return;
+        Entity vehicle = getVehicle();
+        stopRiding();
+        if (vehicle == null || vehicle instanceof LivingEntity) return;
+        vehicle.discard();
+        if (ac.vehicleRage != null && !ac.vehicleRage.isEmpty()) triggerRage(ac.vehicleRage);
+    }
+
+    @Override
+    public void makeStuckInBlock(BlockState state, Vec3 motionMultiplier) {
+        if (ignoresSlowBlock(state)) return;
+        super.makeStuckInBlock(state, motionMultiplier);
+    }
+
+    @Override
+    protected float getBlockSpeedFactor() {
+        float factor = super.getBlockSpeedFactor();
+        if (factor < 1.0f && (ignoresSlowBlock(level().getBlockState(blockPosition()))
+                || ignoresSlowBlock(level().getBlockState(getBlockPosBelowThatAffectsMyMovement())))) {
+            return 1.0f;
+        }
+        return factor;
+    }
+
+    private boolean ignoresSlowBlock(BlockState state) {
+        AntiCheeseConfig ac = definition != null ? definition.antiCheese : null;
+        if (ac == null || ac.ignoreSlowBlocks == null) return false;
+        return ac.ignoreSlowBlocks.ignores(BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+    }
+
+    /** Starts a named rage from the boss's "rages"; re-triggering the active one refreshes its timer. */
+    public boolean triggerRage(String name) {
+        if (definition == null || definition.rages == null || phaseManager == null
+                || !(level() instanceof ServerLevel sl)) return false;
+        JsonObject json = definition.rages.get(name);
+        if (json == null) {
+            FiwBossesCore.LOGGER.warn("Boss '{}' has no rage named '{}'", bossId, name);
+            return false;
+        }
+        RageDefinition r = PhaseOverlay.rageFields(json);
+        long now = sl.getGameTime();
+        if (!name.equals(phaseManager.getActiveRage())) {
+            endRage();
+            if (r.extraHealthPercent > 0) {
+                rageExtraHealth = definition.health * r.extraHealthPercent / 100f;
+                applyConfiguredHealth(definition.health + rageExtraHealth);
+                setHealth(getHealth() + rageExtraHealth);
+            }
+            if (r.healPercent > 0) {
+                setHealth(Math.min(getMaxHealth(), getHealth() + getMaxHealth() * r.healPercent / 100f));
+            }
+            setBarColor(r.bossBarColor);
+            phaseManager.applyRage(name, json, true);
+        }
+        rageEndTick = r.durationSeconds > 0 ? now + r.durationSeconds * 20L : -1L;
+        return true;
+    }
+
+    /** Ends the active rage, undoing its extra health and bar color. */
+    public void endRage() {
+        if (phaseManager == null || phaseManager.getActiveRage() == null) return;
+        phaseManager.clearRage();
+        rageEndTick = -1L;
+        if (rageExtraHealth > 0) {
+            rageExtraHealth = 0f;
+            applyConfiguredHealth(definition.health);
+            if (getHealth() > getMaxHealth()) setHealth(getMaxHealth());
+        }
+        setBarColor(null);
+    }
+
+    public String getActiveRage() {
+        return phaseManager != null ? phaseManager.getActiveRage() : null;
+    }
+
+    private void setBarColor(String color) {
+        String c = color != null ? color : (definition.bossBar != null ? definition.bossBar.color : null);
+        if (c == null) return;
+        try { bossBar.setColor(BossEvent.BossBarColor.valueOf(c.toUpperCase())); }
+        catch (IllegalArgumentException ignored) { /* invalid color: keep the current one */ }
+    }
+
+    private void restoreRage(String name, float extraHealth, long ticksLeft) {
+        JsonObject json = name != null && definition != null && definition.rages != null ? definition.rages.get(name) : null;
+        if (json == null || phaseManager == null) return;
+        phaseManager.setRageSilently(name, json);
+        rageExtraHealth = Math.max(0f, extraHealth);
+        if (rageExtraHealth > 0) applyConfiguredHealth(definition.health + rageExtraHealth);
+        rageEndTick = ticksLeft >= 0 ? level().getGameTime() + ticksLeft : -1L;
+        setBarColor(PhaseOverlay.rageFields(json).bossBarColor);
+    }
+
+    private void tickRages(long now) {
+        if (rageEndTick >= 0 && now >= rageEndTick) endRage();
+        if (ledger.isEmpty()) {
+            // No fight running (never started, or healed back to full): enrage timers restart.
+            if (!enragesFired.isEmpty()) {
+                enragesFired.clear();
+                endRage();
+            }
+            return;
+        }
+        if (definition.rages == null) return;
+        long fightTicks = ledger.durationTicks(now);
+        for (var e : definition.rages.entrySet()) {
+            if (enragesFired.contains(e.getKey())) continue;
+            int after = PhaseOverlay.rageFields(e.getValue()).afterSeconds;
+            if (after > 0 && fightTicks >= after * 20L) {
+                enragesFired.add(e.getKey());
+                triggerRage(e.getKey());
             }
         }
     }
