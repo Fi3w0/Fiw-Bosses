@@ -44,8 +44,13 @@ matching the tag).
 - **Discord kill webhooks** — `settings.json` `webhooks.discord` (or a boss's own `webhook`,
   or `"enabled": false`) posts an embed on every rewarded kill: killer, fight time, variant,
   top damage, unique drops, new-record footer. Sent off the server thread, no retries.
+- **Scheduled world spawns** — `schedules` in settings.json or a boss file's `schedule`:
+  every `intervalMinutes` or at daily `times`, random pick from `locations`, server-wide
+  countdown broadcasts, at most one live boss per schedule. Validated on reload (exactly one
+  timing option; a boss file wins over settings.json for the same boss).
 - Commands: `/boss spawn <bossId> variant <name> [pos]`, `/boss limits <bossId> [reset]`,
-  `/boss rage <targets> start <name>`, `/boss rage <targets> end`, `/boss stats [bossId]`.
+  `/boss rage <targets> start <name>`, `/boss rage <targets> end`, `/boss stats [bossId]`,
+  `/boss schedule list`, `/boss schedule trigger <id>`.
 - API: `FiwBossesAPI.isMinion(Entity)`, `FiwBossesAPI.getVariant(Entity)`.
 
 ### Changed

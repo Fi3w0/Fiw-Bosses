@@ -111,6 +111,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Summoning & Altars](#summoning--altars)
 - [Spawn Limits](#spawn-limits)
 - [Difficulty Variants](#difficulty-variants)
+- [Scheduled Spawns](#scheduled-spawns)
 - [Loot](#loot)
 - [Raid Rewards (per-player loot)](#raid-rewards-per-player-loot)
 - [Fight Summary](#fight-summary)
@@ -2213,6 +2214,53 @@ Variant multipliers stack with phase multipliers. Raid rewards use the variant's
 for `minDamagePercent`.
 
 Full example: [`examples/summon/ember_warden.json`](examples/summon/ember_warden.json).
+
+## Scheduled Spawns
+
+World events: a boss spawns on its own at a set location, with server-wide countdown
+broadcasts. At most one boss from a schedule is alive at a time — while the last one lives
+(even in an unloaded chunk) the schedule skips its turn.
+
+Put schedules in `settings.json` (`"schedules": [ ... ]`, each needs `id` and `boss`) or in
+a boss file as `"schedule": { ... }` (id and boss default to that boss). If the same boss is
+scheduled in both places, the boss file wins and the settings.json entry is ignored.
+`/boss reload` and the console list every problem found.
+
+```json
+"schedules": [
+  {
+    "id": "nether_warden",
+    "boss": "ember_warden",
+    "variant": "hard",
+    "times": ["18:00", "21:30"],
+    "locations": [
+      { "dimension": "minecraft:the_nether", "x": 120, "y": 70, "z": -40 },
+      { "dimension": "minecraft:the_nether", "x": -300, "z": 210 }
+    ],
+    "announceSeconds": [600, 60, 10]
+  }
+]
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | string | boss id in a boss file | Unique schedule name (used by `/boss schedule trigger`) |
+| `boss` | string | — | Boss id (settings.json only) |
+| `variant` | string | — | Difficulty variant to spawn |
+| `enabled` | bool | true | Turn the schedule off without deleting it |
+| `intervalMinutes` | int | 0 | Spawn every N minutes. Counted across restarts |
+| `times` | array | — | Or spawn at these daily times (`"HH:mm"`, server timezone). Use **exactly one** of `intervalMinutes` / `times` — a schedule with both (or neither) is disabled |
+| `locations` | array | — | `dimension` (default overworld), `x`, `z`, optional `y` (absent = top block). One is picked at random per spawn |
+| `announceSeconds` | array | `[600, 60, 10]` | Countdown broadcasts, seconds before the spawn |
+| `announceMessage` | string | `&e{boss}&e awakens in {time} at {x}, {y}, {z}!` | Placeholders: `{boss}` `{time}` `{x}` `{y}` `{z}` `{dimension}` |
+| `spawnMessage` | string | `&6{boss}&6 has awakened at {x}, {y}, {z}!` | Same placeholders |
+
+`/boss schedule list` shows every schedule and when it runs next; `/boss schedule trigger
+<id>` spawns it now (unless its last boss is still alive). State is kept in
+`config/fiw_bosses/data/schedules.json`.
+
+> With `pause-when-empty-seconds` in `server.properties` (Minecraft 1.21.2+), an empty
+> server stops ticking, so schedules wait too; a missed spawn happens as soon as someone joins.
 
 ## Loot
 

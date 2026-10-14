@@ -11,6 +11,7 @@ import com.fiw.fiw_bosses.data.KillRecords;
 import com.fiw.fiw_bosses.data.SpawnData;
 import com.fiw.fiw_bosses.data.SpawnRules;
 import com.fiw.fiw_bosses.summon.BossSpawner;
+import com.fiw.fiw_bosses.summon.ScheduleRunner;
 import com.fiw.fiw_bosses.config.MinionConfigLoader;
 import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.entity.BossEntity;
@@ -133,6 +134,17 @@ public final class BossCommand {
                                                 .executes(ctx -> changePhase(ctx.getSource(),
                                                         EntityArgument.getEntities(ctx, "targets"), 0,
                                                         IntegerArgumentType.getInteger(ctx, "phase")))))))
+                .then(Commands.literal("schedule")
+                        .then(Commands.literal("list")
+                                .executes(ctx -> scheduleList(ctx.getSource())))
+                        .then(Commands.literal("trigger")
+                                .then(Commands.argument("schedule_id", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            ScheduleRunner.schedules().forEach(sc -> builder.suggest(sc.id));
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> scheduleTrigger(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "schedule_id"))))))
                 .then(Commands.literal("stats")
                         .executes(ctx -> statsAll(ctx.getSource()))
                         .then(Commands.argument("boss_id", StringArgumentType.word())
@@ -248,6 +260,39 @@ public final class BossCommand {
                 .append(Component.literal(variant != null ? " (" + variant + ")" : ""))
                 .append(Component.literal(" at " + (int) fx + ", " + (int) fy + ", " + (int) fz)), true);
         return n;
+    }
+
+    private static int scheduleList(CommandSourceStack source) {
+        var list = ScheduleRunner.schedules();
+        if (list.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No spawn schedules.").withStyle(ChatFormatting.YELLOW), false);
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Spawn schedules:").withStyle(ChatFormatting.GREEN), false);
+        for (var sc : list) {
+            boolean alive = ScheduleRunner.isAlive(sc, BossData.SCHEDULES.get());
+            String when = alive ? "boss alive" : "next in " + SpawnRules.formatDuration(Math.max(0, ScheduleRunner.millisUntil(sc)));
+            String timing = sc.hasInterval() ? "every " + sc.intervalMinutes + "m" : "at " + String.join(", ", sc.times);
+            source.sendSuccess(() -> Component.literal("  " + sc.id).withStyle(ChatFormatting.GOLD)
+                    .append(Component.literal(" → " + sc.boss + (sc.variant != null ? " (" + sc.variant + ")" : "")
+                            + ", " + timing + ", " + when).withStyle(ChatFormatting.GRAY)), false);
+        }
+        return list.size();
+    }
+
+    private static int scheduleTrigger(CommandSourceStack source, String id) {
+        var sc = ScheduleRunner.schedules().stream().filter(x -> x.id.equals(id)).findFirst().orElse(null);
+        if (sc == null) {
+            source.sendFailure(Component.literal("Unknown schedule: " + id));
+            return 0;
+        }
+        if (!ScheduleRunner.trigger(source.getServer(), sc)) {
+            source.sendFailure(Component.literal("The last boss from schedule " + id + " is still alive."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Triggered schedule ")
+                .append(Component.literal(id).withStyle(ChatFormatting.GOLD)), true);
+        return 1;
     }
 
     private static int statsAll(CommandSourceStack source) {
@@ -595,6 +640,15 @@ public final class BossCommand {
         FiwToolsBridge.reportUnknownToolIds();
         source.sendSuccess(() -> Component.literal("Reloaded " + bosses + " boss + " + minions + " minion definitions.")
                 .withStyle(ChatFormatting.GREEN), true);
+        List<String> scheduleWarnings = ScheduleRunner.reload();
+        for (String w : scheduleWarnings) {
+            source.sendSuccess(() -> Component.literal("Schedule: " + w).withStyle(ChatFormatting.YELLOW), false);
+        }
+        int scheduled = ScheduleRunner.schedules().size();
+        if (scheduled > 0) {
+            source.sendSuccess(() -> Component.literal(scheduled + " spawn schedule(s) active.")
+                    .withStyle(ChatFormatting.GREEN), false);
+        }
         return bosses + minions;
     }
     // ── Phase control ────────────────────────────────────────────────────────

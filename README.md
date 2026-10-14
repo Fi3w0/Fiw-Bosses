@@ -149,6 +149,9 @@ Named variants such as `hard` scale health, all/melee/ability damage and loot, w
 ### Arena leash, anti-cheese & rages
 Bosses never break blocks, and players may build. Instead: an `arena` radius resets a boss that's pulled away (no loot for that attempt); opt-in stuck detection teleports, strikes, heals, resets or enrages a boxed-in boss, escalating on repeats; boats and minecarts are destroyed on contact; slowing blocks can be ignored; minions that can't reach you teleport to you. **Rages** are phases triggered by behavior or an **enrage timer**, with extra health, a new bar color and their own abilities.
 
+### Scheduled world spawns
+Bosses appear on their own every N minutes or at set daily times, at one of several locations, with server-wide countdowns — and never twice while one is still alive.
+
 ### Lockouts, records & Discord
 `rewards.lockoutHours` stops loot farming (shared or per-variant). Every kill updates records — fastest kill, top damage, kills per player — shown with `/boss stats`. A Discord webhook posts a clean embed for each kill.
 
@@ -226,6 +229,7 @@ soul_tether, wind_charge
 /boss limits <bossId> [reset]
 /boss rage <targets> start <name> | end
 /boss stats [bossId]
+/boss schedule list | trigger <id>
 ```
 
 **Config folders**

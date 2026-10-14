@@ -9,10 +9,12 @@ import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.summon.ScheduleRunner;
 import com.fiw.fiw_bosses.summon.SummonHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
@@ -44,6 +46,9 @@ public class FiwBossesFabric implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> FiwToolsBridge.reportUnknownToolIds());
+
+        // Scheduled world spawns (countdowns + spawn), checked once a second.
+        ServerTickEvents.END_SERVER_TICK.register(ScheduleRunner::onServerTick);
 
         // Summon items / altars (server side only; clients get PASS).
         UseBlockCallback.EVENT.register((player, level, hand, hit) ->

@@ -10,6 +10,7 @@ import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.summon.ScheduleRunner;
 import com.fiw.fiw_bosses.summon.SummonHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
@@ -24,6 +25,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
@@ -83,6 +85,12 @@ public class FiwBossesNeoForge {
                 && event.getEntity() instanceof ServerPlayer player) {
             NetworkHandler.sendSkinToPlayer(player, boss);
         }
+    }
+
+    // Scheduled world spawns (countdowns + spawn), checked once a second.
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event) {
+        ScheduleRunner.onServerTick(event.getServer());
     }
 
     // Summon items / altars. Only the server summons; a used click is cancelled.
