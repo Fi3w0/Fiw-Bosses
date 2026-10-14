@@ -1,5 +1,6 @@
 package com.fiw.fiw_bosses.entity;
 
+import com.fiw.fiw_bosses.ModRefs;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.AntiCheeseConfig;
@@ -9,6 +10,9 @@ import com.fiw.fiw_bosses.config.BossVariants;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.config.FluidSettings;
+import com.fiw.fiw_bosses.config.MinionConfigLoader;
+import com.fiw.fiw_bosses.config.MinionDefinition;
+import com.fiw.fiw_bosses.config.ShieldConfig;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.config.PhaseOverlay;
 import com.fiw.fiw_bosses.config.RageDefinition;
@@ -43,6 +47,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -337,22 +342,27 @@ public class BossEntity extends Monster {
     private Component bossBarTitle = null;
     private long shownHealth = -1L;
 
-    /** Appends the boss's HP to the bar title when enabled for this boss. */
+    private int shownShield = -1;
+
+    /** Appends the boss's HP (when enabled) and the pylons left (during a shield) to the bar title. */
     private void updateBossBarHealthText() {
         if (definition == null || bossBarTitle == null) return;
         Boolean perBoss = definition.bossBar != null ? definition.bossBar.showHealth : null;
         boolean show = perBoss != null ? perBoss : SettingsLoader.get().showBossBarHealth;
-        if (!show) {
-            if (shownHealth != -1L) { bossBar.setName(bossBarTitle); shownHealth = -1L; }
-            return;
-        }
-        long current = (long) Math.ceil(getHealth());
-        if (current == shownHealth) return;
+        long current = show ? (long) Math.ceil(getHealth()) : -1L;
+        int shield = shieldActive ? shieldPylons.size() : -1;
+        if (current == shownHealth && shield == shownShield) return;
         shownHealth = current;
-        long max = Math.round(getMaxHealth());
-        bossBar.setName(Component.empty().append(bossBarTitle).append(TextUtil.parseColorCodes(
-                "  &f" + String.format(java.util.Locale.ROOT, "%,d", current)
-                        + "&7/&f" + String.format(java.util.Locale.ROOT, "%,d", max) + " &c\u2764")));
+        shownShield = shield;
+        StringBuilder extra = new StringBuilder();
+        if (show) {
+            long max = Math.round(getMaxHealth());
+            extra.append("  &f").append(String.format(java.util.Locale.ROOT, "%,d", current))
+                    .append("&7/&f").append(String.format(java.util.Locale.ROOT, "%,d", max)).append(" &c\u2764");
+        }
+        if (shield >= 0) extra.append("  &b\u26E8 ").append(shield);
+        bossBar.setName(extra.length() == 0 ? bossBarTitle
+                : Component.empty().append(bossBarTitle).append(TextUtil.parseColorCodes(extra.toString())));
     }
 
     private void tickBossBar() {
@@ -503,6 +513,12 @@ public class BossEntity extends Monster {
         // Faction / own-group friendly-fire gate
         Entity attacker = source.getEntity();
         if (attacker != null && blocksFriendlyDamageFrom(attacker)) return false;
+
+        // Shield phase: immune until the pylons are destroyed
+        if (shieldActive) {
+            notifyShieldBlocked(attacker);
+            return false;
+        }
 
         // Config-driven damage protection (item id > damage type id > category).
         // Runs before adaptation so fully-blocked damage is never recorded there.
@@ -655,6 +671,9 @@ public class BossEntity extends Monster {
             if (rageExtraHealth > 0) output.putFloat("RageExtraHealth", rageExtraHealth);
         }
         if (!enragesFired.isEmpty()) output.putString("EnragesFired", String.join(",", enragesFired));
+        if (shieldKey != null) output.putString("ShieldKey", shieldKey);
+        if (shieldActive) output.putString("ShieldPylons", shieldPylons.stream().map(UUID::toString)
+                .collect(Collectors.joining(",")));
         if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
             output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
         output.putString("BossState", bossState.name());
@@ -700,6 +719,13 @@ public class BossEntity extends Monster {
         input.getString("EnragesFired").ifPresent(list -> enragesFired.addAll(Arrays.asList(list.split(","))));
         String savedRage = input.getString("Rage").orElse(null);
         restoreRage(savedRage, input.getFloatOr("RageExtraHealth", 0f), input.getLongOr("RageTicksLeft", -1L));
+        shieldKey = input.getString("ShieldKey").orElse(null);
+        input.getString("ShieldPylons").ifPresent(list -> {
+            for (String id : list.split(",")) {
+                try { shieldPylons.add(UUID.fromString(id)); } catch (IllegalArgumentException ignored) { }
+            }
+        });
+        shieldActive = !shieldPylons.isEmpty();
 
         if (savedHealth >= 0.0f) setHealth(savedHealth);
 
@@ -813,6 +839,104 @@ public class BossEntity extends Monster {
         }
     }
 
+    // ── Shield phase (pylons) ────────────────────────────────────────────────
+
+    // Which phase/rage armed the current shield ("index|rage"), so it arms once per activation.
+    private String shieldKey;
+    private boolean shieldActive;
+    private final Set<UUID> shieldPylons = new HashSet<>();
+    private long lastShieldNotice;
+
+    /** Arms the shield when the phase in effect has one, and drops it when all pylons are gone. */
+    private void tickShield(ServerLevel sl) {
+        PhaseDefinition phase = phaseManager != null ? phaseManager.getCurrentPhase() : null;
+        if (phase == null || phase.shield == null) {
+            if (shieldActive) dropShield(false);
+            shieldKey = null;
+            return;
+        }
+        String key = phaseManager.getCurrentPhaseIndex() + "|" + phaseManager.getActiveRage();
+        if (!key.equals(shieldKey)) {
+            shieldKey = key;
+            armShield(sl, phase.shield);
+            return;
+        }
+        // Give pylons a few seconds to load back in after a restart before counting them.
+        if (!shieldActive || tickCount < 100) return;
+        shieldPylons.removeIf(id -> {
+            Entity e = sl.getEntity(id);
+            return e == null || !e.isAlive();
+        });
+        if (shieldPylons.isEmpty()) dropShield(true);
+    }
+
+    private void armShield(ServerLevel sl, ShieldConfig cfg) {
+        clearShieldPylons(sl);
+        MinionDefinition def = cfg.minion != null ? MinionConfigLoader.getDefinition(cfg.minion) : null;
+        if (def == null || !def.isCustom()) {
+            FiwBossesCore.LOGGER.warn("Boss '{}': shield minion '{}' is missing or not a custom minion; no shield",
+                    bossId, cfg.minion);
+            return;
+        }
+        int count = Math.max(1, cfg.count);
+        for (int i = 0; i < count; i++) {
+            double angle = Math.PI * 2 * i / count;
+            double x = getX() + Math.cos(angle) * cfg.radius;
+            double z = getZ() + Math.sin(angle) * cfg.radius;
+            double ground = sl.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    net.minecraft.util.Mth.floor(x), net.minecraft.util.Mth.floor(z));
+            double y = Math.abs(ground - getY()) <= 6 ? ground : getY();
+            MinionEntity pylon = ModRefs.MINION.create(sl, EntitySpawnReason.MOB_SUMMONED);
+            if (pylon == null) continue;
+            pylon.snapTo(x, y, z, getRandom().nextFloat() * 360, 0);
+            pylon.applyMinionDefinition(def, this);
+            pylon.setPersistenceRequired();
+            sl.addFreshEntity(pylon);
+            shieldPylons.add(pylon.getUUID());
+        }
+        if (shieldPylons.isEmpty()) return;
+        shieldActive = true;
+        broadcastNearby(fillShield(cfg.message, count));
+    }
+
+    private void dropShield(boolean broken) {
+        shieldActive = false;
+        shieldPylons.clear();
+        PhaseDefinition phase = phaseManager != null ? phaseManager.getCurrentPhase() : null;
+        if (broken && phase != null && phase.shield != null) broadcastNearby(fillShield(phase.shield.brokenMessage, 0));
+    }
+
+    /** Removes this boss's shield pylons (arena reset, new shield). */
+    private void clearShieldPylons(ServerLevel sl) {
+        for (UUID id : shieldPylons) {
+            Entity e = sl.getEntity(id);
+            if (e != null) e.discard();
+        }
+        shieldPylons.clear();
+        shieldActive = false;
+    }
+
+    private void notifyShieldBlocked(Entity attacker) {
+        if (!(attacker instanceof ServerPlayer player)) return;
+        long now = level().getGameTime();
+        if (now - lastShieldNotice < 40) return;
+        lastShieldNotice = now;
+        PhaseDefinition phase = phaseManager != null ? phaseManager.getCurrentPhase() : null;
+        String text = phase != null && phase.shield != null ? fillShield(phase.shield.blockedMessage, 0) : null;
+        if (text != null && !text.isEmpty()) player.sendSystemMessage(TextUtil.parseColorCodes(text));
+    }
+
+    private String fillShield(String template, int count) {
+        if (template == null || template.isEmpty()) return null;
+        String name = definition != null && definition.displayName != null ? definition.displayName : String.valueOf(bossId);
+        return template.replace("{boss}", name).replace("{count}", String.valueOf(count))
+                .replace("{left}", String.valueOf(shieldPylons.size()));
+    }
+
+    public boolean isShielded() {
+        return shieldActive;
+    }
+
     // ── Arena leash, anti-cheese & rages ─────────────────────────────────────
 
     // Where the boss spawned: arena center and teleport_home target.
@@ -834,6 +958,7 @@ public class BossEntity extends Monster {
             stuckTracker.reset();
             return;
         }
+        if (tracksFight()) tickShield(sl);
         tickAntiCheese(sl, now);
     }
 
@@ -908,6 +1033,8 @@ public class BossEntity extends Monster {
      */
     public void resetFight() {
         if (!(level() instanceof ServerLevel sl) || definition == null) return;
+        clearShieldPylons(sl);
+        shieldKey = null;
         endRage();
         enragesFired.clear();
         stuckTracker.resetAll();

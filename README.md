@@ -149,6 +149,9 @@ Named variants such as `hard` scale health, all/melee/ability damage and loot, w
 ### Arena leash, anti-cheese & rages
 Bosses never break blocks, and players may build. Instead: an `arena` radius resets a boss that's pulled away (no loot for that attempt); opt-in stuck detection teleports, strikes, heals, resets or enrages a boxed-in boss, escalating on repeats; boats and minecarts are destroyed on contact; slowing blocks can be ignored; minions that can't reach you teleport to you. **Rages** are phases triggered by behavior or an **enrage timer**, with extra health, a new bar color and their own abilities.
 
+### Shield phases
+A phase or rage can raise a shield: pylons (any custom minion — they can even shoot back) appear around the boss, and it takes no damage until players destroy them all.
+
 ### Scheduled world spawns
 Bosses appear on their own every N minutes or at set daily times, at one of several locations, with server-wide countdowns — and never twice while one is still alive.
 

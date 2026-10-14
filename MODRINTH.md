@@ -95,6 +95,8 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 😡 **Rages & enrage timer** — phases triggered by behavior instead of HP: trap the boss and it rages with extra health, a red bar and new abilities; take too long and the enrage timer kicks in.
 
+🛡️ **Shield phases** — at 40% HP the boss raises a shield and summons pylons that fight back; it's immune until your players tear them all down.
+
 ⏰ **Scheduled world spawns** — "The Ember Warden awakens in 10 minutes at 120, 70, -40!" Bosses appear every N minutes or at set times of day, with countdowns, never twice while one lives.
 
 📊 **Lockouts, records & Discord** — loot lockouts stop farming, `/boss stats` shows fastest kills and top players, and every kill can post a Discord embed to your community channel.

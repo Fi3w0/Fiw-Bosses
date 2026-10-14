@@ -355,6 +355,7 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 | `abilities` | array | [] | Active abilities in this phase |
 | `minions` | array | [] | Minion types available for `summon_minions` |
 | `equipment` | object | null | Override gear for this phase |
+| `shield` | object | null | Shield phase — see [Shield Phase (Pylons)](#shield-phase-pylons) |
 | `protection` | object | null | Per-phase damage protection overrides — merged key-by-key over the boss-level `protection` map |
 | `transitionMessage` | string | null | Chat message sent to nearby players |
 | `transitionSound` | string | null | Sound ID played on transition |
@@ -364,6 +365,30 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 
 > **Changed in 1.3.0:** `damageMultiplier` used to boost melee only. It now boosts ability
 > damage too. To keep a phase's old behavior, rename it to `meleeDamageMultiplier`.
+
+### Shield Phase (Pylons)
+
+When a phase (or a rage) with a `shield` starts, the boss summons pylons in a ring around
+itself and takes **no damage** until every pylon is destroyed. Pylons are ordinary
+[custom minions](#minion-system) — pick their look with `renderEntity`, give them HP, `static`
+movement, even abilities so they fight back. The boss bar shows how many are left.
+
+```json
+"shield": { "minion": "rift_pylon", "count": 3, "radius": 7 }
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `minion` | string | — | Minion id from `config/fiw_bosses/minions/`; must be `"baseEntity": "custom"` |
+| `count` | int | 4 | How many pylons |
+| `radius` | number | 8 | Distance from the boss |
+| `message` | string | `&b{boss}&b raises a shield! Destroy the {count} pylons.` | Sent when the shield goes up |
+| `brokenMessage` | string | `&b{boss}&b's shield shatters!` | Sent when the last pylon falls |
+| `blockedMessage` | string | `&7The shield absorbs the hit. {left} pylon(s) left.` | Sent (at most every 2 s) to a player whose hit was absorbed |
+
+The shield goes up once per phase/rage activation; an arena reset removes the pylons and
+starts over. Example: `examples/anticheese/rift_sentinel.json` with
+`examples/anticheese/minions/rift_pylon.json`.
 
 ### Forcing a phase (admins)
 

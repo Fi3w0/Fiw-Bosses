@@ -58,6 +58,7 @@
     {
       "hpThresholdPercent": 0.4,
       "speedMultiplier": 1.2,
+      "shield": { "minion": "rift_pylon", "count": 3, "radius": 7 },
       "transitionMessage": "&5The rift tears wider!",
       "abilities": [
         { "type": "teleport", "cooldownTicks": 80, "params": {} },

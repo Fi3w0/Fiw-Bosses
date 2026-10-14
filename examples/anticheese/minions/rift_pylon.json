@@ -1,0 +1,16 @@
+{
+  "id": "rift_pylon",
+  "displayName": "&dRift Pylon",
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:shulker",
+  "health": 40.0,
+  "armor": 4.0,
+  "speed": 0.0,
+  "knockbackResistance": 1.0,
+  "attackDamage": 0.0,
+  "movement": "static",
+  "teleportWhenStuck": false,
+  "abilities": [
+    { "type": "tracking_orb", "cooldownTicks": 100, "params": { "damage": 3 } }
+  ]
+}

@@ -18,6 +18,8 @@ public class PhaseDefinition {
     public List<AbilityEntry> abilities = new ArrayList<>();
     public List<MinionEntry> minions = new ArrayList<>();
     public EquipmentConfig equipment;
+    // Optional shield: the boss is immune until these pylons are destroyed.
+    public ShieldConfig shield;
     public String transitionMessage;
     public String transitionSound;
     public String transitionParticle;
