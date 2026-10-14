@@ -7,7 +7,11 @@ import java.util.Map;
 public class PhaseDefinition {
     public float hpThresholdPercent = 1.0f;
     public float speedMultiplier = 1.0f;
+    // All damage (melee and abilities).
     public float damageMultiplier = 1.0f;
+    // Melee hits only / ability hits only, on top of damageMultiplier.
+    public float meleeDamageMultiplier = 1.0f;
+    public float abilityDamageMultiplier = 1.0f;
     // Per-phase damage protection overrides; key-by-key over the boss-level map.
     // Same key format as BossDefinition.protection.
     public Map<String, Float> protection;

@@ -73,4 +73,17 @@ public class BossDefinition {
     public List<String> preDeathDialogue = new ArrayList<>();
     // Ticks between each pre-death dialogue line (40 = 2 s).
     public int preDeathDialogueDelay = 40;
+
+    // ── Summoning & difficulty variants ─────────────────────────────────────
+    // Optional. Items (or item + altar block) that let players start this boss.
+    public List<SummonEntry> summon;
+    // Optional. maxAlive / global cooldown for player summons.
+    public SpawnLimits spawnLimits;
+    // Optional. Difficulty variants by name, e.g. "hard".
+    public Map<String, VariantDefinition> variants;
+
+    // Set by BossVariants.apply on the per-entity copy; never read from or written to JSON.
+    public transient String variantName;
+    public transient float variantMeleeScale = 1.0f;
+    public transient float variantAbilityScale = 1.0f;
 }
