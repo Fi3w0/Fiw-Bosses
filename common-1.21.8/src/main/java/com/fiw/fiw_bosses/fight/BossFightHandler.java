@@ -5,6 +5,10 @@ import com.fiw.fiw_bosses.config.FightSummaryConfig;
 import com.fiw.fiw_bosses.config.LootEntry;
 import com.fiw.fiw_bosses.config.RewardsConfig;
 import com.fiw.fiw_bosses.config.SettingsLoader;
+import com.fiw.fiw_bosses.config.WebhookConfig;
+import com.fiw.fiw_bosses.data.BossData;
+import com.fiw.fiw_bosses.data.LockoutData;
+import com.fiw.fiw_bosses.data.SpawnRules;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
@@ -117,6 +121,7 @@ public final class BossFightHandler {
                 // Offline players can't receive items or run commands; they forfeit.
                 if (server.getPlayerList().getPlayer(e.id) != null) eligible.add(e);
             }
+            eligible = applyLockout(def, rewards, eligible, server);
             if (perPlayer) uniqueDrops = distributeLoot(boss, def, rewards, eligible, server);
             runRewardCommands(boss, def, rewards, eligible, ledger.totalDealt(), killer, server);
         }
@@ -125,6 +130,50 @@ public final class BossFightHandler {
         if (Boolean.TRUE.equals(summary.enabled) && !ledger.isEmpty()) {
             sendSummary(boss, def, ledger, summary, killer, uniqueDrops, level);
         }
+        if (ledger.isEmpty()) return;
+
+        long duration = ledger.durationTicks(level.getGameTime());
+        boolean fastest = BossData.RECORDS.get().record(def.id, duration, ledger.participants());
+        BossData.RECORDS.save();
+
+        String url = WebhookConfig.resolve(def.webhook, SettingsLoader.get().webhooks);
+        if (url != null) {
+            WebhookSender.post(url, DiscordEmbed.build(new DiscordEmbed.Kill(
+                    def.displayName != null ? def.displayName : def.id, def.variantName,
+                    killer != null ? killer.getName().getString() : null, duration,
+                    ledger.byDamageDealt(), ledger.totalDealt(), uniqueDrops, fastest,
+                    DiscordEmbed.colorFor(def.bossBar != null ? def.bossBar.color : null),
+                    summary.topCount != null ? summary.topCount : 3)));
+        }
+    }
+
+    /**
+     * Loot lockout: players who looted this boss within lockoutHours get no per-player loot
+     * or reward commands (they still appear in the summary); everyone else is locked now.
+     */
+    private static List<FightLedger.Entry> applyLockout(BossDefinition def, RewardsConfig rewards,
+                                                        List<FightLedger.Entry> eligible, MinecraftServer server) {
+        if (rewards.lockoutHours <= 0) return eligible;
+        LockoutData data = BossData.LOCKOUTS.get();
+        String key = LockoutData.key(def.id, def.variantName, rewards.lockoutPerVariant);
+        String bossName = def.displayName != null ? def.displayName : def.id;
+        long now = System.currentTimeMillis();
+        List<FightLedger.Entry> allowed = new ArrayList<>();
+        for (FightLedger.Entry e : eligible) {
+            long left = data.remaining(key, e.id.toString(), now);
+            if (left > 0) {
+                ServerPlayer player = server.getPlayerList().getPlayer(e.id);
+                if (player != null && rewards.lockoutMessage != null && !rewards.lockoutMessage.isEmpty()) {
+                    player.sendSystemMessage(TextUtil.parseColorCodes(rewards.lockoutMessage
+                            .replace("{boss}", bossName).replace("{time}", SpawnRules.formatDuration(left))));
+                }
+            } else {
+                allowed.add(e);
+                data.lock(key, e.id.toString(), now, rewards.lockoutHours);
+            }
+        }
+        BossData.LOCKOUTS.save();
+        return allowed;
     }
 
     public static FightSummaryConfig resolveSummary(BossDefinition def) {

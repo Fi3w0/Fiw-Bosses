@@ -8,6 +8,8 @@ import java.nio.file.Path;
 public final class BossData {
 
     public static final JsonStore<SpawnData> SPAWNS = new JsonStore<>("spawns.json", SpawnData.class, SpawnData::new);
+    public static final JsonStore<LockoutData> LOCKOUTS = new JsonStore<>("lockouts.json", LockoutData.class, LockoutData::new);
+    public static final JsonStore<KillRecords> RECORDS = new JsonStore<>("records.json", KillRecords.class, KillRecords::new);
 
     private BossData() {}
 
@@ -22,5 +24,10 @@ public final class BossData {
         if (s.lastSummon == null) s.lastSummon = new java.util.HashMap<>();
         if (s.playerSummons == null) s.playerSummons = new java.util.HashMap<>();
         if (s.alive == null) s.alive = new java.util.HashMap<>();
+        LOCKOUTS.load(dir());
+        if (LOCKOUTS.get().until == null) LOCKOUTS.get().until = new java.util.HashMap<>();
+        LOCKOUTS.get().prune(System.currentTimeMillis());
+        RECORDS.load(dir());
+        if (RECORDS.get().bosses == null) RECORDS.get().bosses = new java.util.HashMap<>();
     }
 }

@@ -49,6 +49,8 @@ public class BossDefinition {
     // reward commands) and FightSummaryConfig (overrides settings.json per boss).
     public RewardsConfig rewards;
     public FightSummaryConfig fightSummary;
+    // Optional per-boss Discord webhook: its own "discord" URL, or "enabled": false to skip.
+    public WebhookConfig webhook;
 
     // ── Idle system ──────────────────────────────────────────────────────────
     // Triggers when no player is nearby for idleTimeout ticks. <= 0 disables.

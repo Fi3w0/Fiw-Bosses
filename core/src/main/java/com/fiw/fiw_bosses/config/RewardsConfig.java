@@ -28,6 +28,13 @@ public class RewardsConfig {
     public List<String> participantCommands = new ArrayList<>();
     // Run once for the top damage dealer. Same placeholders as participantCommands.
     public List<String> mvpCommands = new ArrayList<>();
+    // Loot lockout: after earning rewards from this boss a player gets none from it for this
+    // many hours (per_player loot and reward commands). 0 = off.
+    public float lockoutHours = 0f;
+    // false = one lockout for the boss shared by all its variants; true = one per variant.
+    public boolean lockoutPerVariant = false;
+    // Sent to a locked-out participant. Placeholders: {boss}, {time}.
+    public String lockoutMessage = "&7You looted {boss}&7 recently. No rewards for another {time}.";
 
     public boolean perPlayer() {
         return "per_player".equalsIgnoreCase(lootMode);

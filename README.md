@@ -146,6 +146,12 @@ Players start fights without an admin: right-click with a summon item (a vanilla
 ### Difficulty variants
 Named variants such as `hard` scale health, all/melee/ability damage and loot, with their own name. The summon item picks the variant, or use `/boss spawn <id> variant <name>`; the boss keeps it through restarts.
 
+### Arena leash, anti-cheese & rages
+Bosses never break blocks, and players may build. Instead: an `arena` radius resets a boss that's pulled away (no loot for that attempt); opt-in stuck detection teleports, strikes, heals, resets or enrages a boxed-in boss, escalating on repeats; boats and minecarts are destroyed on contact; slowing blocks can be ignored; minions that can't reach you teleport to you. **Rages** are phases triggered by behavior or an **enrage timer**, with extra health, a new bar color and their own abilities.
+
+### Lockouts, records & Discord
+`rewards.lockoutHours` stops loot farming (shared or per-variant). Every kill updates records — fastest kill, top damage, kills per player — shown with `/boss stats`. A Discord webhook posts a clean embed for each kill.
+
 ### Admin phase control
 `/boss phase <targets> next|prev|set <n>` moves a live boss between phases without touching HP — ease a fight players are stuck on, or speed up a stalled one.
 
@@ -218,6 +224,8 @@ soul_tether, wind_charge
 /boss summary [on | off | top <n> | show <section> <true|false>]
 /boss spawn <bossId> variant <name> [pos]
 /boss limits <bossId> [reset]
+/boss rage <targets> start <name> | end
+/boss stats [bossId]
 ```
 
 **Config folders**

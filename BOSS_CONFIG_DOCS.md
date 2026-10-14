@@ -105,6 +105,9 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [Movement Modes](#movement-modes)
   - [Referencing Minions in Boss Phases](#referencing-minions-in-boss-phases)
 - [Idle System](#idle-system)
+- [Arena Leash](#arena-leash)
+- [Anti-Cheese](#anti-cheese)
+- [Rages & Enrage Timer](#rages--enrage-timer)
 - [Summoning & Altars](#summoning--altars)
 - [Spawn Limits](#spawn-limits)
 - [Difficulty Variants](#difficulty-variants)
@@ -1896,6 +1899,8 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 | `targetFactionAllies` | bool | false | Whether this minion's AI may target same-faction allies |
 | `damageOwnGroup` | bool | false | Whether this minion can damage its owner boss and sibling minions |
 | `fluid` | object | null | Water/lava behavior — see [Water & Lava Behavior](#water--lava-behavior). Custom minions only |
+| `teleportWhenStuck` | bool | true | A custom minion that makes no progress toward its target for `stuckSeconds` (blocked, boxed in, running in circles) teleports next to it; with no target it teleports back to its boss when more than 32 blocks away. Not used for `static`, `guard_point` and `sniper` movement |
+| `stuckSeconds` | int | 5 | See `teleportWhenStuck` |
 
 ### Movement Modes
 
@@ -2018,6 +2023,106 @@ Idle timer is reset when:
 > Ticks reference: 20 ticks = 1 second · 600 ticks = 30 s · 1200 ticks = 1 min · 6000 ticks = 5 min
 
 ---
+
+## Arena Leash
+
+A boss pulled too far from where it spawned resets: it teleports home, heals to full,
+goes back to phase 1, ends any rage, and the fight ledger is cleared — nobody earns loot
+for the abandoned attempt.
+
+```json
+"arena": { "radius": 32, "minionsOnReset": "despawn" }
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `radius` | number | 0 | Blocks from the spawn point. `0` = no leash |
+| `resetMessage` | string | `&7{boss}&7 retreats to its lair and recovers.` | Sent to players within 64 blocks. Empty = silent |
+| `minionsOnReset` | string | `"despawn"` | The boss's own minions on reset: `"despawn"` (no loot) or `"teleport"` (brought to the boss) |
+
+The spawn point is saved with the boss. Bosses spawned before 1.3.0 use the spot where they
+were when the server first ran 1.3.0.
+
+## Anti-Cheese
+
+Bosses and minions **never break blocks**, and players may build during fights — protect
+spawn points and altars with a claim mod. These options handle the classic cheeses:
+
+```json
+"antiCheese": {
+  "stuck": {
+    "seconds": 8,
+    "escalation": [["teleport_to_target"], ["teleport_attack"], ["teleport_to_target", "rage:trapped"]]
+  },
+  "destroyVehicles": true,
+  "vehicleRage": "boated",
+  "ignoreSlowBlocks": { "blocks": { "minecraft:powder_snow": false } }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `stuck` | object | off | Stuck detection (opt-in — add the block to enable it). See below |
+| `destroyVehicles` | bool | true | A boss or custom minion put in a boat or minecart dismounts and destroys it at once |
+| `vehicleRage` | string | null | Rage to start when that happens (see [Rages](#rages--enrage-timer)) |
+| `ignoreSlowBlocks` | object | off | Opt-in: cobwebs, powder snow, sweet berry bushes, honey, soul sand and other slowing blocks don't slow the boss. `blocks` maps a block id to `false` to keep that block's slowdown |
+
+`ignoreSlowBlocks` only removes the slowdown. Damage from berry bushes or freezing still
+applies — use [Damage Protection](#damage-protection) (`"minecraft:sweet_berry_bush": 0`,
+`"freezing": 0`) if you want the boss immune.
+
+### Stuck detection
+
+The boss is stuck when it has a target more than 3 blocks away but stayed within `radius`
+blocks for `seconds`. Never checked for `guard_point`/`static` movement, before the fight
+starts or during pre-death dialogue.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | bool | true | Turn it off without deleting the block |
+| `seconds` | int | 8 | How long the boss must stay in place |
+| `radius` | number | 1.5 | How far it may move and still count as stuck |
+| `actions` | array | `["teleport_to_target"]` | Run every time the boss gets stuck |
+| `escalation` | array of arrays | null | Actions per occurrence (1st, 2nd, 3rd...; the last entry repeats). Overrides `actions` |
+| `teleportAttackMultiplier` | float | 1.0 | Damage of `teleport_attack`'s strike, as a multiple of the boss's melee damage |
+| `despawnMessage` | string | `&c{boss}&c was stuck and vanished.` | Sent when `despawn` runs |
+
+Actions: `teleport_to_target` (to free ground next to the target, or onto it when boxed in),
+`teleport_attack` (teleport + an immediate melee strike), `teleport_home`, `heal` (full),
+`reset` (same as the arena leash), `despawn` (removed with no loot), `rage:<name>`. To have a
+stuck boss use specific abilities, combine `teleport_to_target` with a rage that lists them.
+
+## Rages & Enrage Timer
+
+A rage is a phase triggered by behavior instead of HP: stuck detection (`rage:<name>`),
+`antiCheese.vehicleRage`, or the enrage timer (`afterSeconds`). While a rage is active, every
+phase field it sets — `abilities`, `speedMultiplier`, the three damage multipliers,
+`equipment`, `protection`, `transitionMessage`/`Sound`/`Particle` — overrides the current HP
+phase. HP phases keep advancing underneath. A new rage replaces the active one;
+re-triggering the same rage refreshes its timer.
+
+```json
+"rages": {
+  "trapped": { "durationSeconds": 30, "extraHealthPercent": 25, "bossBarColor": "RED",
+               "transitionMessage": "&4You can't hide!",
+               "abilities": [ { "type": "blink_strike", "cooldownTicks": 60, "params": { "damage": 8 } } ] },
+  "timer":   { "afterSeconds": 300, "damageMultiplier": 1.5, "bossBarColor": "WHITE" }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `durationSeconds` | int | 0 | How long it lasts. `0` = until the fight ends or the boss resets |
+| `afterSeconds` | int | 0 | Enrage timer: start this rage automatically this long after the fight started (first damage dealt). Restarts when the fight is reset or the boss heals back to full |
+| `extraHealthPercent` | float | 0 | Raises max health by this percent while active |
+| `healPercent` | float | 0 | Heals this percent of max health when it starts |
+| `bossBarColor` | string | null | Boss bar color while active |
+| *any phase field* | | | Overrides the current HP phase while active |
+
+`/boss rage <targets> start <name>` and `/boss rage <targets> end` let admins test rages.
+Active rages survive restarts.
+
+Full example: [`examples/anticheese/rift_sentinel.json`](examples/anticheese/rift_sentinel.json).
 
 ## Summoning & Altars
 
@@ -2181,6 +2286,12 @@ straight into their inventory — no scramble for a ground pile, no one player v
 | `commands` | [] | Run once on death. Placeholders: `{boss}` `{killer}` `{mvp}` `{x}` `{y}` `{z}` `{participants}` |
 | `participantCommands` | [] | Run once per eligible player. Placeholders: `{player}` `{damage}` `{percent}` `{rank}` + the above |
 | `mvpCommands` | [] | Run once for the top damage dealer. Same placeholders as `participantCommands` |
+| `lockoutHours` | 0 | Loot lockout: after earning rewards from this boss, a player gets no per-player loot and no participant/MVP commands from it for this many hours. They still appear in the fight summary and are told how long is left. `0` = off. Saved in `config/fiw_bosses/data/lockouts.json` |
+| `lockoutPerVariant` | false | `false` = one lockout for the boss, shared by all its variants. `true` = each variant has its own |
+| `lockoutMessage` | `&7You looted {boss}&7 recently. No rewards for another {time}.` | Sent to a locked-out participant |
+
+> The lockout can't stop the classic `"shared"` ground drop (anyone can pick it up). Use
+> `"per_player"` loot with `lockoutHours`.
 
 **How the rolls work**
 - Normal entries roll **independently for each eligible player** — two players can both get diamonds.
@@ -2233,11 +2344,31 @@ Created on first start. Applies to every boss.
     "broadcastRange": 64
   },
   "combatTrackingRange": 48,
-  "showBossBarHealth": false
+  "showBossBarHealth": false,
+  "webhooks": { "discord": "" }
 }
 ```
 
 `showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
+
+`webhooks.discord` is a Discord webhook URL that gets an embed on every rewarded boss kill:
+boss name, killing blow, fight time, variant, top damage with share %, unique drops, and a
+"New fastest kill!" footer when a record falls. It is sent in the background and never slows
+the server. A boss can use its own channel or opt out:
+
+```json
+"webhook": { "discord": "https://discord.com/api/webhooks/..." }
+"webhook": { "enabled": false }
+```
+
+> Never post a webhook URL in an issue or a log — anyone with it can post to your channel.
+
+### Kill records
+
+Every rewarded kill updates `config/fiw_bosses/data/records.json`: total kills, fastest kill
+(and who was in that fight), the most damage one player dealt in a single fight, and kills
+per player. `/boss stats` lists every boss; `/boss stats <bossId>` shows one boss's records
+and its top 5 players. Variants share their boss's records.
 
 Change it live (saved to `settings.json`, op level 2):
 

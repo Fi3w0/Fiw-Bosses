@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
-## [1.3.0] - Summon altars and difficulty variants
+## [1.3.0] - Summon altars, variants, rages and anti-cheese
 
 ### Added
 - **Summon items & altars** — new `summon` list on a boss. Players right-click with a configured
@@ -20,7 +20,32 @@ matching the tag).
   optional replacement `loot` table and `displayName`. Saved with the boss.
 - **Melee / ability damage multipliers** — phases gain `meleeDamageMultiplier` and
   `abilityDamageMultiplier` next to `damageMultiplier`.
-- Commands: `/boss spawn <bossId> variant <name> [pos]`, `/boss limits <bossId> [reset]`.
+- **Arena leash** — `arena.radius`: a boss pulled too far from its spawn point resets (home,
+  full health, phase 1, fight ledger cleared so nobody earns loot for the abandoned attempt).
+  `minionsOnReset` despawns its minions or brings them to the boss.
+- **Anti-cheese** — opt-in `antiCheese.stuck` detection with admin-chosen actions
+  (`teleport_to_target`, `teleport_attack`, `teleport_home`, `heal`, `reset`, `despawn`,
+  `rage:<name>`) and optional per-occurrence `escalation`; bosses and custom minions destroy
+  boats/minecarts they're put in (on by default, optional `vehicleRage`); opt-in
+  `ignoreSlowBlocks` (cobweb, powder snow, berry bush, honey, soul sand...) with per-block
+  overrides. Custom minions that can't reach their target teleport to it
+  (`teleportWhenStuck`, on by default). Bosses still never break blocks.
+- **Rages & enrage timer** — named `rages` that override the current HP phase while active
+  (abilities, multipliers, gear, protection, messages) plus `durationSeconds`,
+  `extraHealthPercent`, `healPercent` and `bossBarColor`. Triggered by stuck actions, vehicles,
+  or automatically `afterSeconds` into the fight. Saved through restarts. Example:
+  `examples/anticheese/rift_sentinel.json`.
+- **Loot lockout** — `rewards.lockoutHours`: a player who earned rewards from a boss gets no
+  per-player loot or reward commands from it until the lockout ends (still listed in the
+  summary, and told how long is left). `lockoutPerVariant` chooses one shared lockout or one
+  per variant. Saved in `config/fiw_bosses/data/lockouts.json`.
+- **Kill records** — total kills, fastest kill and its party, top single-fight damage and
+  kills per player, in `config/fiw_bosses/data/records.json`. `/boss stats [bossId]`.
+- **Discord kill webhooks** — `settings.json` `webhooks.discord` (or a boss's own `webhook`,
+  or `"enabled": false`) posts an embed on every rewarded kill: killer, fight time, variant,
+  top damage, unique drops, new-record footer. Sent off the server thread, no retries.
+- Commands: `/boss spawn <bossId> variant <name> [pos]`, `/boss limits <bossId> [reset]`,
+  `/boss rage <targets> start <name>`, `/boss rage <targets> end`, `/boss stats [bossId]`.
 - API: `FiwBossesAPI.isMinion(Entity)`, `FiwBossesAPI.getVariant(Entity)`.
 
 ### Changed

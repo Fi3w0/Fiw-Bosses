@@ -7,6 +7,7 @@ import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.BossVariants;
 import com.fiw.fiw_bosses.data.BossData;
+import com.fiw.fiw_bosses.data.KillRecords;
 import com.fiw.fiw_bosses.data.SpawnData;
 import com.fiw.fiw_bosses.data.SpawnRules;
 import com.fiw.fiw_bosses.summon.BossSpawner;
@@ -132,6 +133,25 @@ public final class BossCommand {
                                                 .executes(ctx -> changePhase(ctx.getSource(),
                                                         EntityArgument.getEntities(ctx, "targets"), 0,
                                                         IntegerArgumentType.getInteger(ctx, "phase")))))))
+                .then(Commands.literal("stats")
+                        .executes(ctx -> statsAll(ctx.getSource()))
+                        .then(Commands.argument("boss_id", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    BossConfigLoader.getDefinitions().keySet().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> statsBoss(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "boss_id")))))
+                .then(Commands.literal("rage")
+                        .then(Commands.argument("targets", EntityArgument.entities())
+                                .then(Commands.literal("start")
+                                        .then(Commands.argument("rage", StringArgumentType.word())
+                                                .executes(ctx -> startRage(ctx.getSource(),
+                                                        EntityArgument.getEntities(ctx, "targets"),
+                                                        StringArgumentType.getString(ctx, "rage")))))
+                                .then(Commands.literal("end")
+                                        .executes(ctx -> endRage(ctx.getSource(),
+                                                EntityArgument.getEntities(ctx, "targets"))))))
                 .then(Commands.literal("summary")
                         .executes(ctx -> summaryStatus(ctx.getSource()))
                         .then(Commands.literal("on")
@@ -227,6 +247,79 @@ public final class BossCommand {
                 .append(Component.literal(bossId).withStyle(ChatFormatting.GOLD))
                 .append(Component.literal(variant != null ? " (" + variant + ")" : ""))
                 .append(Component.literal(" at " + (int) fx + ", " + (int) fy + ", " + (int) fz)), true);
+        return n;
+    }
+
+    private static int statsAll(CommandSourceStack source) {
+        var bosses = BossData.RECORDS.get().bosses;
+        if (bosses.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No boss kills recorded yet.").withStyle(ChatFormatting.YELLOW), false);
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Boss kill records:").withStyle(ChatFormatting.GREEN), false);
+        bosses.entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue().kills, a.getValue().kills))
+                .forEach(e -> source.sendSuccess(() -> Component.literal("  " + e.getKey()).withStyle(ChatFormatting.GOLD)
+                        .append(Component.literal(": " + e.getValue().kills + " kill(s)"
+                                + (e.getValue().fastestTicks > 0
+                                ? ", fastest " + SpawnRules.formatDuration(e.getValue().fastestTicks * 50L) : ""))
+                                .withStyle(ChatFormatting.GRAY)), false));
+        return bosses.size();
+    }
+
+    private static int statsBoss(CommandSourceStack source, String bossId) {
+        KillRecords.BossRecord r = BossData.RECORDS.get().bosses.get(bossId);
+        if (r == null) {
+            source.sendFailure(Component.literal("No kills recorded for " + bossId + "."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(bossId).withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(" — " + r.kills + " kill(s)").withStyle(ChatFormatting.GRAY)), false);
+        if (r.fastestTicks > 0) {
+            source.sendSuccess(() -> Component.literal("  Fastest kill: ").withStyle(ChatFormatting.GRAY)
+                    .append(Component.literal(SpawnRules.formatDuration(r.fastestTicks * 50L)).withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" by " + String.join(", ", r.fastestParty)).withStyle(ChatFormatting.GRAY)), false);
+        }
+        if (r.topDamageName != null) {
+            source.sendSuccess(() -> Component.literal("  Top damage in one fight: ").withStyle(ChatFormatting.GRAY)
+                    .append(Component.literal(String.format(java.util.Locale.ROOT, "%,.0f", r.topDamage)).withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" by " + r.topDamageName).withStyle(ChatFormatting.GRAY)), false);
+        }
+        int rank = 0;
+        for (KillRecords.PlayerKills p : KillRecords.topKillers(r, 5)) {
+            final int n = ++rank;
+            source.sendSuccess(() -> Component.literal("  " + n + ". " + p.name).withStyle(ChatFormatting.WHITE)
+                    .append(Component.literal(" — " + p.kills + " kill(s)").withStyle(ChatFormatting.GRAY)), false);
+        }
+        return r.kills;
+    }
+
+    private static int startRage(CommandSourceStack source, Collection<? extends Entity> targets, String rage) {
+        int changed = 0;
+        for (Entity e : targets) {
+            if (FiwBossesAPI.isBoss(e) && ((BossEntity) e).isActive() && ((BossEntity) e).triggerRage(rage)) changed++;
+        }
+        if (changed == 0) {
+            source.sendFailure(Component.literal("No active boss with a rage named '" + rage + "' was selected."));
+            return 0;
+        }
+        final int n = changed;
+        source.sendSuccess(() -> Component.literal("Started rage ")
+                .append(Component.literal(rage).withStyle(ChatFormatting.RED))
+                .append(Component.literal(" on " + n + " boss(es).")), true);
+        return n;
+    }
+
+    private static int endRage(CommandSourceStack source, Collection<? extends Entity> targets) {
+        int changed = 0;
+        for (Entity e : targets) {
+            if (FiwBossesAPI.isBoss(e) && ((BossEntity) e).getActiveRage() != null) {
+                ((BossEntity) e).endRage();
+                changed++;
+            }
+        }
+        final int n = changed;
+        source.sendSuccess(() -> Component.literal("Ended the rage on " + n + " boss(es)."), true);
         return n;
     }
 

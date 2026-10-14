@@ -91,6 +91,12 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 ⚔️ **Difficulty variants** — a `hard` key spawns a tougher boss: more health, more damage (all, melee-only or ability-only), more loot and its own name. It keeps its variant through restarts.
 
+🧱 **Cheese-proof fights** — bosses never break blocks, yet boxing, pillaring, boats, cobwebs and minion traps don't work: arena leash resets (no loot for the abandoned attempt), stuck detection that teleports, strikes or enrages with escalation, vehicles destroyed on contact, slowing blocks ignored, and minions that teleport to players they can't reach.
+
+😡 **Rages & enrage timer** — phases triggered by behavior instead of HP: trap the boss and it rages with extra health, a red bar and new abilities; take too long and the enrage timer kicks in.
+
+📊 **Lockouts, records & Discord** — loot lockouts stop farming, `/boss stats` shows fastest kills and top players, and every kill can post a Discord embed to your community channel.
+
 🎚️ **Admin phase control** — `/boss phase` moves a live boss to the next, previous or any phase without touching its HP. Players struggling? Ease it. Fight dragging? Push it.
 
 🎲 **Loot ranges** — roll random drop amounts with `minCount`/`maxCount` (10–120 diamonds at 50% chance); big rolls split into stacks automatically.
@@ -152,6 +158,7 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 /boss phase <targets> next | prev | set <n>
 /boss summary [on | off | top <n> | show <section> <true|false>]
 /boss spawn <id> variant <name> [x y z]   /boss limits <id> [reset]
+/boss rage <targets> start <name> | end   /boss stats [id]
 /boss reload
 ```
 
