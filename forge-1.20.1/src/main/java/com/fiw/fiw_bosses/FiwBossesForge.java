@@ -10,11 +10,14 @@ import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.summon.SummonHandler;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -82,5 +85,23 @@ public class FiwBossesForge {
     public void onServerStarting(ServerStartingEvent event) {
         SkinCache.fetchAll();
         FiwToolsBridge.reportUnknownToolIds();
+    }
+
+    // Summon items / altars. Only the server summons; a used click is cancelled.
+    @SubscribeEvent
+    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && SummonHandler.onUseBlock(player, event.getHand(), event.getPos(), event.getHitVec().getDirection())) {
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getEntity() instanceof ServerPlayer player && SummonHandler.onUseItem(player, event.getHand())) {
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
     }
 }

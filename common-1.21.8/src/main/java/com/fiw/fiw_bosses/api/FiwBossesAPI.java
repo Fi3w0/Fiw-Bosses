@@ -18,6 +18,18 @@ public final class FiwBossesAPI {
         return entity instanceof BossEntity && !(entity instanceof MinionEntity);
     }
 
+    /** True for Fiw Bosses minions (custom minions and shadow clones). */
+    public static boolean isMinion(Entity entity) {
+        return entity instanceof MinionEntity;
+    }
+
+    /** The boss's difficulty variant name, or null for the normal boss / non-bosses. */
+    public static String getVariant(Entity entity) {
+        if (!isBoss(entity)) return null;
+        var def = ((BossEntity) entity).getDefinition();
+        return def != null ? def.variantName : null;
+    }
+
     /** The boss's config id, or null. */
     public static String getBossId(Entity entity) {
         return isBoss(entity) ? ((BossEntity) entity).getBossId() : null;

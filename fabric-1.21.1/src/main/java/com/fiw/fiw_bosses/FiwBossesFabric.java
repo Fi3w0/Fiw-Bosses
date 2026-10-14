@@ -9,11 +9,17 @@ import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.summon.SummonHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 
 public class FiwBossesFabric implements ModInitializer {
 
@@ -38,6 +44,16 @@ public class FiwBossesFabric implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> FiwToolsBridge.reportUnknownToolIds());
+
+        // Summon items / altars (server side only; clients get PASS).
+        UseBlockCallback.EVENT.register((player, level, hand, hit) ->
+                player instanceof ServerPlayer sp
+                        && SummonHandler.onUseBlock(sp, hand, hit.getBlockPos(), hit.getDirection())
+                        ? InteractionResult.SUCCESS : InteractionResult.PASS);
+        UseItemCallback.EVENT.register((player, level, hand) ->
+                player instanceof ServerPlayer sp && SummonHandler.onUseItem(sp, hand)
+                        ? InteractionResultHolder.success(player.getItemInHand(hand))
+                        : InteractionResultHolder.pass(player.getItemInHand(hand)));
 
         EntityTrackingEvents.START_TRACKING.register((entity, player) -> {
             if (entity instanceof com.fiw.fiw_bosses.entity.BossEntity boss) {

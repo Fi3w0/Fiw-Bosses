@@ -9,9 +9,11 @@ import com.fiw.fiw_bosses.config.MinionConfigLoader;
 import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -27,6 +29,8 @@ import java.util.TreeSet;
  */
 public final class FiwToolsBridge {
     private static final String API_CLASS = "com.fiw.tools.api.FiwToolsAPI";
+    // Custom data key Fiw Tools writes its item id under (ItemBuilder.FIW_TOOLS_ID_KEY).
+    private static final String TOOL_ID_KEY = "fiw_tools_id";
 
     private static final boolean PRESENT;
     private static final Method GET_ITEMSTACK;
@@ -89,6 +93,18 @@ public final class FiwToolsBridge {
             FiwBossesCore.LOGGER.warn("Fiw Tools getItemStack failed for id '{}': {}", id, t.getMessage());
             return null;
         }
+    }
+
+    /**
+     * The Fiw Tools item id stored on a stack, or null. Reads the custom data tag directly,
+     * so it works with every Fiw Tools version and needs no API call.
+     */
+    public static String getToolId(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return null;
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data == null) return null;
+        String id = data.copyTag().getString(TOOL_ID_KEY);
+        return id.isEmpty() ? null : id;
     }
 
     /** Tells Fiw Tools a boss changed phase (1-based numbers) for its on_boss_phase trigger. */

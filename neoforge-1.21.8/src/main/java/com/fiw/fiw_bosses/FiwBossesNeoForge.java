@@ -10,7 +10,9 @@ import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
 import com.fiw.fiw_bosses.network.NetworkHandler;
 import com.fiw.fiw_bosses.skin.SkinCache;
+import com.fiw.fiw_bosses.summon.SummonHandler;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -21,6 +23,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 
@@ -79,6 +82,24 @@ public class FiwBossesNeoForge {
         if (event.getTarget() instanceof BossEntity boss
                 && event.getEntity() instanceof ServerPlayer player) {
             NetworkHandler.sendSkinToPlayer(player, boss);
+        }
+    }
+
+    // Summon items / altars. Only the server summons; a used click is cancelled.
+    @SubscribeEvent
+    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && SummonHandler.onUseBlock(player, event.getHand(), event.getPos(), event.getHitVec().getDirection())) {
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getEntity() instanceof ServerPlayer player && SummonHandler.onUseItem(player, event.getHand())) {
+            event.setCancellationResult(InteractionResult.SUCCESS);
+            event.setCanceled(true);
         }
     }
 }
