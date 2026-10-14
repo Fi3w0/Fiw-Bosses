@@ -10,6 +10,8 @@ public final class BossData {
     public static final JsonStore<SpawnData> SPAWNS = new JsonStore<>("spawns.json", SpawnData.class, SpawnData::new);
     public static final JsonStore<LockoutData> LOCKOUTS = new JsonStore<>("lockouts.json", LockoutData.class, LockoutData::new);
     public static final JsonStore<KillRecords> RECORDS = new JsonStore<>("records.json", KillRecords.class, KillRecords::new);
+    public static final JsonStore<com.fiw.fiw_bosses.schedule.ScheduleData> SCHEDULES = new JsonStore<>(
+            "schedules.json", com.fiw.fiw_bosses.schedule.ScheduleData.class, com.fiw.fiw_bosses.schedule.ScheduleData::new);
 
     private BossData() {}
 
@@ -29,5 +31,10 @@ public final class BossData {
         LOCKOUTS.get().prune(System.currentTimeMillis());
         RECORDS.load(dir());
         if (RECORDS.get().bosses == null) RECORDS.get().bosses = new java.util.HashMap<>();
+        SCHEDULES.load(dir());
+        var sd = SCHEDULES.get();
+        if (sd.nextAt == null) sd.nextAt = new java.util.HashMap<>();
+        if (sd.lastFired == null) sd.lastFired = new java.util.HashMap<>();
+        if (sd.liveBoss == null) sd.liveBoss = new java.util.HashMap<>();
     }
 }

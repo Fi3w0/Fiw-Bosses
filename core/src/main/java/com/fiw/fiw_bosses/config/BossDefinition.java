@@ -81,6 +81,8 @@ public class BossDefinition {
     public List<SummonEntry> summon;
     // Optional. maxAlive / global cooldown for player summons.
     public SpawnLimits spawnLimits;
+    // Optional. Scheduled world spawn for this boss (see ScheduleConfig).
+    public ScheduleConfig schedule;
     // Optional. Difficulty variants by name, e.g. "hard".
     public Map<String, VariantDefinition> variants;
 
