@@ -87,6 +87,10 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 ❤️ **Any health value** — go past vanilla's 1024 HP cap: a 60,000 HP raid boss really has 60,000 HP — shown correctly in Jade and similar mods, and optionally in the boss bar (`60,000/60,000 ❤`).
 
+🗝️ **Summon items & altars** — players start fights themselves: right-click with a summon item, optionally on an altar block. Cap how many can be alive, add a server-wide cooldown, and players are told exactly why a summon was refused. Admin spawns are never limited.
+
+⚔️ **Difficulty variants** — a `hard` key spawns a tougher boss: more health, more damage (all, melee-only or ability-only), more loot and its own name. It keeps its variant through restarts.
+
 🎚️ **Admin phase control** — `/boss phase` moves a live boss to the next, previous or any phase without touching its HP. Players struggling? Ease it. Fight dragging? Push it.
 
 🎲 **Loot ranges** — roll random drop amounts with `minCount`/`maxCount` (10–120 diamonds at 50% chance); big rolls split into stacks automatically.
@@ -147,6 +151,7 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 /boss minion spawn <id> [count]    /boss minion list /boss minion kill <id> | all
 /boss phase <targets> next | prev | set <n>
 /boss summary [on | off | top <n> | show <section> <true|false>]
+/boss spawn <id> variant <name> [x y z]   /boss limits <id> [reset]
 /boss reload
 ```
 

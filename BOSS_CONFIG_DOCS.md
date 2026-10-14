@@ -105,6 +105,9 @@ Bosses are defined as `.json` files — no coding or server restart needed.
   - [Movement Modes](#movement-modes)
   - [Referencing Minions in Boss Phases](#referencing-minions-in-boss-phases)
 - [Idle System](#idle-system)
+- [Summoning & Altars](#summoning--altars)
+- [Spawn Limits](#spawn-limits)
+- [Difficulty Variants](#difficulty-variants)
 - [Loot](#loot)
 - [Raid Rewards (per-player loot)](#raid-rewards-per-player-loot)
 - [Fight Summary](#fight-summary)
@@ -342,7 +345,9 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 |-------|------|---------|-------------|
 | `hpThresholdPercent` | float | 1.0 | Phase starts when HP drops to this fraction (`0.5` = 50% HP) |
 | `speedMultiplier` | float | 1.0 | Applied on top of base speed |
-| `damageMultiplier` | float | 1.0 | Applied on top of base attack damage |
+| `damageMultiplier` | float | 1.0 | Scales **all** damage the boss deals: melee hits and abilities |
+| `meleeDamageMultiplier` | float | 1.0 | Scales melee hits only (on top of `damageMultiplier`) |
+| `abilityDamageMultiplier` | float | 1.0 | Scales ability hits only (on top of `damageMultiplier`) |
 | `abilities` | array | [] | Active abilities in this phase |
 | `minions` | array | [] | Minion types available for `summon_minions` |
 | `equipment` | object | null | Override gear for this phase |
@@ -352,6 +357,9 @@ Phases change the boss's behavior at HP thresholds. Define them from **highest t
 | `transitionParticle` | string | null | Particle effect burst on transition |
 
 > The boss's current phase is stored in NBT — it survives server restarts.
+
+> **Changed in 1.3.0:** `damageMultiplier` used to boost melee only. It now boosts ability
+> damage too. To keep a phase's old behavior, rename it to `meleeDamageMultiplier`.
 
 ### Forcing a phase (admins)
 
@@ -2010,6 +2018,96 @@ Idle timer is reset when:
 > Ticks reference: 20 ticks = 1 second · 600 ticks = 30 s · 1200 ticks = 1 min · 6000 ticks = 5 min
 
 ---
+
+## Summoning & Altars
+
+Players can start a boss themselves by right-clicking with a summon item. Each `summon`
+entry is one way to do it; a boss can have several (e.g. a normal key and a hard key).
+
+```json
+"summon": [
+  {
+    "item": "minecraft:blaze_rod",
+    "name": "&6Ember Key",
+    "altar": "minecraft:lodestone",
+    "cooldownSeconds": 300,
+    "message": "&e{player}&7 lit the altar. {boss}&7 awakens!"
+  },
+  { "toolId": "storm_core", "variant": "hard" }
+]
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `item` | string | — | Vanilla item id that summons the boss. Ignored when `toolId` is set |
+| `toolId` | string | — | Fiw Tools item id (needs Fiw Tools; not available on 1.20.1) |
+| `name` | string | — | Optional exact item name (color codes ignored). Use it so only a renamed item works, not every copy of that item |
+| `altar` | string | — | Optional block id. The item then only works when used on that block, and the boss appears on top of it |
+| `consume` | bool | true | Use up one item on a successful summon (never in creative) |
+| `cooldownSeconds` | int | 0 | Per-player wait before the same player can summon with this entry again |
+| `variant` | string | — | Difficulty variant to spawn (see [Difficulty Variants](#difficulty-variants)) |
+| `message` | string | — | Server-wide announcement. Placeholders: `{player}`, `{boss}` |
+
+Where the boss appears: on top of the altar; without an altar, on the block the player
+clicked; when used in the air, on the ground about 5 blocks in front of the player.
+
+> Protect your altars with a claim mod (FTB Chunks or similar). FIW Bosses adds no
+> build-protection zones.
+
+## Spawn Limits
+
+Limits for **player summons** (summon items and altars). Admin `/boss spawn`, command
+blocks and Fiw Tools `run_command` items are never limited.
+
+```json
+"spawnLimits": { "maxAlive": 1, "cooldownSeconds": 1800 }
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `maxAlive` | int | 0 | Refuse a summon while this many of this boss are alive (counts bosses in unloaded chunks too). `0` = unlimited |
+| `cooldownSeconds` | int | 0 | Server-wide wait between summons of this boss, by anyone |
+| `aliveMessage` | string | `&c{boss}&c is already awake.` | Shown when `maxAlive` is reached |
+| `cooldownMessage` | string | `&c{boss}&c can be summoned again in {time}.` | Shown during the global cooldown |
+| `playerCooldownMessage` | string | `&cYou can summon {boss}&c again in {time}.` | Shown during a summon entry's per-player cooldown |
+
+Placeholders: `{boss}`, `{alive}`, `{max}`, `{time}`. Cooldowns and living bosses are saved
+in `config/fiw_bosses/data/spawns.json`, so they survive restarts.
+
+`/boss limits <bossId>` shows the alive count and remaining cooldown; `/boss limits <bossId>
+reset` clears the cooldowns and re-counts the bosses that are loaded right now (use it if
+a boss was deleted by a world edit).
+
+## Difficulty Variants
+
+Named variants of a boss. The summon item (or `/boss spawn <id> variant <name>`) picks one;
+the boss keeps its variant through restarts.
+
+```json
+"variants": {
+  "hard": {
+    "displayName": "&4&lEmber Warden &c[Hard]",
+    "healthMultiplier": 2.0,
+    "damageMultiplier": 1.5,
+    "lootMultiplier": 2.0
+  }
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `displayName` | string | — | Name override for the nameplate and boss bar |
+| `healthMultiplier` | float | 1.0 | Scales max health |
+| `damageMultiplier` | float | 1.0 | Scales all damage the boss deals |
+| `meleeDamageMultiplier` | float | 1.0 | Scales melee hits only |
+| `abilityDamageMultiplier` | float | 1.0 | Scales ability hits only |
+| `lootMultiplier` | float | 1.0 | Scales loot counts (`count`, `minCount`, `maxCount`; at least 1). `unique` drops stay single |
+| `loot` | array | — | Loot table that replaces the boss's own loot for this variant |
+
+Variant multipliers stack with phase multipliers. Raid rewards use the variant's health
+for `minDamagePercent`.
+
+Full example: [`examples/summon/ember_warden.json`](examples/summon/ember_warden.json).
 
 ## Loot
 

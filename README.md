@@ -140,6 +140,12 @@ Optional post-fight chat recap — killing blow, top damage with share %, most d
 ### Any health value
 `health` isn't capped at vanilla's 1024 — a 60,000 HP boss really has 60,000 HP, and Jade / WTHIT / The One Probe show it. `bossBar.showHealth` also puts the HP (`60,000/60,000 ❤`) in the bar title.
 
+### Summon items & altars
+Players start fights without an admin: right-click with a summon item (a vanilla item, optionally with an exact name, or a Fiw Tools item), optionally only on an altar block. `spawnLimits` caps how many are alive (`maxAlive`), adds a server-wide cooldown, and tells players why a summon was refused. Admin `/boss spawn` is never limited.
+
+### Difficulty variants
+Named variants such as `hard` scale health, all/melee/ability damage and loot, with their own name. The summon item picks the variant, or use `/boss spawn <id> variant <name>`; the boss keeps it through restarts.
+
 ### Admin phase control
 `/boss phase <targets> next|prev|set <n>` moves a live boss between phases without touching HP — ease a fight players are stuck on, or speed up a stalled one.
 
@@ -210,6 +216,8 @@ soul_tether, wind_charge
 /boss kill <id> | all                 /boss minion kill all
 /boss phase <targets> next | prev | set <n>
 /boss summary [on | off | top <n> | show <section> <true|false>]
+/boss spawn <bossId> variant <name> [pos]
+/boss limits <bossId> [reset]
 ```
 
 **Config folders**

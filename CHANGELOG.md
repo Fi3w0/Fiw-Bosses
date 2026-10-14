@@ -4,6 +4,29 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.3.0] - Summon altars and difficulty variants
+
+### Added
+- **Summon items & altars** — new `summon` list on a boss. Players right-click with a configured
+  item (vanilla `item`, optional exact `name`, or a Fiw Tools `toolId`) to start the fight,
+  optionally only on an `altar` block. Per-entry `consume`, per-player `cooldownSeconds`,
+  `variant` and a server-wide `message`. Example: `examples/summon/ember_warden.json`.
+- **Spawn limits** — `spawnLimits.maxAlive` and a server-wide `cooldownSeconds` for player
+  summons, with refusal messages telling the player why. Living bosses are counted even in
+  unloaded chunks. State is saved in `config/fiw_bosses/data/spawns.json`. Admin
+  `/boss spawn` is never limited.
+- **Difficulty variants** — named `variants` (e.g. `hard`) with `healthMultiplier`,
+  `damageMultiplier`, `meleeDamageMultiplier`, `abilityDamageMultiplier`, `lootMultiplier`, an
+  optional replacement `loot` table and `displayName`. Saved with the boss.
+- **Melee / ability damage multipliers** — phases gain `meleeDamageMultiplier` and
+  `abilityDamageMultiplier` next to `damageMultiplier`.
+- Commands: `/boss spawn <bossId> variant <name> [pos]`, `/boss limits <bossId> [reset]`.
+- API: `FiwBossesAPI.isMinion(Entity)`, `FiwBossesAPI.getVariant(Entity)`.
+
+### Changed
+- A phase's `damageMultiplier` now scales ability damage as well as melee (it used to be
+  melee only). Use `meleeDamageMultiplier` to keep the old behavior.
+
 ## [1.2.1] - Performance fixes
 
 ### Fixed
