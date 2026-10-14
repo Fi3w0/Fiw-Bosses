@@ -119,7 +119,7 @@ public class AoeSmashAttackGoal extends Goal {
             double dist = entity.distanceTo(boss);
             if (dist <= radius) {
                 float finalDamage = damage * (1.0f - (float) (dist / radius) * 0.3f);
-                entity.hurtServer(level, boss.damageSources().mobAttack(boss), finalDamage);
+                boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), finalDamage);
 
                 Vec3 dir = entity.position().subtract(center).normalize();
                 double yLaunch = 0.4 + (1.0 - dist / radius) * 0.4;

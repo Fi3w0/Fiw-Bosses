@@ -764,6 +764,18 @@ public class BossEntity extends Monster {
         }
     }
 
+    // ── Ability damage ───────────────────────────────────────────────────────
+
+    /** Every ability hit goes through here so ability damage multipliers apply in one place. */
+    public boolean dealAbilityDamage(Entity victim, DamageSource source, float amount) {
+        return victim.hurt(source, amount * abilityDamageScale());
+    }
+
+    /** Multiplier for ability (non-melee) damage. */
+    public float abilityDamageScale() {
+        return 1.0f;
+    }
+
     // ── Misc ─────────────────────────────────────────────────────────────────
 
     @Override

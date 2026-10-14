@@ -162,7 +162,7 @@ public class MirrorImageGoal extends Goal {
                 p -> p.isAlive() && !p.isCreative() && !p.isSpectator()
                         && boss.distanceToSqr(p) <= reappearRadius * reappearRadius);
         for (Player player : victims) {
-            player.hurtServer(level, boss.damageSources().magic(), reappearDamage);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), reappearDamage);
         }
     }
 

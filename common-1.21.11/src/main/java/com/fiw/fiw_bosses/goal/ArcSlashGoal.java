@@ -169,7 +169,7 @@ public class ArcSlashGoal extends Goal {
                             && !alreadyHit.contains(e.getUUID()));
 
             for (LivingEntity victim : victims) {
-                victim.hurtServer(level, boss.damageSources().mobAttack(boss), damage);
+                boss.dealAbilityDamage(victim, boss.damageSources().mobAttack(boss), damage);
                 alreadyHit.add(victim.getUUID());
 
                 Vec3 knock = victim.position().subtract(boss.position()).normalize();

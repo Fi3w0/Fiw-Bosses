@@ -223,7 +223,7 @@ public class SingularityCannonGoal extends Goal {
             for (Player player : victims) {
                 if (hitPlayers.contains(player.getUUID())) continue;
                 hitPlayers.add(player.getUUID());
-                player.hurtServer(level, boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
                 Vec3 drag = beamDir.scale(2.0);
                 player.push(drag.x, drag.y * 0.3, drag.z);
                 player.hurtMarked = true;

@@ -112,7 +112,7 @@ public class GuardianShieldGoal extends Goal {
     }
 
     private void executeCounterAttack(ServerLevel level, Player target) {
-        target.hurt(boss.damageSources().magic(), counterDamage);
+        boss.dealAbilityDamage(target, boss.damageSources().magic(), counterDamage);
 
         Vec3 dir = target.position().subtract(boss.position()).normalize();
         target.push(dir.x * counterKnockback, 0.4, dir.z * counterKnockback);

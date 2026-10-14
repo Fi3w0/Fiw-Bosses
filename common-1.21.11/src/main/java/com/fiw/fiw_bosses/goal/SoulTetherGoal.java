@@ -102,7 +102,7 @@ public class SoulTetherGoal extends Goal {
 
             pull(player, dist);
             if (pulseDamage > 0 && damageInterval > 0 && tick % damageInterval == 0) {
-                player.hurtServer(level, boss.damageSources().magic(), pulseDamage);
+                boss.dealAbilityDamage(player, boss.damageSources().magic(), pulseDamage);
                 level.sendParticles(ParticleTypes.SOUL,
                         player.getX(), player.getY() + 1.0, player.getZ(), 8, 0.25, 0.35, 0.25, 0.04);
             }
@@ -156,7 +156,7 @@ public class SoulTetherGoal extends Goal {
     }
 
     private void snap(ServerLevel level, Player player) {
-        player.hurtServer(level, boss.damageSources().magic(), snapDamage);
+        boss.dealAbilityDamage(player, boss.damageSources().magic(), snapDamage);
         Vec3 toBoss = boss.position().subtract(player.position());
         toBoss = new Vec3(toBoss.x, 0, toBoss.z);
         if (toBoss.lengthSqr() < 1.0e-6) toBoss = new Vec3(0, 0, 1);

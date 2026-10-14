@@ -142,7 +142,7 @@ public class GravityWellGoal extends Goal {
                 p -> p.isAlive() && !p.isCreative() && !p.isSpectator()
                         && p.distanceToSqr(boss) <= radius * radius);
         for (Player player : victims) {
-            player.hurt(boss.damageSources().magic(), impactDamage);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), impactDamage);
         }
     }
 

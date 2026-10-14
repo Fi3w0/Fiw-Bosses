@@ -123,7 +123,7 @@ public class ChainLightningGoal extends Goal {
                         1, 0, 0, 0, 0);
             }
 
-            entity.hurtServer(level, boss.damageSources().lightningBolt(), damage);
+            boss.dealAbilityDamage(entity, boss.damageSources().lightningBolt(), damage);
 
             LightningBolt bolt = new LightningBolt(EntityType.LIGHTNING_BOLT, level);
             bolt.setVisualOnly(true);

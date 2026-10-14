@@ -198,7 +198,7 @@ public class SlamGoal extends Goal {
             double dist = entity.distanceTo(boss);
             if (dist <= radius) {
                 float falloff = 1.0f - (float)(dist / radius) * 0.4f;
-                entity.hurtServer(level, boss.damageSources().mobAttack(boss), damage * falloff);
+                boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), damage * falloff);
 
                 Vec3 dir = entity.position().subtract(center).normalize();
                 double yLaunch = 0.5 + (1.0 - dist / radius) * 0.6;

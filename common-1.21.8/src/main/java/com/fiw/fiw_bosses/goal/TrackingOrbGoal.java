@@ -169,7 +169,7 @@ public class TrackingOrbGoal extends Goal {
 
             if (!victims.isEmpty()) {
                 Player hit = victims.get(0);
-                hit.hurtServer(level, boss.damageSources().magic(), (float) damage);
+                boss.dealAbilityDamage(hit, boss.damageSources().magic(), (float) damage);
                 level.sendParticles(ParticleTypes.WITCH,
                         proj.pos.x, proj.pos.y, proj.pos.z,
                         6, 0.2, 0.2, 0.2, 0.1);

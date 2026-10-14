@@ -119,7 +119,7 @@ public class ChargeGoal extends Goal {
                     e -> boss.canAbilityHit(e) && !alreadyHit.contains(e.getUUID()));
 
             for (LivingEntity entity : hit) {
-                entity.hurt(boss.damageSources().mobAttack(boss), damage);
+                boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), damage);
                 Vec3 knockDir = entity.position().subtract(boss.position()).normalize();
                 entity.push(knockDir.x * 1.5, 0.6, knockDir.z * 1.5);
                 entity.hurtMarked = true;

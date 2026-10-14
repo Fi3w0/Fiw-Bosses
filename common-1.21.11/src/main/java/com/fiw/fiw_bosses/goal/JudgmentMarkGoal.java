@@ -194,7 +194,7 @@ public class JudgmentMarkGoal extends Goal {
                         player.getX(), player.getY() + 1.0, player.getZ(),
                         15, 0.4, 0.5, 0.4, 0.1);
             } else {
-                player.hurtServer(level, boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
                 level.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                         player.getX(), player.getY() + 0.5, player.getZ(),
                         1, 0, 0, 0, 0);

@@ -194,7 +194,7 @@ public class PotionFieldGoal extends Goal {
                     p -> p.isAlive() && !p.isSpectator() && !p.isCreative()
                             && p.distanceToSqr(pos.x, pos.y, pos.z) <= rSq);
             for (Player p : players) {
-                p.hurt(boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(p, boss.damageSources().magic(), damage);
             }
         }
 

@@ -220,7 +220,7 @@ public class LightningRadialGoal extends Goal {
                 for (Player player : victims) {
                     if (blade.hitSet.contains(player.getUUID())) continue;
                     blade.hitSet.add(player.getUUID());
-                    player.hurt(boss.damageSources().magic(), damage);
+                    boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
                     player.push(blade.dir.x * 1.2, 0.3, blade.dir.z * 1.2);
                     player.hurtMarked = true;
                     level.sendParticles(ParticleTypes.ASH,

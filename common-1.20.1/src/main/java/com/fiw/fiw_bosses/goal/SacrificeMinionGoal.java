@@ -128,7 +128,7 @@ public class SacrificeMinionGoal extends Goal {
                     p -> p.isAlive() && !p.isCreative() && !p.isSpectator()
                             && p.distanceToSqr(minion) <= explosionRadius * explosionRadius);
             for (Player player : victims) {
-                player.hurt(boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
                 Vec3 away = player.position().subtract(minion.position());
                 away = new Vec3(away.x, 0, away.z);
                 if (away.lengthSqr() > 1.0e-6) {

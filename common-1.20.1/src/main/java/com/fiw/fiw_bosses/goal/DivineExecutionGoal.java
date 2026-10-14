@@ -163,7 +163,7 @@ public class DivineExecutionGoal extends Goal {
 
         target.push(vx, 0.9, vz);
         target.hurtMarked = true;
-        target.hurt(boss.damageSources().magic(), throwDamage);
+        boss.dealAbilityDamage(target, boss.damageSources().magic(), throwDamage);
 
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                 target.getX(), target.getY() + 0.5, target.getZ(), 1, 0, 0, 0, 0);

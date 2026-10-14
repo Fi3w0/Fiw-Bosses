@@ -170,7 +170,7 @@ public class CurseBombGoal extends Goal {
                             && p.position().distanceToSqr(center) <= blastRadius * blastRadius);
 
             for (Player victim : victims) {
-                victim.hurt(boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(victim, boss.damageSources().magic(), damage);
                 Vec3 away = victim.position().subtract(center);
                 away = new Vec3(away.x, 0, away.z);
                 if (away.lengthSqr() < 1.0e-6) away = victim.position().subtract(boss.position());

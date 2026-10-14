@@ -175,7 +175,7 @@ public class BeamGoal extends Goal {
                         origin, dir, beamLen));
 
         for (Player victim : victims) {
-            victim.hurtServer(level, boss.damageSources().magic(), damage);
+            boss.dealAbilityDamage(victim, boss.damageSources().magic(), damage);
             level.sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                     victim.getX(), victim.getY() + 1.0, victim.getZ(),
                     4, 0.2, 0.2, 0.2, 0.05);

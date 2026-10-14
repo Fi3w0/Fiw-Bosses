@@ -172,7 +172,7 @@ public class EssenceAbsorptionGoal extends Goal {
     }
 
     private void onHit(ServerLevel level, Player target) {
-        target.hurt(boss.damageSources().magic(), damage);
+        boss.dealAbilityDamage(target, boss.damageSources().magic(), damage);
         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, weaknessDuration, 1, false, true));
         boss.heal(healAmount);
 

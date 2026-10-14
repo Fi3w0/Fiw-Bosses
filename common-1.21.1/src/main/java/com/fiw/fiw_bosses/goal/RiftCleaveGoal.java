@@ -177,7 +177,7 @@ public class RiftCleaveGoal extends Goal {
 
         for (LivingEntity victim : victims) {
             if (!hitEntities.add(victim.getUUID())) continue;
-            victim.hurt(boss.damageSources().magic(), damage);
+            boss.dealAbilityDamage(victim, boss.damageSources().magic(), damage);
             Vec3 away = new Vec3(victim.getX() - boss.getX(), 0, victim.getZ() - boss.getZ());
             if (away.lengthSqr() < 1.0e-6) away = direction;
             away = away.normalize();

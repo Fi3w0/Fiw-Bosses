@@ -254,7 +254,7 @@ public class PhantomDashGoal extends Goal {
                         && !hitPlayers.contains(p.getUUID()));
         for (Player p : victims) {
             hitPlayers.add(p.getUUID());
-            p.hurt(boss.damageSources().magic(), damage);
+            boss.dealAbilityDamage(p, boss.damageSources().magic(), damage);
             level.sendParticles(ParticleTypes.CRIT,
                     p.getX(), p.getY() + 1.0, p.getZ(), 8, 0.3, 0.3, 0.3, 0.2);
         }

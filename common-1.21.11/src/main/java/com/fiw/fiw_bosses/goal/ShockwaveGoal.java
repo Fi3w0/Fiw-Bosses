@@ -174,7 +174,7 @@ public class ShockwaveGoal extends Goal {
                 boolean jumping = entity.getDeltaMovement().y > 0.15;
                 if (jumping) continue;
 
-                entity.hurtServer(level, boss.damageSources().mobAttack(boss), damage);
+                boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), damage);
                 waveHit[w].add(entity.getUUID());
 
                 Vec3 dir = new Vec3(dx, 0, dz).normalize();

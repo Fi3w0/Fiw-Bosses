@@ -181,7 +181,7 @@ public class FireArrowGoal extends Goal {
             if (dist > explosionRadius) continue;
 
             float falloff = (float) (1.0 - dist / explosionRadius);
-            player.hurtServer(level, boss.damageSources().magic(), damage * falloff);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), damage * falloff);
 
             Vec3 knock = player.position().subtract(pos).normalize().scale(1.5 * falloff);
             player.push(knock.x, knock.y, knock.z);

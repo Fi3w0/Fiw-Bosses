@@ -144,7 +144,7 @@ public class BlinkStrikeGoal extends Goal {
                         && p.position().distanceToSqr(targetPos) <= strikeRadius * strikeRadius);
 
         for (Player player : victims) {
-            player.hurt(boss.damageSources().mobAttack(boss), damage);
+            boss.dealAbilityDamage(player, boss.damageSources().mobAttack(boss), damage);
             Vec3 away = player.position().subtract(landing);
             away = new Vec3(away.x, 0, away.z);
             if (away.lengthSqr() < 1.0e-6) away = boss.getLookAngle();

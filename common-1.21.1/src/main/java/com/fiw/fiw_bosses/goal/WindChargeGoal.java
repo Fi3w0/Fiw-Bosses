@@ -173,7 +173,7 @@ public class WindChargeGoal extends Goal {
             double dist = entity.distanceTo(boss);
             if (dist > radius) continue;
 
-            entity.hurt(boss.damageSources().mobAttack(boss), finalDamage);
+            boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), finalDamage);
 
             Vec3 dir = entity.position().subtract(center);
             Vec3 push = dir.lengthSqr() > 1.0E-4 ? dir.normalize() : Vec3.ZERO;

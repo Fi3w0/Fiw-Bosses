@@ -140,7 +140,7 @@ public class ParticleTornadoGoal extends Goal {
                     e -> boss.canAbilityHit(e)
                          && isInsideTornado(e));
             for (LivingEntity entity : inside) {
-                if (damage > 0) entity.hurtServer(level, boss.damageSources().mobAttack(boss), damage);
+                if (damage > 0) boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), damage);
                 if (fire) entity.setRemainingFireTicks(Math.max(entity.getRemainingFireTicks(), fireSeconds * 20));
                 Vec3 toCenter = origin.subtract(entity.position()).normalize();
                 entity.push(toCenter.x * 0.3, 0.15, toCenter.z * 0.3);

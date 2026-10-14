@@ -213,7 +213,7 @@ public class CrimsonSlashGoal extends Goal {
 
         float clawDamage = damage * (1.0f + clawIndex * 0.2f);
         for (Player player : players) {
-            player.hurtServer(level, boss.damageSources().magic(), clawDamage);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), clawDamage);
             hitPerClaw.get(clawIndex).add(player.getUUID());
         }
     }
@@ -263,7 +263,7 @@ public class CrimsonSlashGoal extends Goal {
             if (dist > explosionRadius) continue;
 
             float falloff = (float)(1.0 - dist / explosionRadius);
-            player.hurtServer(level, boss.damageSources().magic(), damage * 1.5f * falloff);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), damage * 1.5f * falloff);
 
             Vec3 knock = player.position().subtract(pos).normalize().scale(1.8 * falloff);
             player.push(knock.x, 0.8 * falloff, knock.z);

@@ -233,7 +233,7 @@ public class IceCrystalGoal extends Goal {
                 p -> p.isAlive() && !p.isSpectator() && !p.isCreative());
 
         for (Player player : players) {
-            player.hurt(boss.damageSources().magic(), damage);
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
 
             double dist = player.distanceTo(boss);
             if (dist <= centerRadius) {

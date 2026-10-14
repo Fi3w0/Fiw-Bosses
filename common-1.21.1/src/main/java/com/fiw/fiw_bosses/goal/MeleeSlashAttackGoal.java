@@ -104,7 +104,7 @@ public class MeleeSlashAttackGoal extends Goal {
             double angle = Math.toDegrees(Math.acos(Math.min(1.0, Math.max(-1.0, dot))));
 
             if (angle <= halfArc && boss.distanceToSqr(entity) <= range * range) {
-                entity.hurt(boss.damageSources().mobAttack(boss), damage);
+                boss.dealAbilityDamage(entity, boss.damageSources().mobAttack(boss), damage);
                 Vec3 knockback = toEntity.scale(0.7);
                 entity.push(knockback.x, 0.25, knockback.z);
                 entity.hurtMarked = true;

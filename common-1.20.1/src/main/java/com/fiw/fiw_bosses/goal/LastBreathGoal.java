@@ -170,7 +170,7 @@ public class LastBreathGoal extends Goal {
 
         for (LivingEntity victim : victims) {
             if (damage > 0) {
-                victim.hurt(boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(victim, boss.damageSources().magic(), damage);
             }
             if (witherDuration > 0) {
                 victim.addEffect(new MobEffectInstance(MobEffects.WITHER, witherDuration, 1, false, true));

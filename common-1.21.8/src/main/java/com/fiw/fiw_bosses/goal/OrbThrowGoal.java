@@ -261,7 +261,7 @@ public class OrbThrowGoal extends Goal {
             double factor = 1.0 - (actualDist / explosionRadius);
             if (factor <= 0) continue;
 
-            player.hurtServer(level, boss.damageSources().magic(), (float)(damage * factor));
+            boss.dealAbilityDamage(player, boss.damageSources().magic(), (float)(damage * factor));
 
             double len = Math.sqrt(dx * dx + dz * dz);
             if (len > 0.001) {

@@ -112,7 +112,7 @@ public class OrbitalGoal extends Goal {
                     p -> p.isAlive() && !hitThisTick.contains(p.getUUID()));
 
             for (Player victim : victims) {
-                victim.hurtServer(level, boss.damageSources().mobAttack(boss), damage);
+                boss.dealAbilityDamage(victim, boss.damageSources().mobAttack(boss), damage);
                 hitThisTick.add(victim.getUUID());
 
                 level.sendParticles(ParticleTypes.DAMAGE_INDICATOR,

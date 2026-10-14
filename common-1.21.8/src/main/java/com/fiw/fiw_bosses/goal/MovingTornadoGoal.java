@@ -193,7 +193,7 @@ public class MovingTornadoGoal extends Goal {
                 }
 
                 if (tick % 20 == 0) {
-                    player.hurtServer(level, boss.damageSources().magic(), (float) damage);
+                    boss.dealAbilityDamage(player, boss.damageSources().magic(), (float) damage);
                     absorbedPlayers.add(player.getUUID());
                 }
             }

@@ -160,7 +160,7 @@ public class SonicBoomGoal extends Goal {
                 if (toEntityH.dot(lockedForward) < cosHalf) continue;
             }
 
-            entity.hurt(boss.damageSources().magic(), damage);
+            boss.dealAbilityDamage(entity, boss.damageSources().magic(), damage);
 
             Vec3 knockDir = new Vec3(toEntity.x, 0.3, toEntity.z).normalize();
             double falloff = 1.0 - (dist / radius) * 0.5;

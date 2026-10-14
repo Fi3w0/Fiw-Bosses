@@ -139,7 +139,7 @@ public class FearBurstGoal extends Goal {
 
         for (LivingEntity victim : victims) {
             if (damage > 0) {
-                victim.hurtServer(level, boss.damageSources().magic(), damage);
+                boss.dealAbilityDamage(victim, boss.damageSources().magic(), damage);
             }
             if (darknessDuration > 0) {
                 victim.addEffect(new MobEffectInstance(MobEffects.DARKNESS, darknessDuration, 0, false, false));

@@ -207,7 +207,7 @@ public class GroundSpikeGoal extends Goal {
 
                     for (Player player : players) {
                         hitPlayers.add(player.getUUID());
-                        player.hurt(boss.damageSources().magic(), damage);
+                        boss.dealAbilityDamage(player, boss.damageSources().magic(), damage);
                         player.push(0, knockback, 0);
                         player.hurtMarked = true;
                         level.sendParticles(ParticleTypes.CRIT,

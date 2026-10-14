@@ -217,7 +217,7 @@ public class DomainGoal extends Goal {
                             domainCenter.z - player.getZ()).normalize();
                     player.push(toCenter.x * 1.4, toCenter.y * 0.4 + 0.3, toCenter.z * 1.4);
                     player.hurtMarked = true;
-                    player.hurtServer(level, boss.damageSources().magic(), pullDamage);
+                    boss.dealAbilityDamage(player, boss.damageSources().magic(), pullDamage);
                     level.sendParticles(ParticleTypes.REVERSE_PORTAL,
                             player.getX(), player.getY() + 1, player.getZ(),
                             8, 0.3, 0.5, 0.3, 0.1);
@@ -231,7 +231,7 @@ public class DomainGoal extends Goal {
                     player.push(awayFromCenter.x * 1.6, 0.5, awayFromCenter.z * 1.6);
                     player.hurtMarked = true;
                     if (dist < pushThreshold - 1.0 && tick % 5 == 0) {
-                        player.hurtServer(level, boss.damageSources().magic(), pushDamage);
+                        boss.dealAbilityDamage(player, boss.damageSources().magic(), pushDamage);
                         level.sendParticles(ParticleTypes.PORTAL,
                                 player.getX(), player.getY() + 1, player.getZ(),
                                 6, 0.3, 0.5, 0.3, 0.1);
