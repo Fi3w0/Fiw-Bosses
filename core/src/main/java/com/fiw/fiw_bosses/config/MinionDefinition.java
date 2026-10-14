@@ -60,4 +60,11 @@ public class MinionDefinition {
     public boolean isCustom() {
         return "custom".equalsIgnoreCase(baseEntity);
     }
+
+    // ── Anti-cheese ──────────────────────────────────────────────────────────
+    // On by default: a minion that makes no progress toward its target for stuckSeconds
+    // (blocked, boxed, running in circles) teleports next to it; with no target it
+    // teleports back to its owner boss when far away.
+    public boolean teleportWhenStuck = true;
+    public int stuckSeconds = 5;
 }

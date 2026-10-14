@@ -82,6 +82,14 @@ public class BossDefinition {
     // Optional. Difficulty variants by name, e.g. "hard".
     public Map<String, VariantDefinition> variants;
 
+    // ── Arena leash, anti-cheese & rages ────────────────────────────────────
+    // Optional. Reset the boss when it is pulled too far from its spawn point.
+    public ArenaConfig arena;
+    // Stuck detection (opt-in), vehicle destruction (on), slow-block immunity (opt-in).
+    public AntiCheeseConfig antiCheese = AntiCheeseConfig.defaults();
+    // Named rages: phase overrides triggered by behavior or the enrage timer.
+    public Map<String, com.google.gson.JsonObject> rages;
+
     // Set by BossVariants.apply on the per-entity copy; never read from or written to JSON.
     public transient String variantName;
     public transient float variantMeleeScale = 1.0f;
