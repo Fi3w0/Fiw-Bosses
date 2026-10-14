@@ -4,6 +4,19 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.2.1] - Performance fixes
+
+### Fixed
+- **Boss bar network spam** — every boss cleared and re-added its boss bar for every nearby player
+  on every tick (about 40 packets per second per player, and the client rebuilt the bar each time).
+  The bar now only adds players who come into range and removes those who leave, checked every
+  10 ticks. Health and title updates are still instant.
+- **Idle-timeout player search** — bosses with `idleTimeout` searched the world for nearby players
+  every tick. They now check every second.
+- **Fight tracking** — damage taken and deaths for raid rewards and the fight summary are now
+  sampled every 5 ticks instead of every tick. Results are the same; deaths on servers with
+  instant respawn are still counted.
+
 ## [1.2.0] - Raid rewards, fight summary, uncapped health
 
 ### Added
