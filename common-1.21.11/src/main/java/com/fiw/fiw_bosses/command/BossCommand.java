@@ -5,6 +5,11 @@ import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.FightSummaryConfig;
 import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
+import com.fiw.fiw_bosses.config.BossVariants;
+import com.fiw.fiw_bosses.data.BossData;
+import com.fiw.fiw_bosses.data.SpawnData;
+import com.fiw.fiw_bosses.data.SpawnRules;
+import com.fiw.fiw_bosses.summon.BossSpawner;
 import com.fiw.fiw_bosses.config.MinionConfigLoader;
 import com.fiw.fiw_bosses.config.MinionDefinition;
 import com.fiw.fiw_bosses.entity.BossEntity;
@@ -48,11 +53,7 @@ public final class BossCommand {
     private BossCommand() {}
 
     private static void sendSkinToNearbyPlayers(ServerLevel level, BossEntity boss) {
-        for (ServerPlayer player : level.players()) {
-            if (player.distanceToSqr(boss) <= 128.0D * 128.0D) {
-                NetworkHandler.sendSkinToPlayer(player, boss);
-            }
-        }
+        BossSpawner.sendSkinToNearbyPlayers(level, boss);
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -65,20 +66,47 @@ public final class BossCommand {
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawnBoss(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "boss_id"), null, 1))
+                                        StringArgumentType.getString(ctx, "boss_id"), null, 1, null))
                                 .then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .executes(ctx -> spawnBoss(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "boss_id"),
-                                                BlockPosArgument.getBlockPos(ctx, "pos"), 1))
+                                                BlockPosArgument.getBlockPos(ctx, "pos"), 1, null))
                                         .then(Commands.argument("count", IntegerArgumentType.integer(1))
                                                 .executes(ctx -> spawnBoss(ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "boss_id"),
                                                         BlockPosArgument.getBlockPos(ctx, "pos"),
-                                                        IntegerArgumentType.getInteger(ctx, "count")))))
+                                                        IntegerArgumentType.getInteger(ctx, "count"), null))))
                                 .then(Commands.argument("count", IntegerArgumentType.integer(1))
                                         .executes(ctx -> spawnBoss(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "boss_id"), null,
-                                                IntegerArgumentType.getInteger(ctx, "count"))))))
+                                                IntegerArgumentType.getInteger(ctx, "count"), null)))
+                                .then(Commands.literal("variant")
+                                        .then(Commands.argument("variant", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> {
+                                                    BossDefinition d = BossConfigLoader.getDefinition(
+                                                            StringArgumentType.getString(ctx, "boss_id"));
+                                                    if (d != null && d.variants != null) d.variants.keySet().forEach(builder::suggest);
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(ctx -> spawnBoss(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "boss_id"), null, 1,
+                                                        StringArgumentType.getString(ctx, "variant")))
+                                                .then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                                        .executes(ctx -> spawnBoss(ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "boss_id"),
+                                                                BlockPosArgument.getBlockPos(ctx, "pos"), 1,
+                                                                StringArgumentType.getString(ctx, "variant"))))))))
+                .then(Commands.literal("limits")
+                        .then(Commands.argument("boss_id", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    BossConfigLoader.getDefinitions().keySet().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> limitsStatus(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "boss_id")))
+                                .then(Commands.literal("reset")
+                                        .executes(ctx -> limitsReset(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "boss_id"))))))
                 .then(Commands.literal("kill")
                         .then(Commands.literal("all")
                                 .executes(ctx -> killAllBosses(ctx.getSource())))
@@ -156,12 +184,17 @@ public final class BossCommand {
 
     // ── Boss commands ────────────────────────────────────────────────────────
 
-    private static int spawnBoss(CommandSourceStack source, String bossId, BlockPos pos, int count) {
-        BossDefinition def = BossConfigLoader.getDefinition(bossId);
-        if (def == null) {
+    private static int spawnBoss(CommandSourceStack source, String bossId, BlockPos pos, int count, String variant) {
+        BossDefinition base = BossConfigLoader.getDefinition(bossId);
+        if (base == null) {
             source.sendFailure(Component.literal("Unknown boss: " + bossId));
             return 0;
         }
+        if (variant != null && BossVariants.find(base, variant) == null) {
+            source.sendFailure(Component.literal("Boss " + bossId + " has no variant: " + variant));
+            return 0;
+        }
+        BossDefinition def = BossVariants.apply(base, variant);
 
         ServerLevel level = source.getLevel();
         double x, y, z;
@@ -177,21 +210,14 @@ public final class BossCommand {
 
         int spawned = 0;
         for (int i = 0; i < count; i++) {
-            BossEntity boss = ModRefs.BOSS.create(level, EntitySpawnReason.COMMAND);
+            // Jitter extra spawns slightly so they don't stack on one point
+            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
+            BossEntity boss = BossSpawner.spawn(level, def, x + ox, y, z + oz, EntitySpawnReason.COMMAND);
             if (boss == null) {
                 source.sendFailure(Component.literal("Failed to create boss entity"));
                 return spawned;
             }
-
-            // Jitter extra spawns slightly so they don't stack on one point
-            double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
-            double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
-            boss.snapTo(x + ox, y, z + oz, 0, 0);
-            boss.applyDefinition(def);
-            boss.finalizeSpawn(level, level.getCurrentDifficultyAt(boss.blockPosition()),
-                    EntitySpawnReason.COMMAND, null);
-            level.addFreshEntity(boss);
-            sendSkinToNearbyPlayers(level, boss);
             spawned++;
         }
 
@@ -199,8 +225,43 @@ public final class BossCommand {
         final double fx = x, fy = y, fz = z;
         source.sendSuccess(() -> Component.literal(n > 1 ? "Spawned " + n + "x boss " : "Spawned boss ")
                 .append(Component.literal(bossId).withStyle(ChatFormatting.GOLD))
+                .append(Component.literal(variant != null ? " (" + variant + ")" : ""))
                 .append(Component.literal(" at " + (int) fx + ", " + (int) fy + ", " + (int) fz)), true);
         return n;
+    }
+
+    private static int limitsStatus(CommandSourceStack source, String bossId) {
+        BossDefinition def = BossConfigLoader.getDefinition(bossId);
+        if (def == null) {
+            source.sendFailure(Component.literal("Unknown boss: " + bossId));
+            return 0;
+        }
+        SpawnData data = BossData.SPAWNS.get();
+        int max = def.spawnLimits != null ? def.spawnLimits.maxAlive : 0;
+        int cooldown = def.spawnLimits != null ? def.spawnLimits.cooldownSeconds : 0;
+        Long last = data.lastSummon.get(bossId);
+        long left = last != null && cooldown > 0 ? last + cooldown * 1000L - System.currentTimeMillis() : 0;
+        String alive = data.aliveCount(bossId) + (max > 0 ? "/" + max : "") + " alive";
+        String wait = left > 0 ? ", summon cooldown " + SpawnRules.formatDuration(left) : ", no summon cooldown";
+        source.sendSuccess(() -> Component.literal(bossId).withStyle(ChatFormatting.GOLD)
+                .append(Component.literal(": " + alive + wait)), false);
+        return 1;
+    }
+
+    private static int limitsReset(CommandSourceStack source, String bossId) {
+        SpawnRules.reset(BossData.SPAWNS.get(), bossId);
+        // Re-add bosses that are actually loaded right now so maxAlive stays correct.
+        AABB worldBox = new AABB(-30000000, -64, -30000000, 30000000, 320, 30000000);
+        for (ServerLevel level : source.getServer().getAllLevels()) {
+            for (BossEntity boss : level.getEntitiesOfClass(BossEntity.class, worldBox,
+                    e -> !(e instanceof MinionEntity) && e.isAlive() && bossId.equals(e.getBossId()))) {
+                BossData.SPAWNS.get().addAlive(bossId, boss.getStringUUID());
+            }
+        }
+        BossData.SPAWNS.save();
+        source.sendSuccess(() -> Component.literal("Reset summon cooldowns and alive tracking for ")
+                .append(Component.literal(bossId).withStyle(ChatFormatting.GOLD)), true);
+        return 1;
     }
 
     private static int listBosses(CommandSourceStack source) {

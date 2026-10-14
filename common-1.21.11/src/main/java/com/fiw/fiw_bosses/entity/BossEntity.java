@@ -3,11 +3,13 @@ package com.fiw.fiw_bosses.entity;
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
+import com.fiw.fiw_bosses.config.BossVariants;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
 import com.fiw.fiw_bosses.config.EquipmentEntry;
 import com.fiw.fiw_bosses.config.FluidSettings;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.config.SettingsLoader;
+import com.fiw.fiw_bosses.data.BossData;
 import com.fiw.fiw_bosses.fight.BossFightHandler;
 import com.fiw.fiw_bosses.fight.FightLedger;
 import com.fiw.fiw_bosses.loot.BossLootHandler;
@@ -183,6 +185,7 @@ public class BossEntity extends Monster {
     public void applyDefinition(BossDefinition def) {
         this.definition = def;
         this.bossId     = def.id;
+        trackAlive();
         setMovementMode(def.movement);
         setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
 
@@ -605,6 +608,17 @@ public class BossEntity extends Monster {
     public void remove(RemovalReason reason) {
         super.remove(reason);
         bossBar.removeAllPlayers();
+        // Killed or discarded (not unloaded): no longer counts toward spawnLimits.maxAlive.
+        if (reason.shouldDestroy() && !level().isClientSide() && tracksFight() && bossId != null
+                && BossData.SPAWNS.get().removeAlive(bossId, getStringUUID())) {
+            BossData.SPAWNS.save();
+        }
+    }
+
+    /** Remembers this boss as alive (also while its chunk is unloaded) for spawnLimits.maxAlive. */
+    private void trackAlive() {
+        if (level().isClientSide() || !tracksFight() || bossId == null) return;
+        if (BossData.SPAWNS.get().addAlive(bossId, getStringUUID())) BossData.SPAWNS.save();
     }
 
     // ── NBT persistence ───────────────────────────────────────────────────────
@@ -618,6 +632,7 @@ public class BossEntity extends Monster {
     /** Hook so {@link MinionEntity} can replace boss-specific persistence with its own. */
     protected void writeBossCustomData(ValueOutput output) {
         if (bossId != null) output.putString("BossId", bossId);
+        if (definition != null && definition.variantName != null) output.putString("BossVariant", definition.variantName);
         if (phaseManager != null && phaseManager.getCurrentPhaseIndex() >= 0)
             output.putInt("BossPhase", phaseManager.getCurrentPhaseIndex());
         output.putString("BossState", bossState.name());
@@ -642,7 +657,8 @@ public class BossEntity extends Monster {
         if (bossIdOpt.isEmpty()) return;
 
         this.bossId = bossIdOpt.get();
-        BossDefinition def = BossConfigLoader.getDefinition(bossId);
+        BossDefinition def = BossVariants.apply(BossConfigLoader.getDefinition(bossId),
+                input.getString("BossVariant").orElse(null));
         if (def == null) {
             FiwBossesCore.LOGGER.warn("Boss definition '{}' not found, entity will be removed", bossId);
             this.discard();
@@ -776,7 +792,10 @@ public class BossEntity extends Monster {
 
     /** Multiplier for ability (non-melee) damage. */
     public float abilityDamageScale() {
-        return 1.0f;
+        float scale = definition != null ? definition.variantAbilityScale : 1.0f;
+        PhaseDefinition phase = phaseManager != null ? phaseManager.getCurrentPhase() : null;
+        if (phase != null) scale *= phase.damageMultiplier * phase.abilityDamageMultiplier;
+        return scale;
     }
 
     // ── Misc ─────────────────────────────────────────────────────────────────

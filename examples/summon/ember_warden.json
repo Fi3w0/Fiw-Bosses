@@ -1,0 +1,59 @@
+{
+  "id": "ember_warden",
+  "displayName": "&6&lEmber Warden",
+  "health": 400.0,
+  "armor": 6.0,
+  "speed": 0.3,
+  "attackDamage": 9.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:blaze",
+  "bossBar": { "color": "YELLOW", "overlay": "NOTCHED_10", "showHealth": true },
+  "summon": [
+    {
+      "item": "minecraft:blaze_rod",
+      "name": "&6Ember Key",
+      "altar": "minecraft:lodestone",
+      "cooldownSeconds": 300,
+      "message": "&e{player}&7 lit the altar. {boss}&7 awakens!"
+    },
+    {
+      "item": "minecraft:nether_star",
+      "altar": "minecraft:lodestone",
+      "variant": "hard",
+      "message": "&c{player}&7 offered a Nether Star. {boss}&7 awakens enraged!"
+    }
+  ],
+  "spawnLimits": {
+    "maxAlive": 1,
+    "cooldownSeconds": 900
+  },
+  "variants": {
+    "hard": {
+      "displayName": "&4&lEmber Warden &c[Hard]",
+      "healthMultiplier": 2.0,
+      "damageMultiplier": 1.5,
+      "lootMultiplier": 2.0
+    }
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        { "type": "flames", "cooldownTicks": 80, "params": { "damage": 6 } }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.5,
+      "abilityDamageMultiplier": 1.3,
+      "transitionMessage": "&6The Ember Warden burns brighter!",
+      "abilities": [
+        { "type": "flames", "cooldownTicks": 50, "params": { "damage": 6 } },
+        { "type": "meteor", "cooldownTicks": 160, "params": { "damage": 10 } }
+      ]
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:blaze_rod", "minCount": 4, "maxCount": 8 },
+    { "item": "minecraft:diamond", "minCount": 2, "maxCount": 5, "chance": 0.6 }
+  ]
+}

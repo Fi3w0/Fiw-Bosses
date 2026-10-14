@@ -2,6 +2,7 @@ package com.fiw.fiw_bosses.entity;
 
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.AbilityEntry;
+import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.PhaseDefinition;
 import com.fiw.fiw_bosses.goal.BossGoalFactory;
 import com.fiw.fiw_bosses.integration.FiwToolsBridge;
@@ -199,10 +200,14 @@ public class BossPhaseManager {
 
         if (damageAttr != null) {
             damageAttr.removeModifier(DAMAGE_MODIFIER_ID);
-            if (phase.damageMultiplier != 1.0f) {
+            // damageMultiplier (all damage) x meleeDamageMultiplier x the variant's melee scale.
+            BossDefinition def = boss.getDefinition();
+            float melee = phase.damageMultiplier * phase.meleeDamageMultiplier
+                    * (def != null ? def.variantMeleeScale : 1.0f);
+            if (melee != 1.0f) {
                 damageAttr.addTransientModifier(new AttributeModifier(
                         DAMAGE_MODIFIER_ID,
-                        phase.damageMultiplier - 1.0,
+                        melee - 1.0,
                         AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
             }
         }
