@@ -53,7 +53,9 @@ public class SkinFetcher {
     public static CompletableFuture<SkinData> fetchLocalSkin(String filename, boolean slim) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                File skinFile = BossConfigLoader.getSkinsDir().resolve(filename).toFile();
+                String pngName = filename.toLowerCase(java.util.Locale.ROOT).endsWith(".png")
+                        ? filename : filename + ".png";
+                File skinFile = BossConfigLoader.getSkinsDir().resolve(pngName).toFile();
                 if (!skinFile.exists()) {
                     FiwBossesCore.LOGGER.warn("Skin file not found: {}", skinFile.getPath());
                     return null;

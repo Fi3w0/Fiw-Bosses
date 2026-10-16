@@ -7,6 +7,7 @@ matching the tag).
 ## [Unreleased]
 
 ### Fixed
+- Local `file` skins accept a name with or without `.png`.
 - Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.
 
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
