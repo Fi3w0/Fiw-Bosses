@@ -1,10 +1,10 @@
 {
   "id": "qa_domain",
-  "displayName": "&bQA Domain aliases",
+  "displayName": "&bQA Domain",
   "health": 200,
   "armor": 0.0,
   "attackDamage": 0.0,
-  "speed": 0.2,
+  "speed": 0.25,
   "movement": "guard_point",
   "baseEntity": "custom",
   "skin": null,
@@ -22,23 +22,23 @@
           "cooldownTicks": 200,
           "params": {
             "radius": 8,
-            "duration": 240,
+            "duration": 200,
             "domainSpeed": 0.2,
             "pushDamage": 0,
             "pullDamage": 0,
             "darkness": false,
             "blindness": false,
-            "cooldown": 20,
+            "cooldown": 300,
             "attacks": [
               {
                 "type": "random_message",
-                "cooldown": 80,
                 "params": {
                   "messages": [
                     "&aQA legacy pulse"
                   ],
                   "radius": 24
-                }
+                },
+                "cooldown": 80
               }
             ]
           }
@@ -54,23 +54,23 @@
           "cooldownTicks": 200,
           "params": {
             "radius": 8,
-            "duration": 240,
+            "duration": 200,
             "domainSpeed": 0.2,
             "pushDamage": 0,
             "pullDamage": 0,
             "darkness": false,
             "blindness": false,
-            "cooldown": 20,
+            "cooldown": 300,
             "attacks": [
               {
                 "type": "random_message",
-                "cooldownTicks": 80,
                 "params": {
                   "messages": [
                     "&aQA alias pulse"
                   ],
                   "radius": 24
-                }
+                },
+                "cooldownTicks": 80
               }
             ]
           }
@@ -86,24 +86,24 @@
           "cooldownTicks": 200,
           "params": {
             "radius": 8,
-            "duration": 240,
+            "duration": 200,
             "domainSpeed": 0.2,
             "pushDamage": 0,
             "pullDamage": 0,
             "darkness": false,
             "blindness": false,
-            "cooldown": 20,
+            "cooldown": 300,
             "attacks": [
               {
                 "type": "random_message",
-                "cooldown": 80,
-                "cooldownTicks": 10,
                 "params": {
                   "messages": [
                     "&aQA precedence pulse"
                   ],
                   "radius": 24
-                }
+                },
+                "cooldown": 80,
+                "cooldownTicks": 10
               }
             ]
           }
@@ -119,13 +119,13 @@
           "cooldownTicks": 200,
           "params": {
             "radius": 8,
-            "duration": 240,
+            "duration": 200,
             "domainSpeed": 0.2,
             "pushDamage": 0,
             "pullDamage": 0,
             "darkness": false,
             "blindness": false,
-            "cooldown": 20,
+            "cooldown": 300,
             "attacks": [
               {
                 "type": "random_message",

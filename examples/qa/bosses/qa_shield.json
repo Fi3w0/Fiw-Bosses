@@ -1,10 +1,10 @@
 {
   "id": "qa_shield",
   "displayName": "&bQA Two pylons",
-  "health": 80.0,
+  "health": 80,
   "armor": 0.0,
   "attackDamage": 0.0,
-  "speed": 0.2,
+  "speed": 0.25,
   "movement": "guard_point",
   "baseEntity": "custom",
   "skin": null,

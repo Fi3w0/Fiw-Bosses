@@ -1,16 +1,14 @@
 {
-  "id": "qa_skin_full",
-  "displayName": "&bQA Skin .png",
-  "health": 80.0,
+  "id": "qa_golem_disguise",
+  "displayName": "&aQA Golem disguise",
+  "health": 120,
   "armor": 0.0,
-  "attackDamage": 0.0,
-  "speed": 0.2,
-  "movement": "guard_point",
+  "attackDamage": 2.0,
+  "speed": 0.25,
+  "movement": "side",
   "baseEntity": "custom",
-  "skin": {
-    "type": "file",
-    "value": "qa_skin.png"
-  },
+  "renderEntity": "minecraft:iron_golem",
+  "skin": null,
   "bossBar": {
     "color": "BLUE",
     "showHealth": true

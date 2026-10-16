@@ -1,6 +1,6 @@
 {
   "id": "qa_scaled_minion",
-  "displayName": "&2QA Scaled zombie minion x1.5",
+  "displayName": "&2QA Zombie minion x1.5",
   "baseEntity": "custom",
   "renderEntity": "minecraft:zombie",
   "scale": 1.5,

@@ -1,17 +1,16 @@
 {
-  "id": "qa_golem_giant",
-  "displayName": "&aQA Giant golem x2",
-  "health": 200,
+  "id": "qa_player_reach",
+  "displayName": "&aQA Reach +3",
+  "health": 120,
   "armor": 0.0,
   "attackDamage": 2.0,
   "speed": 0.25,
   "movement": "side",
   "baseEntity": "custom",
-  "renderEntity": "minecraft:iron_golem",
-  "scale": 2.0,
+  "reach": 3.0,
   "skin": null,
   "bossBar": {
-    "color": "GREEN",
+    "color": "BLUE",
     "showHealth": true
   },
   "phases": [

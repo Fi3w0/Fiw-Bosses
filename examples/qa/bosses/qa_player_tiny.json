@@ -1,16 +1,16 @@
 {
-  "id": "qa_player_reach",
-  "displayName": "&aQA Long reach +3",
+  "id": "qa_player_tiny",
+  "displayName": "&aQA Player x0.5",
   "health": 120,
   "armor": 0.0,
   "attackDamage": 2.0,
   "speed": 0.25,
   "movement": "side",
   "baseEntity": "custom",
-  "reach": 3.0,
+  "scale": 0.5,
   "skin": null,
   "bossBar": {
-    "color": "GREEN",
+    "color": "BLUE",
     "showHealth": true
   },
   "phases": [

@@ -1,6 +1,6 @@
 {
-  "id": "qa_minion_full",
-  "displayName": "&bQA qa_minion_full",
+  "id": "qa_minion_skin",
+  "displayName": "&bQA Minion skin (.png)",
   "baseEntity": "custom",
   "health": 5,
   "attackDamage": 0,

@@ -1,6 +1,6 @@
 {
   "id": "qa_pylon",
-  "displayName": "&bQA qa_pylon",
+  "displayName": "&bQA Pylon",
   "baseEntity": "custom",
   "health": 5,
   "attackDamage": 0,

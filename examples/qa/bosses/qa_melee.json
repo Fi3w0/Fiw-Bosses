@@ -1,16 +1,15 @@
 {
-  "id": "qa_huge_room",
-  "displayName": "&aQA Huge x6 (room check)",
-  "health": 400,
+  "id": "qa_melee",
+  "displayName": "&cQA Melee chase",
+  "health": 200,
   "armor": 0.0,
-  "attackDamage": 1.0,
+  "attackDamage": 4.0,
   "speed": 0.25,
-  "movement": "guard_point",
+  "movement": "side",
   "baseEntity": "custom",
-  "scale": 6.0,
   "skin": null,
   "bossBar": {
-    "color": "GREEN",
+    "color": "BLUE",
     "showHealth": true
   },
   "phases": [

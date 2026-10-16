@@ -1,6 +1,6 @@
 {
   "id": "qa_scale_abilities",
-  "displayName": "&aQA Big teleporter x2.5",
+  "displayName": "&aQA Teleporter x2.5",
   "health": 300,
   "armor": 0.0,
   "attackDamage": 1.0,
@@ -10,7 +10,7 @@
   "scale": 2.5,
   "skin": null,
   "bossBar": {
-    "color": "GREEN",
+    "color": "BLUE",
     "showHealth": true
   },
   "phases": [

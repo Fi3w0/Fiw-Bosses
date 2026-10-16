@@ -1,16 +1,16 @@
 {
-  "id": "qa_player_tiny",
-  "displayName": "&aQA Tiny player x0.5",
-  "health": 120,
+  "id": "qa_huge_room",
+  "displayName": "&aQA Huge x6 (room check)",
+  "health": 400,
   "armor": 0.0,
-  "attackDamage": 2.0,
+  "attackDamage": 1.0,
   "speed": 0.25,
-  "movement": "side",
+  "movement": "guard_point",
   "baseEntity": "custom",
-  "scale": 0.5,
+  "scale": 6.0,
   "skin": null,
   "bossBar": {
-    "color": "GREEN",
+    "color": "BLUE",
     "showHealth": true
   },
   "phases": [
