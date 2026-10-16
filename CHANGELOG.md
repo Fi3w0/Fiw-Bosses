@@ -6,6 +6,8 @@ matching the tag).
 
 ## [1.3.1] - Domain stability, melee chase and domain sound settings
 
+Maintenance and bug-fix update. If something breaks or behaves differently than before, please report it on the [issue tracker](https://github.com/Fi3w0/Fiw-Bosses/issues).
+
 > **⚠ Upgrade note:** a boss or custom minion with `renderEntity` now has that mob's hitbox instead of the player-sized one (an iron golem disguise is 1.4 x 2.7). Spawns are lifted up to 3 blocks or refused when the boss does not fit. Update client and server together.
 >
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
