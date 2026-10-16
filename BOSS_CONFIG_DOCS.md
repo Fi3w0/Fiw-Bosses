@@ -1220,7 +1220,7 @@ The boss can run a completely separate set of attacks while the domain is active
 }
 ```
 
-> **Sound file:** The domain collapse sound already ships in the mod. Override it through a resource pack at `assets/fiw_bosses/sounds/domain_break.ogg` (Minecraft uses `.ogg` audio).
+> **Sound file:** The domain collapse sound already ships in the mod. Turn it off or change its volume with `domainBreakSound` / `domainBreakVolume` in [settings.json](#global-settingsjson). Override it through a resource pack at `assets/fiw_bosses/sounds/domain_break.ogg` (Minecraft uses `.ogg` audio).
 
 > Inside `attacks[]`, `cooldown` and its alias `cooldownTicks` both set the attack interval in ticks (default 40). If both are supplied, `cooldown` wins. This is separate from the domain’s post-collapse lockout below.
 
@@ -2482,11 +2482,15 @@ Created on first start at `config/fiw_bosses/settings.json`. Applies to every bo
   "showBossBarHealth": false,
   "webhooks": { "discord": "" },
   "pathfinding": "vanilla",
+  "domainBreakSound": true,
+  "domainBreakVolume": 50,
   "schedules": []
 }
 ```
 
 `showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
+
+`domainBreakSound` turns the domain collapse sound on or off for every boss. `domainBreakVolume` sets its volume from `0` to `100` percent (default `50`); values outside that range are clamped. The sound carries 48 blocks. Both apply on `/boss reload`.
 
 ## Discord Webhooks
 

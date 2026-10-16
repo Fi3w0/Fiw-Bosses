@@ -14,7 +14,7 @@ public final class ModSounds {
 
     private static SoundEvent register(String name) {
         ResourceLocation id = new ResourceLocation(FiwBossesCore.MOD_ID, name);
-        return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
+        return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createFixedRangeEvent(id, 48f));
     }
 
     public static void init() {

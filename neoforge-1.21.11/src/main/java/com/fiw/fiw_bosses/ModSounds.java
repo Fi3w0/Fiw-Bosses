@@ -15,8 +15,8 @@ public final class ModSounds {
 
     public static final DeferredHolder<SoundEvent, SoundEvent> DOMAIN_BREAK =
             SOUND_EVENTS.register("domain_break",
-                    () -> SoundEvent.createVariableRangeEvent(
-                            Identifier.fromNamespaceAndPath(FiwBossesCore.MOD_ID, "domain_break")));
+                    () -> SoundEvent.createFixedRangeEvent(
+                            Identifier.fromNamespaceAndPath(FiwBossesCore.MOD_ID, "domain_break"), 48f));
 
     private ModSounds() {}
 

@@ -21,6 +21,25 @@ class SettingsTest {
     }
 
     @Test
+    void domainBreakVolumeDefaultsClampsAndToggles() {
+        GlobalSettings s = SettingsLoader.parse(new StringReader("{}"));
+        assertTrue(s.domainBreakSound);
+        assertEquals(50, s.domainBreakVolume);
+        assertEquals(0.25f, s.domainBreakGain());
+
+        s = SettingsLoader.parse(new StringReader("{\"domainBreakVolume\":250}"));
+        assertEquals(100, s.domainBreakVolume);
+        assertEquals(0.5f, s.domainBreakGain());
+
+        s = SettingsLoader.parse(new StringReader("{\"domainBreakVolume\":-5}"));
+        assertEquals(0, s.domainBreakVolume);
+        assertEquals(0f, s.domainBreakGain());
+
+        s = SettingsLoader.parse(new StringReader("{\"domainBreakSound\":false,\"domainBreakVolume\":100}"));
+        assertEquals(0f, s.domainBreakGain());
+    }
+
+    @Test
     void bossOverrideWinsKeyByKey() {
         BossDefinition def = new Gson().fromJson(
                 "{\"id\":\"b\",\"fightSummary\":{\"showDeaths\":false,\"topCount\":5},"

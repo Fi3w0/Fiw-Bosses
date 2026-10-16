@@ -2,6 +2,7 @@ package com.fiw.fiw_bosses.goal;
 
 import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.ModRefs;
+import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.entity.BossEntity;
 import com.fiw.fiw_bosses.util.TextUtil;
 import com.google.gson.JsonArray;
@@ -288,8 +289,11 @@ public class DomainGoal extends Goal {
         }
         capturedPlayers.clear();
 
-        level.playSound(null, center.x, center.y, center.z,
-                ModRefs.DOMAIN_BREAK, SoundSource.HOSTILE, 3.0f, 1.0f);
+        float breakVolume = SettingsLoader.get().domainBreakGain();
+        if (breakVolume > 0f) {
+            level.playSound(null, center.x, center.y, center.z,
+                    ModRefs.DOMAIN_BREAK, SoundSource.HOSTILE, breakVolume, 1.0f);
+        }
 
         for (int ring = 0; ring < 6; ring++) {
             double br = radius * (6 - ring) / 6.0;

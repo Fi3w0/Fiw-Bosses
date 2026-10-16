@@ -3,7 +3,7 @@
     "sounds": [
       {
         "name": "fiw_bosses:domain_break",
-        "volume": 0.6,
+        "attenuation_distance": 48,
         "stream": false
       }
     ]

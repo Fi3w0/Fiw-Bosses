@@ -8,6 +8,9 @@ matching the tag).
 
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
 
+### Added
+- `domainBreakSound` (on/off) and `domainBreakVolume` (0-100%, default 50%) in `settings.json` control the domain collapse sound for every boss. It still carries 48 blocks.
+
 ### Changed
 - Include a two-instance regression pack for domain aliases, local skins, schedules, reloads and restart checks, with a bundled test skin.
 - Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
@@ -18,7 +21,7 @@ matching the tag).
 - Local `file` skins accept a name with or without `.png`.
 - Correct configuration guide commands, paths, navigation, persistence notes and domain sound overrides; give global settings, webhooks, pathfinding and records their own sections.
 - Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.
-- Domain collapse is no longer deafening: the layered ender dragon death roar is removed and the `domain_break` sound plays at 60% volume.
+- Domain collapse is no longer deafening: the layered ender dragon death roar is removed and the `domain_break` sound is quieter by default.
 
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
 

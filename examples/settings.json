@@ -14,5 +14,7 @@
   "showBossBarHealth": false,
   "webhooks": { "discord": "" },
   "pathfinding": "vanilla",
+  "domainBreakSound": true,
+  "domainBreakVolume": 50,
   "schedules": []
 }

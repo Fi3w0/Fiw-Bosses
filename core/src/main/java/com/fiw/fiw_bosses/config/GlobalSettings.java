@@ -18,6 +18,15 @@ public class GlobalSettings {
     // Default path finding for bosses and custom minions: "vanilla" or "shared" (squads share
     // paths and re-plan less often for far targets). A boss/minion's own "pathfinding" wins.
     public String pathfinding = "vanilla";
+    // Domain collapse sound. Volume is a 0-100 percent of the loudest allowed level.
+    public boolean domainBreakSound = true;
+    public int domainBreakVolume = 50;
+
+    /** Playback volume for the domain collapse sound; 0 = silent. 100% plays at half gain. */
+    public float domainBreakGain() {
+        if (!domainBreakSound) return 0f;
+        return Math.max(0, Math.min(100, domainBreakVolume)) / 200f;
+    }
 
     /** True when an entity with this own setting (may be null) should use shared path finding. */
     public boolean sharedPathfinding(String own) {
@@ -30,6 +39,7 @@ public class GlobalSettings {
         FightSummaryConfig defaults = FightSummaryConfig.defaults();
         fightSummary = fightSummary == null ? defaults : fightSummary.over(defaults);
         if (combatTrackingRange <= 0) combatTrackingRange = 48;
+        domainBreakVolume = Math.max(0, Math.min(100, domainBreakVolume));
         if (webhooks == null) webhooks = new WebhookConfig();
         if (schedules == null) schedules = new java.util.ArrayList<>();
     }
