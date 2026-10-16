@@ -6,11 +6,14 @@ matching the tag).
 
 ## [Unreleased]
 
+> **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
+
 ### Changed
 - Include a two-instance regression pack for domain aliases, local skins, schedules, reloads and restart checks, with a bundled test skin.
 - Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
 
 ### Fixed
+- Safely restore domain goals after expiry or interruption, discard stale phase/reload actions, and preserve the active rage overlay.
 - Local `file` skins accept a name with or without `.png`.
 - Correct configuration guide commands, paths, navigation, persistence notes and domain sound overrides; give global settings, webhooks, pathfinding and records their own sections.
 - Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.

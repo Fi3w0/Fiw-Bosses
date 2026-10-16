@@ -15,6 +15,8 @@ No Java. No restarts. No combat-modding degree required.
 
 </div>
 
+Domains with custom attacks now stop safely across expiry, phase changes and reloads; active rage settings remain applied.
+
 Local `file` skins accept names with or without `.png`. Domain `attacks[]` accept both `cooldown` and `cooldownTicks` (ticks; `cooldown` wins if both are set). See the [configuration guide](BOSS_CONFIG_DOCS.md).
 
 Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.

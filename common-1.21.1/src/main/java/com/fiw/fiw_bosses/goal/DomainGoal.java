@@ -269,7 +269,16 @@ public class DomainGoal extends Goal {
         if (speedAttr != null) speedAttr.removeModifier(DOMAIN_SPEED_ID);
 
         if (hasCustomAttacks && boss.getPhaseManager() != null) {
-            boss.getPhaseManager().restoreCurrentPhase();
+            // stop() can run inside GoalSelector.removeGoal()/tick(). Rebuilding here
+            // mutates that selector recursively. A removed phase's domain must also
+            // never rebuild the goals of the phase that replaced it.
+            boss.scheduleGoalAction(() -> {
+                if (boss.isAlive() && boss.isActive()
+                        && boss.getGoalSelector().getAvailableGoals().stream()
+                        .anyMatch(wrapped -> wrapped.getGoal() == this)) {
+                    boss.getPhaseManager().restoreCurrentPhase();
+                }
+            });
         }
 
         for (ServerPlayer p : capturedPlayers) {
@@ -425,6 +434,9 @@ public class DomainGoal extends Goal {
     }
 
     private void applyDomainGoals() {
+        // A phase change/reload may have removed this domain after start() queued us.
+        if (boss.getGoalSelector().getAvailableGoals().stream()
+                .noneMatch(wrapped -> wrapped.getGoal() == this && wrapped.isRunning())) return;
         var toRemove = boss.getGoalSelector().getAvailableGoals().stream()
                 .map(WrappedGoal::getGoal)
                 .filter(g -> g != this
