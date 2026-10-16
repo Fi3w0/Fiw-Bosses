@@ -1,0 +1,27 @@
+{
+  "id": "clockwork_guardian",
+  "displayName": "&6&lClockwork Guardian",
+  "health": 300.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:iron_golem",
+  "speed": 0.25,
+  "attackDamage": 8.0,
+  "schedule": {
+    "intervalMinutes": 30,
+    "locations": [
+      { "dimension": "minecraft:overworld", "x": 0, "z": 0 }
+    ],
+    "announceSeconds": [600, 60, 10]
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        { "type": "slam", "cooldownTicks": 160, "params": { "radius": 4, "damage": 8 } }
+      ]
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:iron_ingot", "minCount": 4, "maxCount": 8 }
+  ]
+}

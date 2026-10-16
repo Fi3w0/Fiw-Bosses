@@ -1,0 +1,18 @@
+{
+  "fightSummary": {
+    "enabled": false,
+    "showDamageDealt": true,
+    "showDamageTaken": true,
+    "showDeaths": true,
+    "showUniqueDrops": true,
+    "showKillingBlow": true,
+    "showDuration": true,
+    "topCount": 3,
+    "broadcastRange": 64
+  },
+  "combatTrackingRange": 48,
+  "showBossBarHealth": false,
+  "webhooks": { "discord": "" },
+  "pathfinding": "vanilla",
+  "schedules": []
+}

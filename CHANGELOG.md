@@ -6,6 +6,9 @@ matching the tag).
 
 ## [Unreleased]
 
+### Changed
+- Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
+
 ### Fixed
 - Local `file` skins accept a name with or without `.png`.
 - Correct configuration guide commands, paths, navigation, persistence notes and domain sound overrides; give global settings, webhooks, pathfinding and records their own sections.
