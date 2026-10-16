@@ -1,0 +1,63 @@
+# Console smoke test, run after "Done". "wait N" sleeps N seconds; the rest are commands.
+boss validate
+boss list
+forceload add -32 -32 31 31
+fill -24 79 -24 24 79 24 minecraft:stone
+# Clear the space above too: the world seed is random and terrain would block spawns.
+fill -24 80 -24 24 92 24 minecraft:air
+wait 2
+boss spawn qa_domain 0 80 0
+boss spawn qa_melee 6 80 0
+boss spawn qa_skin -6 80 0
+boss spawn qa_shield 0 80 6
+boss spawn qa_golem_disguise 10 80 10
+boss spawn qa_golem_giant -12 80 -12
+boss spawn qa_golem_small 12 80 -12
+boss spawn qa_player_giant -12 80 12
+boss spawn qa_player_tiny 4 80 -8
+boss spawn qa_player_reach -4 80 -8
+boss spawn qa_scale_abilities 16 80 0
+boss spawn qa_summon variant hard 0 80 -16
+boss minion spawn qa_minion_skin
+boss minion spawn qa_scaled_minion
+boss minion spawn qa_vanilla_minion
+wait 5
+# 1.21.x only (1.20.1 has no scale attribute; the script checks the result per version).
+# 1.21.1 still names it generic.scale; the name that does not exist only prints "Can't find element".
+attribute @e[nbt={BossId:"qa_golem_giant"},limit=1] minecraft:scale get
+attribute @e[nbt={BossId:"qa_golem_giant"},limit=1] minecraft:generic.scale get
+boss phase @e[nbt={BossId:"qa_domain"}] set 2
+boss phase @e[nbt={BossId:"qa_domain"}] set 3
+boss phase @e[nbt={BossId:"qa_domain"}] set 4
+boss phase @e[nbt={BossId:"qa_domain"}] set 1
+boss rage @e[nbt={BossId:"qa_summon"}] start qa_rage
+wait 10
+boss rage @e[nbt={BossId:"qa_summon"}] end
+boss reload
+wait 5
+# Room check: a 7x3x7 pocket under a stone roof is too small for the x6 boss.
+fill 20 80 20 26 82 26 minecraft:air
+fill 20 83 20 26 83 26 minecraft:stone
+boss spawn qa_huge_room 23 80 23
+boss limits qa_summon
+boss schedule trigger qa_schedule
+boss schedule trigger qa_schedule
+boss stats
+# Keep qa_domain (in phase 3) for the restart check; remove the rest.
+boss kill qa_melee
+boss kill qa_skin
+boss kill qa_shield
+boss kill qa_golem_disguise
+boss kill qa_golem_giant
+boss kill qa_golem_small
+boss kill qa_player_giant
+boss kill qa_player_tiny
+boss kill qa_player_reach
+boss kill qa_scale_abilities
+boss kill qa_summon
+boss kill qa_schedule
+boss minion kill all
+boss phase @e[nbt={BossId:"qa_domain"}] set 3
+wait 3
+save-all flush
+wait 3

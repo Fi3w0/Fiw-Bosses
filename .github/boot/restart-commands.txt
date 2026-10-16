@@ -1,0 +1,6 @@
+# After a restart the domain boss must still be there, in phase 3 (saved zero-based as 2).
+wait 5
+boss list
+data get entity @e[nbt={BossId:"qa_domain"},limit=1] BossPhase
+boss kill all
+wait 2

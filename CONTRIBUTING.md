@@ -38,9 +38,15 @@ For a single target:
 
 ## Testing
 
-- Run `./gradlew :core:test` for core config parsing and text utility tests.
+- Run `./gradlew :core:test` for core tests. They also validate every config under
+  `examples/`, so a new example must load without warnings.
+- A new ability type goes in its `BossGoalFactory` on every version and in core
+  `AbilityTypes`; a test checks they match.
+- Boot test on a real server with the built jar:
+  `JAVA_17=<java 17> JAVA_21=<java 21> .github/scripts/boot-test.sh fabric-1.21.8 <jar>`.
+  CI runs it for every target before publishing.
 - For in-game testing, build and copy the jar to your Minecraft instance's
-  `mods/` folder, or use the IDE's run configuration.
+  `mods/` folder and use the checklist in `examples/qa/README.md`.
 
 ## Pull Requests
 
