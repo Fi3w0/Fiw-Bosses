@@ -1,0 +1,22 @@
+boss reload
+boss list
+boss minion list
+boss schedule list
+forceload add -16 -16 31 31
+fill -16 79 -16 16 79 16 minecraft:stone
+boss spawn qa_domain 0 80 0
+boss phase @e[nbt={BossId:"qa_domain"}] set 2
+data get entity @e[nbt={BossId:"qa_domain"},limit=1] BossPhase
+boss spawn qa_skin_short 5 80 0
+boss spawn qa_skin_full 8 80 0
+boss spawn qa_summon variant hard 0 80 8
+boss rage @e[nbt={BossId:"qa_summon"}] start qa_rage
+boss rage @e[nbt={BossId:"qa_summon"}] end
+boss limits qa_summon
+boss stats
+boss summary on
+boss summary top 2
+boss summary show duration false
+boss schedule trigger qa_schedule
+boss schedule trigger qa_schedule
+save-all flush

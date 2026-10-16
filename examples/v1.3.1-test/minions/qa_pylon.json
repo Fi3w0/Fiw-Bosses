@@ -1,0 +1,15 @@
+{
+  "id": "qa_pylon",
+  "displayName": "&bQA qa_pylon",
+  "baseEntity": "custom",
+  "health": 5,
+  "attackDamage": 0,
+  "movement": "static",
+  "teleportWhenStuck": false,
+  "skin": {
+    "type": "file",
+    "value": "qa_skin"
+  },
+  "abilities": [],
+  "loot": []
+}

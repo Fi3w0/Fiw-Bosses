@@ -1,0 +1,15 @@
+{
+  "id": "qa_minion_full",
+  "displayName": "&bQA qa_minion_full",
+  "baseEntity": "custom",
+  "health": 5,
+  "attackDamage": 0,
+  "movement": "static",
+  "teleportWhenStuck": false,
+  "skin": {
+    "type": "file",
+    "value": "qa_skin.png"
+  },
+  "abilities": [],
+  "loot": []
+}

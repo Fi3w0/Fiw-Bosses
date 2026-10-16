@@ -7,6 +7,7 @@ matching the tag).
 ## [Unreleased]
 
 ### Changed
+- Include a two-instance regression pack for domain aliases, local skins, schedules, reloads and restart checks, with a bundled test skin.
 - Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
 
 ### Fixed

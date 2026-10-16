@@ -1,0 +1,7 @@
+{
+  "id": "qa_vanilla_minion",
+  "displayName": "&aQA vanilla chicken",
+  "baseEntity": "minecraft:chicken",
+  "health": 5,
+  "attackDamage": 0
+}

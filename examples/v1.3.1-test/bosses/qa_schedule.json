@@ -1,0 +1,37 @@
+{
+  "id": "qa_schedule",
+  "displayName": "&bQA One-minute schedule",
+  "health": 80.0,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "BLUE",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": [],
+  "schedule": {
+    "intervalMinutes": 1,
+    "locations": [
+      {
+        "dimension": "minecraft:overworld",
+        "x": 8,
+        "z": 8
+      }
+    ],
+    "announceSeconds": [
+      10
+    ],
+    "announceMessage": "&eQA schedule in {time}",
+    "spawnMessage": "&aQA scheduled boss spawned"
+  }
+}

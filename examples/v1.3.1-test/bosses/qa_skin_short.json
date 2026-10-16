@@ -1,0 +1,25 @@
+{
+  "id": "qa_skin_short",
+  "displayName": "&bQA Skin short",
+  "health": 80.0,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": {
+    "type": "file",
+    "value": "qa_skin"
+  },
+  "bossBar": {
+    "color": "BLUE",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

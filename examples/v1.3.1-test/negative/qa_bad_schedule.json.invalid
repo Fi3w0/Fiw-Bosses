@@ -1,0 +1,24 @@
+{
+  "id": "qa_bad_schedule",
+  "displayName": "QA invalid timing",
+  "health": 20,
+  "skin": null,
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "schedule": {
+    "intervalMinutes": 1,
+    "times": [
+      "18:00"
+    ],
+    "locations": [
+      {
+        "x": 8,
+        "z": 8
+      }
+    ]
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "id": "qa_domain",
+  "displayName": "&bQA Domain aliases",
+  "health": 200,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "BLUE",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "transitionMessage": "&eQA phase: legacy",
+      "abilities": [
+        {
+          "type": "domain",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 8,
+            "duration": 240,
+            "domainSpeed": 0.2,
+            "pushDamage": 0,
+            "pullDamage": 0,
+            "darkness": false,
+            "blindness": false,
+            "cooldown": 20,
+            "attacks": [
+              {
+                "type": "random_message",
+                "cooldown": 80,
+                "params": {
+                  "messages": [
+                    "&aQA legacy pulse"
+                  ],
+                  "radius": 24
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.75,
+      "transitionMessage": "&eQA phase: alias",
+      "abilities": [
+        {
+          "type": "domain",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 8,
+            "duration": 240,
+            "domainSpeed": 0.2,
+            "pushDamage": 0,
+            "pullDamage": 0,
+            "darkness": false,
+            "blindness": false,
+            "cooldown": 20,
+            "attacks": [
+              {
+                "type": "random_message",
+                "cooldownTicks": 80,
+                "params": {
+                  "messages": [
+                    "&aQA alias pulse"
+                  ],
+                  "radius": 24
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.5,
+      "transitionMessage": "&eQA phase: precedence",
+      "abilities": [
+        {
+          "type": "domain",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 8,
+            "duration": 240,
+            "domainSpeed": 0.2,
+            "pushDamage": 0,
+            "pullDamage": 0,
+            "darkness": false,
+            "blindness": false,
+            "cooldown": 20,
+            "attacks": [
+              {
+                "type": "random_message",
+                "cooldown": 80,
+                "cooldownTicks": 10,
+                "params": {
+                  "messages": [
+                    "&aQA precedence pulse"
+                  ],
+                  "radius": 24
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.25,
+      "transitionMessage": "&eQA phase: default",
+      "abilities": [
+        {
+          "type": "domain",
+          "cooldownTicks": 200,
+          "params": {
+            "radius": 8,
+            "duration": 240,
+            "domainSpeed": 0.2,
+            "pushDamage": 0,
+            "pullDamage": 0,
+            "darkness": false,
+            "blindness": false,
+            "cooldown": 20,
+            "attacks": [
+              {
+                "type": "random_message",
+                "params": {
+                  "messages": [
+                    "&aQA default pulse"
+                  ],
+                  "radius": 24
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "loot": []
+}

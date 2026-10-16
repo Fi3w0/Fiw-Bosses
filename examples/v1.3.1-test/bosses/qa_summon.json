@@ -1,0 +1,51 @@
+{
+  "id": "qa_summon",
+  "displayName": "&bQA Summon and restart",
+  "health": 80.0,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "BLUE",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": [
+    {
+      "item": "minecraft:stick",
+      "count": 1
+    }
+  ],
+  "summon": [
+    {
+      "item": "minecraft:paper",
+      "altar": "minecraft:lodestone",
+      "consume": true,
+      "cooldownSeconds": 10
+    }
+  ],
+  "spawnLimits": {
+    "maxAlive": 1,
+    "cooldownSeconds": 30
+  },
+  "variants": {
+    "hard": {
+      "healthMultiplier": 2.0,
+      "displayName": "&cQA Hard Summon"
+    }
+  },
+  "rages": {
+    "qa_rage": {
+      "durationSeconds": 5,
+      "transitionMessage": "&eQA rage started"
+    }
+  }
+}

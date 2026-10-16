@@ -1,0 +1,13 @@
+{
+  "fightSummary": {
+    "enabled": true,
+    "topCount": 3
+  },
+  "combatTrackingRange": 48,
+  "showBossBarHealth": true,
+  "webhooks": {
+    "discord": ""
+  },
+  "pathfinding": "vanilla",
+  "schedules": []
+}

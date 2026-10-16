@@ -254,6 +254,8 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 
 Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.
 
+The current two-instance regression pack and command checklist are in [examples/v1.3.1-test](examples/v1.3.1-test/README.md).
+
 ## Building
 
 Run Gradle with **JDK 21** (the 1.20.1 modules compile against a Java 17 toolchain).
