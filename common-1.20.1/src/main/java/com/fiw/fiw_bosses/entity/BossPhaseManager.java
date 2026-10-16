@@ -247,7 +247,9 @@ public class BossPhaseManager {
     /** Re-applies current phase goals and stats without playing transition effects. */
     public void restoreCurrentPhase() {
         if (currentPhaseIndex < 0 || currentPhaseIndex >= phases.size()) return;
-        applyEffective();
+        PhaseDefinition phase = getCurrentPhase();
+        rebuildGoals(phase);
+        applyStatModifiers(phase);
     }
 
     public int getCurrentPhaseIndex() { return currentPhaseIndex; }
