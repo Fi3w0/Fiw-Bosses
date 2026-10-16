@@ -127,7 +127,8 @@ public class DomainGoal extends Goal {
             for (var elem : attacksJson) {
                 JsonObject entry = elem.getAsJsonObject();
                 String type    = entry.has("type")     ? entry.get("type").getAsString()          : "";
-                int    cd      = entry.has("cooldown") ? entry.get("cooldown").getAsInt()          : 40;
+                int    cd      = entry.has("cooldown") ? entry.get("cooldown").getAsInt()
+                        : entry.has("cooldownTicks") ? entry.get("cooldownTicks").getAsInt() : 40;
                 JsonObject ap  = entry.has("params")   ? entry.get("params").getAsJsonObject()     : new JsonObject();
                 try {
                     Goal g = BossGoalFactory.create(type, boss, cd, ap);

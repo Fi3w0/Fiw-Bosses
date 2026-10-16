@@ -4,6 +4,11 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [Unreleased]
+
+### Fixed
+- Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.
+
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
 
 ### Added
