@@ -85,6 +85,9 @@ Fabric builds require **[Fabric API](https://modrinth.com/mod/fabric-api)**. **[
 
 ## Features
 
+Local `file` skins accept names with or without `.png`. Domain `attacks[]` accept both `cooldown` and `cooldownTicks` (ticks; `cooldown` wins if both are set). See the [configuration guide](BOSS_CONFIG_DOCS.md).
+
+
 ### Phase-based fights
 Bosses change behavior as their HP drops. Each phase can alter speed, damage, equipment, minion pools, transition messages, sounds, particles, and the active ability set.
 
@@ -248,6 +251,8 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 ```
 
 ---
+
+Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.
 
 ## Building
 

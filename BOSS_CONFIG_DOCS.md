@@ -7,7 +7,11 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `config/fiw_bosses/bosses/` | Active boss definitions |
 | `config/fiw_bosses/minions/` | Custom minion definitions |
 | `config/fiw_bosses/skins/` | Custom skin `.png` files |
+| `config/fiw_bosses/settings.json` | Global defaults and optional world spawn schedules |
+| `config/fiw_bosses/data/` | Persistent `spawns.json`, `lockouts.json`, `records.json`, `schedules.json`; back up this folder |
 | `examples/` | Pre-built bosses ready to copy |
+
+**Units:** Ability, idle and phase timing uses ticks (20 ticks = 1 second), unless the field explicitly names another unit. Summoning, spawn limits, rages, loot lockouts and schedules use seconds, minutes or hours as named by the field. Daily schedule times use the server timezone.
 
 > **Hot reload:** `/boss reload` — picks up all boss + minion changes instantly.
 
@@ -22,9 +26,23 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `/boss list` | level 2 | List all loaded boss IDs |
 | `/boss reload` | level 3 | Reload all boss + minion configs without restart |
 | `/boss minion list` | level 2 | List all loaded minion definitions |
-| `/boss minion spawn <id> [count]` | level 2 | Spawn one or more custom minions at your position |
+| `/boss minion spawn <id> [count]` | level 2 | Spawn one or more minions from a loaded definition (custom or vanilla base) |
 | `/boss minion kill <id>` | level 2 | Kill all living minions with that ID |
 | `/boss minion kill all` | level 2 | Kill every living minion in all worlds |
+| `/boss spawn <bossId> variant <name> [pos]` | level 2 | Spawn a named difficulty variant |
+| `/boss limits <bossId> [reset]` | level 2 | Inspect or reset native-summon limits |
+| `/boss phase <targets> next` | level 2 | Advance the selected bosses one phase |
+| `/boss phase <targets> prev` | level 2 | Move the selected bosses back one phase |
+| `/boss phase <targets> set <n>` | level 2 | Force a phase (1-based) |
+| `/boss rage <targets> start <name>` | level 2 | Start a named rage |
+| `/boss rage <targets> end` | level 2 | End the active rage |
+| `/boss stats [bossId]` | level 2 | Show kill records |
+| `/boss schedule list` | level 2 | List world spawn schedules |
+| `/boss schedule trigger <id>` | level 2 | Trigger a schedule now |
+| `/boss summary` | level 2 | Show current global summary settings |
+| `/boss summary on` / `/boss summary off` | level 2 | Enable or disable the global fight summary |
+| `/boss summary top <n>` | level 2 | Set summary ranking length (1–10) |
+| `/boss summary show <section> <bool>` | level 2 | Toggle damage, taken, deaths, drops, killer or duration |
 
 ---
 
@@ -38,75 +56,80 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Skin](#skin)
 - [Equipment](#equipment)
 - [Phases](#phases)
+  - [Shield Phase (Pylons)](#shield-phase-pylons)
+  - [Forcing a phase (admins)](#forcing-a-phase-admins)
+  - [Health above 1024](#health-above-1024)
 - [Damage Protection](#damage-protection)
 - [Factions](#factions)
 - [Water & Lava Behavior](#water--lava-behavior)
 - [Abilities](#abilities)
-  - [melee_slash](#melee_slash)
-  - [arc_slash](#arc_slash)
-  - [dodge](#dodge)
-  - [slam](#slam)
-  - [aoe_smash](#aoe_smash)
-  - [charge](#charge)
-  - [teleport](#teleport)
-  - [shield](#shield)
-  - [heal](#heal)
-  - [ranged_projectile](#ranged_projectile)
-  - [summon_minions](#summon_minions)
-  - [beam](#beam)
-  - [chain_lightning](#chain_lightning)
-  - [orbital](#orbital)
-  - [meteor](#meteor)
-  - [pull](#pull)
-  - [flames](#flames)
-  - [freeze](#freeze)
-  - [random_message](#random_message)
-  - [particle_tornado](#particle_tornado)
-  - [swap](#swap)
-  - [shockwave](#shockwave)
-  - [slash_wave](#slash_wave)
-  - [sonic_boom](#sonic_boom)
-  - [domain](#domain)
-  - [ice_crystal](#ice_crystal)
-  - [fire_arrow](#fire_arrow)
-  - [crimson_slash](#crimson_slash)
-  - [singularity_cannon](#singularity_cannon)
-  - [lightning_radial](#lightning_radial)
-  - [orb_throw](#orb_throw)
-  - [tracking_orb](#tracking_orb)
-  - [moving_tornado](#moving_tornado)
-  - [ground_spike](#ground_spike)
-  - [arrow_rain](#arrow_rain)
-  - [potion_field](#potion_field)
-  - [detect_mark](#detect_mark)
-  - [phantom_dash](#phantom_dash)
-  - [guardian_shield](#guardian_shield)
-  - [essence_absorption](#essence_absorption)
-  - [judgment_mark](#judgment_mark)
-  - [divine_execution](#divine_execution)
-  - [rift_cleave](#rift_cleave)
-  - [fear_burst](#fear_burst)
-  - [mirror_image](#mirror_image)
-  - [sacrifice_minion](#sacrifice_minion)
-  - [last_breath](#last_breath)
-  - [wither_crown](#wither_crown)
-  - [cleanse](#cleanse)
-  - [second_wind](#second_wind)
-  - [adaptation](#adaptation)
-  - [rewind](#rewind)
-  - [gravity_well](#gravity_well)
-  - [shadow_clone](#shadow_clone)
-  - [blink_strike](#blink_strike)
-  - [curse_bomb](#curse_bomb)
-  - [soul_tether](#soul_tether)
-  - [wind_charge](#wind_charge)
+  - [`melee_slash`](#melee_slash)
+  - [`arc_slash`](#arc_slash)
+  - [`dodge`](#dodge)
+  - [`slam`](#slam)
+  - [`aoe_smash`](#aoe_smash)
+  - [`charge`](#charge)
+  - [`teleport`](#teleport)
+  - [`shield`](#shield)
+  - [`heal`](#heal)
+  - [`ranged_projectile`](#ranged_projectile)
+  - [`summon_minions`](#summon_minions)
+  - [`beam`](#beam)
+  - [`chain_lightning`](#chain_lightning)
+  - [`orbital`](#orbital)
+  - [`meteor`](#meteor)
+  - [`pull`](#pull)
+  - [`flames`](#flames)
+  - [`freeze`](#freeze)
+  - [`random_message`](#random_message)
+  - [`particle_tornado`](#particle_tornado)
+  - [`swap`](#swap)
+  - [`shockwave`](#shockwave)
+  - [`slash_wave`](#slash_wave)
+  - [`sonic_boom`](#sonic_boom)
+  - [`domain`](#domain)
+  - [`ice_crystal`](#ice_crystal)
+  - [`fire_arrow`](#fire_arrow)
+  - [`crimson_slash`](#crimson_slash)
+  - [`singularity_cannon`](#singularity_cannon)
+  - [`lightning_radial`](#lightning_radial)
+  - [`orb_throw`](#orb_throw)
+  - [`tracking_orb`](#tracking_orb)
+  - [`moving_tornado`](#moving_tornado)
+  - [`ground_spike`](#ground_spike)
+  - [`arrow_rain`](#arrow_rain)
+  - [`potion_field`](#potion_field)
+  - [`detect_mark`](#detect_mark)
+  - [`phantom_dash`](#phantom_dash)
+  - [`guardian_shield`](#guardian_shield)
+  - [`essence_absorption`](#essence_absorption)
+  - [`judgment_mark`](#judgment_mark)
+  - [`divine_execution`](#divine_execution)
+  - [`rift_cleave`](#rift_cleave)
+  - [`fear_burst`](#fear_burst)
+  - [`mirror_image`](#mirror_image)
+  - [`sacrifice_minion`](#sacrifice_minion)
+  - [`last_breath`](#last_breath)
+  - [`wither_crown`](#wither_crown)
+  - [`cleanse`](#cleanse)
+  - [`second_wind`](#second_wind)
+  - [`adaptation`](#adaptation)
+  - [`rewind`](#rewind)
+  - [`gravity_well`](#gravity_well)
+  - [`shadow_clone`](#shadow_clone)
+  - [`blink_strike`](#blink_strike)
+  - [`curse_bomb`](#curse_bomb)
+  - [`soul_tether`](#soul_tether)
+  - [`wind_charge`](#wind_charge)
 - [Minion System](#minion-system)
   - [Minion Definition Fields](#minion-definition-fields)
   - [Movement Modes](#movement-modes)
   - [Referencing Minions in Boss Phases](#referencing-minions-in-boss-phases)
+  - [Minion Behavior](#minion-behavior)
 - [Idle System](#idle-system)
 - [Arena Leash](#arena-leash)
 - [Anti-Cheese](#anti-cheese)
+  - [Stuck detection](#stuck-detection)
 - [Rages & Enrage Timer](#rages--enrage-timer)
 - [Summoning & Altars](#summoning--altars)
 - [Spawn Limits](#spawn-limits)
@@ -115,6 +138,14 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Loot](#loot)
 - [Raid Rewards (per-player loot)](#raid-rewards-per-player-loot)
 - [Fight Summary](#fight-summary)
+  - [Per-boss override](#per-boss-override)
+- [Global settings.json](#global-settingsjson)
+- [Discord Webhooks](#discord-webhooks)
+- [Path finding](#path-finding)
+- [Kill Records](#kill-records)
+- [Pre-Fight Activation & Dialogue](#pre-fight-activation--dialogue)
+  - [Pre-fight dialogue](#pre-fight-dialogue)
+  - [Pre-death dialogue](#pre-death-dialogue)
 - [Behavior Notes](#behavior-notes)
 
 ---
@@ -266,7 +297,7 @@ Use `&` prefix in `displayName`, `transitionMessage`, and `taunt` fields.
 
 **showHealth:** `true` appends the boss's real HP to the bar title, e.g. `Raid Titan  1,500/1,500 ❤`.
 It shows the real health, also above the 1024 cap. Omit it to use `showBossBarHealth` from
-[`settings.json`](#global-defaults--configfiw_bossessettingsjson) (default `false`).
+[`settings.json`](#global-settingsjson) (default `false`).
 
 ---
 
@@ -279,7 +310,7 @@ It shows the real health, also above the 1024 cap. Omit it to use `showBossBarHe
 | `type` | `value` | Notes |
 |--------|---------|-------|
 | `player` | Username or UUID | Fetches skin from Mojang API on server start — requires internet |
-| `file` | Filename without extension | Loads `config/fiw_bosses/skins/<name>.png` from your server config folder |
+| `file` | Filename with or without `.png` | Loads `config/fiw_bosses/skins/<name>.png` from your server config folder |
 
 **Using a custom skin file:**
 
@@ -555,7 +586,7 @@ Each ability entry follows this structure:
 
 - **`cooldownTicks`** — ticks between uses (20 ticks = 1 second)
 - **`params`** — all parameters are optional; defaults are listed below
-- **`taunt`** — available on many abilities. When supported, the boss sends a chat message when the ability activates. **All taunts are optional:** omit the param and the ability is completely silent (since 1.1.2 no ability has a built-in default message)
+- **`params.taunt`** — a key inside `params`, available on many abilities. When supported, the boss sends a chat message when the ability activates. **All taunts are optional:** omit the param and the ability is completely silent (since 1.1.2 no ability has a built-in default message)
 
 Abilities take **priority over basic melee** — they never get interrupted mid-cast.
 
@@ -1187,9 +1218,9 @@ The boss can run a completely separate set of attacks while the domain is active
 }
 ```
 
-> **Sound file:** The domain collapse plays `domain_break` — place your sound file at `src/main/resources/assets/fiw_bosses/sounds/domain_break.ogg`. Minecraft requires **`.ogg` format** — convert `.mp3` files with Audacity or ffmpeg (`ffmpeg -i domain_break.mp3 domain_break.ogg`).
+> **Sound file:** The domain collapse sound already ships in the mod. Override it through a resource pack at `assets/fiw_bosses/sounds/domain_break.ogg` (Minecraft uses `.ogg` audio).
 
-> `attacks` entries use `"cooldown"` (not `"cooldownTicks"`) inside the domain attacks array.
+> Inside `attacks[]`, `cooldown` and its alias `cooldownTicks` both set the attack interval in ticks (default 40). If both are supplied, `cooldown` wins. This is separate from the domain’s post-collapse lockout below.
 
 > The outer ability's `cooldownTicks` still exists, but `params.cooldown` controls the post-domain lockout. If `params.cooldown` is omitted, the lockout is at least 1800 ticks (90 seconds).
 
@@ -1309,7 +1340,7 @@ Summons a green mystic orb that orbits the boss with three spinning ring layers 
 
 ### `tracking_orb`
 
-A passive purple orb that follows the boss in a figure-8 pattern and periodically fires homing projectiles at nearby players. Uses `EnumSet.noneOf` so the boss can move and use other abilities simultaneously.
+A passive purple orb that follows the boss in a figure-8 pattern and periodically fires homing projectiles at nearby players. Runs alongside movement and other abilities.
 
 | Param | Default | Description |
 |-------|---------|-------------|
@@ -2016,7 +2047,7 @@ In any boss phase, add a `minions` array with `minionId` references:
 
 ## Idle System
 
-Bosses are persistent by default — they never despawn and never regen HP. The idle system lets you override this when no players are nearby.
+Bosses are persistent by default — they never despawn on their own unless configured, and do not regenerate HP automatically. The idle system lets you override this when no players are nearby.
 
 **Trigger condition:** no alive, non-spectator, non-creative player within 64 blocks for `idleTimeout` ticks.
 
@@ -2243,6 +2274,8 @@ Full example: [`examples/summon/ember_warden.json`](examples/summon/ember_warden
 
 ## Scheduled Spawns
 
+Copy `examples/schedules/clockwork_guardian.json` into `config/fiw_bosses/bosses/` for a working interval schedule. It is a boss definition with its own `schedule` block; there is no separate schedules config folder.
+
 World events: a boss spawns on its own at a set location, with server-wide countdown
 broadcasts. At most one boss from a schedule is alive at a time — while the last one lives
 (even in an unloaded chunk) the schedule skips its turn.
@@ -2400,61 +2433,6 @@ within `combatTrackingRange` blocks of it. Damage taken and deaths are only reco
 
 **Who sees it:** every participant (wherever they are) plus players within `broadcastRange` of the boss.
 
-### Global defaults — `config/fiw_bosses/settings.json`
-
-Created on first start. Applies to every boss.
-
-```json
-{
-  "fightSummary": {
-    "enabled": false,
-    "showDamageDealt": true,
-    "showDamageTaken": true,
-    "showDeaths": true,
-    "showUniqueDrops": true,
-    "showKillingBlow": true,
-    "showDuration": true,
-    "topCount": 3,
-    "broadcastRange": 64
-  },
-  "combatTrackingRange": 48,
-  "showBossBarHealth": false,
-  "webhooks": { "discord": "" },
-  "pathfinding": "vanilla"
-}
-```
-
-`showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
-
-`webhooks.discord` is a Discord webhook URL that gets an embed on every rewarded boss kill:
-boss name, killing blow, fight time, variant, top damage with share %, unique drops, and a
-"New fastest kill!" footer when a record falls. It is sent in the background and never slows
-the server. A boss can use its own channel or opt out:
-
-```json
-"webhook": { "discord": "https://discord.com/api/webhooks/..." }
-"webhook": { "enabled": false }
-```
-
-> Never post a webhook URL in an issue or a log — anyone with it can post to your channel.
-
-### Path finding
-
-`pathfinding` (settings.json default, overridable per boss and per minion) picks how bosses
-and custom minions find their way:
-
-| Mode | Behavior |
-|------|----------|
-| `vanilla` | Default. Plain Minecraft path finding, unchanged |
-| `shared` | For big minion swarms: re-plans less often when the target is far (every ¼ s within 16 blocks, 1 s within 32, 2 s beyond), and entities chasing the same target with the same hitbox and water handling reuse a path a squad-mate found in the last second, joining it at the nearest node. Entities too far from that path search on their own |
-
-### Kill records
-
-Every rewarded kill updates `config/fiw_bosses/data/records.json`: total kills, fastest kill
-(and who was in that fight), the most damage one player dealt in a single fight, and kills
-per player. `/boss stats` lists every boss; `/boss stats <bossId>` shows one boss's records
-and its top 5 players. Variants share their boss's records.
-
 Change it live (saved to `settings.json`, op level 2):
 
 ```text
@@ -2477,6 +2455,68 @@ to it. Example — always on for this boss, damage ranking only:
   "topCount": 5
 }
 ```
+
+
+---
+
+## Global settings.json
+
+Created on first start at `config/fiw_bosses/settings.json`. Applies to every boss; per-boss or per-minion values override global defaults where supported. A complete default example is in `examples/settings.json`.
+
+```json
+{
+  "fightSummary": {
+    "enabled": false,
+    "showDamageDealt": true,
+    "showDamageTaken": true,
+    "showDeaths": true,
+    "showUniqueDrops": true,
+    "showKillingBlow": true,
+    "showDuration": true,
+    "topCount": 3,
+    "broadcastRange": 64
+  },
+  "combatTrackingRange": 48,
+  "showBossBarHealth": false,
+  "webhooks": { "discord": "" },
+  "pathfinding": "vanilla",
+  "schedules": []
+}
+```
+
+`showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
+
+## Discord Webhooks
+
+`webhooks.discord` is a Discord webhook URL that gets an embed on every rewarded boss kill:
+boss name, killing blow, fight time, variant, top damage with share %, unique drops, and a
+"New fastest kill!" footer when a record falls. It is sent in the background and never slows
+the server. A boss can use its own channel or opt out:
+
+```json
+"webhook": { "discord": "https://discord.com/api/webhooks/..." }
+"webhook": { "enabled": false }
+```
+
+> Never post a webhook URL in an issue or a log — anyone with it can post to your channel.
+
+## Path finding
+
+`pathfinding` (settings.json default, overridable per boss and per minion) picks how bosses
+and custom minions find their way:
+
+| Mode | Behavior |
+|------|----------|
+| `vanilla` | Default. Plain Minecraft path finding, unchanged |
+| `shared` | For big minion swarms: re-plans less often when the target is far (every ¼ s within 16 blocks, 1 s within 32, 2 s beyond), and entities chasing the same target with the same hitbox and water handling reuse a path a squad-mate found in the last second, joining it at the nearest node. Entities too far from that path search on their own |
+
+## Kill Records
+
+Every rewarded kill updates `config/fiw_bosses/data/records.json`: total kills, fastest kill
+(and who was in that fight), the most damage one player dealt in a single fight, and kills
+per player. `/boss stats` lists every boss; `/boss stats <bossId>` shows one boss's records
+and its top 5 players. Variants share their boss's records.
+
 
 ---
 
@@ -2547,6 +2587,6 @@ Bosses can start **passive and immortal** — they do nothing until a player rig
 - Multiple abilities share priority slots 1–5; basic melee is at priority 6
 
 **Persistence**
-- Bosses never despawn
+- Bosses never despawn on their own unless configured. Idle and anti-cheese `despawn` actions can remove them; arena leash resets return them home and reset the fight. Removing a config and reloading removes its bosses.
 - Phase index is saved to NBT and restored on world reload
 - Deleting a boss config and running `/boss reload` removes the entity from the world
