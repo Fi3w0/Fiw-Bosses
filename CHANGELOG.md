@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
-## [Unreleased]
+## [1.3.1] - Domain stability, melee chase and domain sound settings
 
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
 
