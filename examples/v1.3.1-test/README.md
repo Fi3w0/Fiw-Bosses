@@ -1,8 +1,8 @@
 # 1.3.1 regression pack
 
-Use the existing **FIW Test Fabric 1.21.8** and **FIW Test NeoForge 1.21.11** Prism instances (Java 21). Replace their old FIW Bosses 1.3.0 jars with matching **1.3.1** production jars after a successful build; use a fresh disposable world. For a dedicated server, install the matching jar on both server and client. This pack works without Fiw Custom Items, and uses a bundled technical PNG rather than a network skin lookup.
+Use the existing **FIW Test Fabric 1.21.8** and **FIW Test NeoForge 1.21.11** Prism instances (Java 21). Both now have matching **1.3.1** production jars and this QA pack installed; use a fresh disposable world. Previous jars/settings are backed up in `Jar/prism-backup-2026-10-16/` (ignored by Git). For a dedicated server, install the matching jar on both server and client. This pack works without Fiw Custom Items, and uses a bundled technical PNG rather than a network skin lookup.
 
-Status on 2026-10-16: all eight dedicated-server launch attempts were blocked before Gradle configuration. No server reached `Done`. These are prepared tests, not completed gameplay tests.
+Status on 2026-10-16 after access was enabled: the full eight-target Gradle build and 58 core tests passed. All eight dedicated servers passed console/config and clean-restart checks. Visible skins, domain attack cadence, sound, player summons and rewards remain for the two-instance player pass.
 
 ## Build and install
 
@@ -98,19 +98,27 @@ For an empty 1.21.11 dedicated test server, set `pause-when-empty-seconds=-1` in
 
 Use `stop` for a clean restart; after boot, inspect the same entities with `/data get entity`, `/boss limits`, `/boss summary` and `/boss schedule list`. Prefix console commands with `/` only when entering them in player chat. This headless pass cannot check visible skins, a player-targeted domain, right-click summons, loot attribution or client rendering.
 
-Record the instance, first failing step and log lines. All required boxes are deliberately unchecked until actual server/player testing succeeds. No push or release.
+Record the instance, first failing step and log lines. Player boxes remain unchecked. Completed headless checks are listed below; they do not establish client rendering or player combat behavior. No push or release.
 
-## Dedicated-server attempt record
+## Dedicated-server results (2026-10-16)
 
-Each command was attempted from this repo on JDK 21 with a writable temporary Gradle cache. All failed before configuration with `FileLockContentionHandler` → `java.net.SocketException: Operation not permitted`. Full logs: `/private/tmp/fiw-runtime-20261016/`.
+The documented Java 21 eight-target build passed, including 58 core tests. Each target reached `Done` twice and stopped cleanly with exit 0. Server checks covered six bosses/four minions, both local skin filename forms, spawning, forced phases, hard variant, rage start/end, limits, settings commands and scheduled spawns. A dual-timing schedule was warned/disabled; removing it and reloading recovered. On restart, the domain boss retained zero-based `BossPhase: 3`, summary settings retained top=2/duration=false, and the saved live scheduled boss prevented duplication.
 
-| Target | Command | Result |
+| Target | Build | Console/config/restart |
 |---|---|---|
-| `fabric-1.21.11` | `./gradlew :fabric-1.21.11:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `neoforge-1.21.11` | `./gradlew :neoforge-1.21.11:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `fabric-1.21.8` | `./gradlew :fabric-1.21.8:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `neoforge-1.21.8` | `./gradlew :neoforge-1.21.8:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `fabric-1.21.1` | `./gradlew :fabric-1.21.1:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `neoforge-1.21.1` | `./gradlew :neoforge-1.21.1:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `fabric-1.20.1` | `./gradlew :fabric-1.20.1:runServer --console=plain --stacktrace` | Blocked before configuration |
-| `forge-1.20.1` | `./gradlew :forge-1.20.1:runServer --console=plain --stacktrace` | Blocked before configuration |
+| Fabric 1.21.11 | Pass | Pass |
+| NeoForge 1.21.11 | Pass | Pass |
+| Fabric 1.21.8 | Pass | Pass |
+| NeoForge 1.21.8 | Pass | Pass |
+| Fabric 1.21.1 | Pass | Pass |
+| NeoForge 1.21.1 | Pass | Pass |
+| Fabric 1.20.1 | Pass | Pass |
+| Forge 1.20.1 | Pass | Pass |
+
+Tests use isolated loopback servers and disposable `qa_world` folders. A temporary external Gradle init script selects loader run directories and forwards console input. Forge's default dev run omitted the core source set (`NoClassDefFoundError: com/fiw/fiw_bosses/core/FiwBossesCore`); adding it to that temporary run setup resolved startup. The production jar already bundles core, so no production change was needed.
+
+Allow chunks/entities to finish loading before immediately selecting a newly spawned boss. The first automated Fabric 1.21.11 phase-2 selection raced initial chunk loading; the delayed retry verifies it separately. Logs/results: `/private/tmp/fiw-live-20261016/bosses-results.json` and matching `bosses-*.log`. These supersede the earlier sandbox-blocked attempts.
+
+Remaining log issue: Fabric 1.20.1 and Fabric 1.21.1 each emit `No data fixer registered for fiw_bosses:boss` and `...:minion` during entity registration. Both targets still complete both boot/command/restart cycles without an exception. Entity registration was outside this fix list and remains unchanged; these runs are not a claim of an ERROR-free log.
+
+The player checks above remain required before pushing/releasing. Headless startup does not test the rendered skin, a player-targeted domain, right-click summoning, client networking or player reward attribution.
