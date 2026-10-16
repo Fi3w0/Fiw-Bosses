@@ -4,7 +4,7 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
-## [1.3.1] - Domain stability, melee chase and domain sound settings
+## [1.3.1] - Boss size, config checking and domain fixes
 
 Maintenance and bug-fix update. If something breaks or behaves differently than before, please report it on the [issue tracker](https://github.com/Fi3w0/Fiw-Bosses/issues).
 
@@ -13,20 +13,32 @@ Maintenance and bug-fix update. If something breaks or behaves differently than 
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
 
 ### Added
-- `/boss validate` (op level 3) lists every config problem with its file and field: misspelled keys with a "did you mean" hint, unknown ability types (also inside domain `attacks` and rages), out-of-range values, missing minions/variants/rages and schedule mistakes. `/boss reload` says how many problems it found, and each one is logged.
-- `scale` (0.0625-16, default 1) on bosses and custom minions sizes model and hitbox together (bosses below 1x also get shorter melee reach); `reach` (blocks, default 0) adds melee reach. Shadow clones copy both. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
-- `domainBreakSound` (on/off) and `domainBreakVolume` (0-100%, default 50%) in `settings.json` control the domain collapse sound for every boss. It still carries 48 blocks.
+- `scale` (0.0625-16, default 1) on bosses and custom minions resizes the model, hitbox and name tag height together, on every loader and Minecraft version. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
+- `reach` (0-16 blocks, default 0) adds melee reach on top of the normal reach, for long weapons or small bosses. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
+- Room check before a boss spawns from `/boss spawn`, summon items/altars and scheduled world spawns: the spawn is lifted up to 3 blocks to fit the boss's hitbox, or refused. `/boss spawn` and summon items say how much open space the boss needs (the summon item is not used up); schedules log a warning and skip that spawn.
+- `/boss validate` (op level 3) lists every config problem with its file and field: misspelled keys with a "did you mean" hint, unknown ability types (also inside domain `attacks` and rages), out-of-range values, duplicate ids, missing minions/variants/rages and schedule mistakes.
+- Configs are also checked on every load and `/boss reload`: each problem is logged, and `/boss reload` says how many it found.
+- `domainBreakSound` (on/off) and `domainBreakVolume` (0-100%, default 50%) in `settings.json` control the domain collapse sound for every boss.
+- Domain `attacks[]` accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are set, `cooldown` wins; the default stays 40 ticks.
+- Copy-ready `examples/settings.json` with every default, and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
 
 ### Changed
-- Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
+- A boss or custom minion with `renderEntity` uses that mob's hitbox instead of the player-sized one. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
+- Melee reach follows body size: big bosses hit you without walking into you, and bosses smaller than 1x get proportionally shorter reach so a tiny boss can't out-reach its own hitbox.
+- Shadow clones copy the boss's `scale` and `reach`; difficulty variants keep the boss's size.
+- Teleport, swap and slam abilities no longer move a big boss into a spot where its hitbox would be stuck in blocks.
+- Domain collapse sound: the layered ender dragon death roar is removed, the `domain_break` sound is quieter by default and carries 48 blocks.
+- Config files are always read as UTF-8 (on 1.20.1 under Windows, non-English names and messages could be garbled before).
 
 ### Fixed
+- Domains with custom attacks no longer crash the server when they end, are interrupted, or the boss changes phase or is reloaded mid-domain. Domain goals are restored safely, stale phase/reload actions are discarded, and the active rage overlay is kept.
 - Side-strafing bosses now close into melee range instead of continuously backing away from their target.
-- Safely restore domain goals after expiry or interruption, discard stale phase/reload actions, and preserve the active rage overlay.
 - Local `file` skins accept a name with or without `.png`.
-- Correct configuration guide commands, paths, navigation, persistence notes and domain sound overrides; give global settings, webhooks, pathfinding and records their own sections.
-- Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.
-- Domain collapse is no longer deafening: the layered ender dragon death roar is removed and the `domain_break` sound is quieter by default.
+
+### Documentation
+- Configuration guide: new "Size and hitbox" section, `scale`/`reach` fields, `/boss validate` and the domain sound settings.
+- Corrected commands, paths, navigation, persistence notes and domain sound overrides; global settings, webhooks, pathfinding and records have their own sections.
+- README and Modrinth page list `/boss validate` and what to back up in `config/fiw_bosses/data/`.
 
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
 
