@@ -188,6 +188,8 @@ public class ShadowCloneGoal extends Goal {
         def.knockbackResistance = 0.0f;
         def.attackDamage = cloneDamage;
         def.movement = "follow_boss";
+        def.scale = bd != null ? bd.scale : 1.0f;
+        def.reach = bd != null ? bd.reach : 0.0f;
         def.equipment = bd != null ? bd.equipment : null;
         def.skin = bd != null && bd.skin != null ? bd.skin : new SkinDefinition();
 

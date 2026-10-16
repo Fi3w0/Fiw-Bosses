@@ -1,0 +1,23 @@
+{
+  "id": "qa_huge_room",
+  "displayName": "&aQA Huge x6 (room check)",
+  "health": 400,
+  "armor": 0.0,
+  "attackDamage": 1.0,
+  "speed": 0.25,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "scale": 6.0,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

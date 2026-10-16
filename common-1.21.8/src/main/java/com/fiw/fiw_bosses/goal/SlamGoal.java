@@ -171,7 +171,8 @@ public class SlamGoal extends Goal {
                 Vec3 dir = target.position().subtract(bossPos).normalize();
                 double tx = target.getX() - dir.x * 1.8;
                 double tz = target.getZ() - dir.z * 1.8;
-                boss.teleportTo(tx, target.getY(), tz);
+                // A large boss stays put rather than landing inside blocks.
+                if (boss.fitsAt(tx, target.getY(), tz)) boss.teleportTo(tx, target.getY(), tz);
                 bossPos = boss.position();
 
                 level.sendParticles(ParticleTypes.POOF, bossPos.x, bossPos.y + 1, bossPos.z,

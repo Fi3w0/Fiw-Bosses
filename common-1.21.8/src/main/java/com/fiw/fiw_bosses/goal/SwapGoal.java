@@ -59,6 +59,8 @@ public class SwapGoal extends Goal {
 
         Vec3 bossPos   = boss.position();
         Vec3 targetPos = target.position();
+        // A boss larger than the spot it would take does not swap.
+        if (!boss.fitsAt(targetPos.x, targetPos.y, targetPos.z)) return;
 
         spawnSwapBurst(level, bossPos);
         spawnSwapBurst(level, targetPos);

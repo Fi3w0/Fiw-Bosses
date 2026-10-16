@@ -111,7 +111,15 @@ public final class ScheduleRunner {
         int bx = Mth.floor(loc.x), bz = Mth.floor(loc.z);
         // Reading the height loads the chunk; a boss spawned there is saved with it if nobody is near.
         double y = loc.y != null ? loc.y : level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
-        BossEntity boss = BossSpawner.spawn(level, BossVariants.apply(base, s.variant), loc.x, y, loc.z,
+        BossDefinition def = BossVariants.apply(base, s.variant);
+        double roomY = BossSpawner.roomFor(level, def, loc.x, y, loc.z);
+        if (Double.isNaN(roomY)) {
+            FiwBossesCore.LOGGER.warn("Schedule '{}': not enough room for boss '{}' ({} blocks) at {} {} {}; nothing spawned",
+                    s.id, s.boss, BossSpawner.describeSize(def), loc.x, y, loc.z);
+            return;
+        }
+        y = roomY;
+        BossEntity boss = BossSpawner.spawn(level, def, loc.x, y, loc.z,
                 EntitySpawnReason.EVENT);
         if (boss == null) return;
         data.liveBoss.put(s.id, s.boss + "|" + boss.getStringUUID());

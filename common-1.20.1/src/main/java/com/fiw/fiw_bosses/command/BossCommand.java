@@ -245,7 +245,13 @@ public final class BossCommand {
             // Jitter extra spawns slightly so they don't stack on one point
             double ox = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
             double oz = i == 0 ? 0 : (level.getRandom().nextDouble() - 0.5) * 3.0;
-            BossEntity boss = BossSpawner.spawn(level, def, x + ox, y, z + oz, MobSpawnType.COMMAND);
+            double roomY = BossSpawner.roomFor(level, def, x + ox, y, z + oz);
+            if (Double.isNaN(roomY)) {
+                source.sendFailure(Component.literal("Not enough room for boss '" + def.id + "' here; it needs about "
+                        + BossSpawner.describeSize(def) + " blocks of open space"));
+                return spawned;
+            }
+            BossEntity boss = BossSpawner.spawn(level, def, x + ox, roomY, z + oz, MobSpawnType.COMMAND);
             if (boss == null) {
                 source.sendFailure(Component.literal("Failed to create boss entity"));
                 return spawned;

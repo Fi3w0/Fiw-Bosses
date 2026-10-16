@@ -1,0 +1,23 @@
+{
+  "id": "qa_player_giant",
+  "displayName": "&aQA Giant player x3",
+  "health": 200,
+  "armor": 0.0,
+  "attackDamage": 2.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "scale": 3.0,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

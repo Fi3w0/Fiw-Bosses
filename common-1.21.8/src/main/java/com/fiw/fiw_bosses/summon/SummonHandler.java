@@ -113,7 +113,13 @@ public final class SummonHandler {
         BossDefinition def = BossVariants.apply(base, variant);
 
         ServerLevel level = (ServerLevel) player.level();
-        BossEntity boss = BossSpawner.spawn(level, def, at.x, at.y, at.z, EntitySpawnReason.TRIGGERED);
+        double roomY = BossSpawner.roomFor(level, def, at.x, at.y, at.z);
+        if (Double.isNaN(roomY)) {
+            player.sendSystemMessage(TextUtil.parseColorCodes("&cThere is not enough room for " + bossName
+                    + "&c here. It needs about " + BossSpawner.describeSize(def) + " blocks of open space."));
+            return;
+        }
+        BossEntity boss = BossSpawner.spawn(level, def, at.x, roomY, at.z, EntitySpawnReason.TRIGGERED);
         if (boss == null) return;
 
         SpawnRules.record(BossData.SPAWNS.get(), base.id, match.entry, match.index, uuid, now);

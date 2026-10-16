@@ -1,0 +1,72 @@
+{
+  "id": "qa_scale_abilities",
+  "displayName": "&aQA Big teleporter x2.5",
+  "health": 300,
+  "armor": 0.0,
+  "attackDamage": 1.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "scale": 2.5,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        {
+          "type": "teleport",
+          "cooldownTicks": 120,
+          "params": {
+            "minDistance": 6.0,
+            "maxDistance": 20.0
+          }
+        },
+        {
+          "type": "swap",
+          "cooldownTicks": 160,
+          "params": {
+            "minDistance": 4.0,
+            "maxDistance": 20.0
+          }
+        },
+        {
+          "type": "slam",
+          "cooldownTicks": 140,
+          "params": {
+            "damage": 2.0,
+            "radius": 5.0,
+            "knockback": 1.0,
+            "teleportRange": 6.0
+          }
+        },
+        {
+          "type": "shadow_clone",
+          "cooldownTicks": 400,
+          "params": {
+            "count": 2,
+            "health": 4,
+            "damage": 1
+          }
+        },
+        {
+          "type": "summon_minions",
+          "cooldownTicks": 300,
+          "params": {}
+        }
+      ],
+      "minions": [
+        {
+          "minionId": "qa_scaled_minion",
+          "count": 2,
+          "maxAlive": 4,
+          "spawnRadius": 5.0
+        }
+      ]
+    }
+  ],
+  "loot": []
+}

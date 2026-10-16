@@ -17,6 +17,11 @@ public class BossDefinition {
     public String pathfinding;
     public String baseEntity = "custom";
     public String renderEntity;
+    // Size multiplier for model and hitbox: 1 = normal, 2 = twice as big (0.0625-16).
+    // The hitbox starts from renderEntity's mob size when a disguise is set.
+    public float scale = 1.0f;
+    // Extra melee reach in blocks (0-16). Vanilla reach already grows with the hitbox.
+    public float reach = 0.0f;
     public BossBarConfig bossBar = new BossBarConfig();
     public SkinDefinition skin = new SkinDefinition();
     public EquipmentConfig equipment;

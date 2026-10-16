@@ -142,7 +142,14 @@ public class BossPhaseManager {
         if (boss.shouldFloat()) boss.getGoalSelector().addGoal(0, new FloatGoal(boss));
         // Ability goals (priority 1-5) run BEFORE MeleeAttackGoal (priority 6)
         // so a casting boss won't have its animation interrupted by basic melee.
-        boss.getGoalSelector().addGoal(6, new MeleeAttackGoal(boss, 1.2, false));
+        boss.getGoalSelector().addGoal(6, new MeleeAttackGoal(boss, 1.2, false) {
+            // Vanilla 1.20.1 reach is (2 x hitbox width)^2 + target width; `reach` extends it.
+            @Override
+            protected double getAttackReachSqr(net.minecraft.world.entity.LivingEntity target) {
+                double reach = boss.getBbWidth() * 2.0 + boss.getExtraReach();
+                return reach * reach + target.getBbWidth();
+            }
+        });
         boss.getGoalSelector().addGoal(8, new WaterAvoidingRandomStrollGoal(boss, 1.0));
         boss.getGoalSelector().addGoal(9, new LookAtPlayerGoal(boss, Player.class, 48.0f));
         boss.getGoalSelector().addGoal(10, new RandomLookAroundGoal(boss));

@@ -6,9 +6,12 @@ matching the tag).
 
 ## [1.3.1] - Domain stability, melee chase and domain sound settings
 
+> **⚠ Upgrade note:** a boss or custom minion with `renderEntity` now has that mob's hitbox instead of the player-sized one (an iron golem disguise is 1.4 x 2.7). Spawns are lifted up to 3 blocks or refused when the boss does not fit. Update client and server together.
+>
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
 
 ### Added
+- `scale` (0.0625-16, default 1) on bosses and custom minions sizes model and hitbox together; `reach` (blocks, default 0) adds melee reach. Shadow clones copy both. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
 - `domainBreakSound` (on/off) and `domainBreakVolume` (0-100%, default 50%) in `settings.json` control the domain collapse sound for every boss. It still carries 48 blocks.
 
 ### Changed

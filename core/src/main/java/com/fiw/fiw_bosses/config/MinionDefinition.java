@@ -13,6 +13,11 @@ public class MinionDefinition {
     public String baseEntity = "custom";
     // Optional visual disguise for custom minions. Example: "minecraft:zombie".
     public String renderEntity;
+    // Custom minions only. Size multiplier for model and hitbox: 1 = normal, 2 = twice as big (0.0625-16).
+    // The hitbox starts from renderEntity's mob size when a disguise is set.
+    public float scale = 1.0f;
+    // Extra melee reach in blocks (0-16). Vanilla reach already grows with the hitbox.
+    public float reach = 0.0f;
 
     // Stats
     public float health = 40.0f;

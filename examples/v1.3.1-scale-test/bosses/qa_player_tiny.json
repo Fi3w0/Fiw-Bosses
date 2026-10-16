@@ -1,0 +1,23 @@
+{
+  "id": "qa_player_tiny",
+  "displayName": "&aQA Tiny player x0.5",
+  "health": 120,
+  "armor": 0.0,
+  "attackDamage": 2.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "scale": 0.5,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

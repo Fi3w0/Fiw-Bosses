@@ -1,0 +1,23 @@
+{
+  "id": "qa_player_reach",
+  "displayName": "&aQA Long reach +3",
+  "health": 120,
+  "armor": 0.0,
+  "attackDamage": 2.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "reach": 3.0,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

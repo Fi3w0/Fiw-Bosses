@@ -22,7 +22,12 @@ final class DisguiseRenderHelper {
         Entity fake = createFake(source);
         if (fake == null) return false;
 
+        // 1.20.1 has no scale attribute: scale the drawn disguise to the boss's `scale`.
+        float scale = source.getBodyScale();
+        poseStack.pushPose();
+        poseStack.scale(scale, scale, scale);
         dispatcher.render(fake, 0.0, 0.0, 0.0, entityYaw, partialTick, poseStack, buffer, packedLight);
+        poseStack.popPose();
         return true;
     }
 

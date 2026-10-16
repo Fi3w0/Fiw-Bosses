@@ -45,6 +45,13 @@ public class BossEntityRenderer extends MobRenderer<BossEntity, PlayerModel<Boss
         super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
     }
 
+    /** 1.20.1 has no scale attribute: apply the boss's `scale` to the model. */
+    @Override
+    protected void scale(BossEntity entity, PoseStack poseStack, float partialTick) {
+        float scale = entity.getBodyScale();
+        poseStack.scale(scale, scale, scale);
+    }
+
     @Override
     public ResourceLocation getTextureLocation(BossEntity entity) {
         ResourceLocation skin = ClientSkinManager.getSkinTexture(entity.getId());

@@ -5,6 +5,7 @@ import com.fiw.fiw_bosses.core.FiwBossesCore;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
 import com.fiw.fiw_bosses.config.AntiCheeseConfig;
 import com.fiw.fiw_bosses.config.ArenaConfig;
+import com.fiw.fiw_bosses.config.BodySize;
 import com.fiw.fiw_bosses.config.BossDefinition;
 import com.fiw.fiw_bosses.config.BossVariants;
 import com.fiw.fiw_bosses.config.EquipmentConfig;
@@ -206,6 +207,7 @@ public class BossEntity extends Monster {
             nav.setMode(SettingsLoader.get().sharedPathfinding(def.pathfinding), def.fluid != null && def.fluid.canSwim);
         }
         setDisguiseEntity(resolveDisguiseEntity(def.baseEntity, def.renderEntity));
+        applyBodySize(def.scale, def.reach);
 
         this.setCustomName(TextUtil.parseColorCodes(def.displayName));
         this.setCustomNameVisible(true);
@@ -1323,6 +1325,53 @@ public class BossEntity extends Monster {
     public String getDisguiseEntity() { return entityData.get(DATA_DISGUISE_ENTITY); }
     public void setDisguiseEntity(String entityId) {
         entityData.set(DATA_DISGUISE_ENTITY, entityId != null && !"custom".equalsIgnoreCase(entityId) ? entityId : "");
+    }
+
+    // ── Body size: the hitbox follows the disguise, `scale` and `reach` ─────────
+    // Cached from DATA_DISGUISE_ENTITY so size code never reads entity data early.
+    private EntityType<?> disguiseType;
+    private float extraReach;
+
+    /** The disguise mob's type, or null when the boss uses its own player-sized body. */
+    private EntityType<?> resolveDisguiseType(String id) {
+        if (id == null || id.isEmpty()) return null;
+        var key = net.minecraft.resources.ResourceLocation.tryParse(id);
+        if (key == null || FiwBossesCore.MOD_ID.equals(key.getNamespace())) return null;
+        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getOptional(key).orElse(null);
+        return type == getType() ? null : type;
+    }
+
+    public float getExtraReach() { return extraReach; }
+
+    /** True when this entity's current hitbox is clear of blocks with its feet at (x, y, z). */
+    public boolean fitsAt(double x, double y, double z) {
+        return level().noCollision(this, getBoundingBox().move(x - getX(), y - getY(), z - getZ()));
+    }
+
+    private void applyBodySize(float scale, float reach) {
+        Objects.requireNonNull(getAttribute(Attributes.SCALE)).setBaseValue(BodySize.scale(scale));
+        this.extraReach = BodySize.reach(reach);
+        refreshDimensions();
+    }
+
+    @Override
+    protected net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        return disguiseType != null ? disguiseType.getDimensions() : super.getDefaultDimensions(pose);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (DATA_DISGUISE_ENTITY.equals(key)) {
+            disguiseType = resolveDisguiseType(entityData.get(DATA_DISGUISE_ENTITY));
+            refreshDimensions();
+        }
+    }
+
+    @Override
+    protected AABB getAttackBoundingBox() {
+        AABB box = super.getAttackBoundingBox();
+        return extraReach > 0f ? box.inflate(extraReach, 0.0, extraReach) : box;
     }
     public net.minecraft.world.entity.ai.goal.GoalSelector getGoalSelector() { return this.goalSelector; }
     public net.minecraft.world.entity.ai.goal.GoalSelector getTargetSelector() { return this.targetSelector; }

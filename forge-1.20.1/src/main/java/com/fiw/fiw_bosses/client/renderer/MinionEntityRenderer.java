@@ -45,6 +45,13 @@ public class MinionEntityRenderer extends MobRenderer<MinionEntity, PlayerModel<
         super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
     }
 
+    /** 1.20.1 has no scale attribute: apply the boss's `scale` to the model. */
+    @Override
+    protected void scale(MinionEntity entity, PoseStack poseStack, float partialTick) {
+        float scale = entity.getBodyScale();
+        poseStack.scale(scale, scale, scale);
+    }
+
     @Override
     public ResourceLocation getTextureLocation(MinionEntity entity) {
         ResourceLocation skin = ClientSkinManager.getSkinTexture(entity.getId());

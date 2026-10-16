@@ -126,7 +126,8 @@ public class TeleportGoal extends Goal {
         for (int dy = -2; dy <= 3; dy++) {
             BlockPos check = basePos.above(dy);
             if (level.isEmptyBlock(check) && level.isEmptyBlock(check.above())
-                    && level.getBlockState(check.below()).isSolid()) {
+                    && level.getBlockState(check.below()).isSolid()
+                    && boss.fitsAt(check.getX() + 0.5, check.getY(), check.getZ() + 0.5)) {
                 boss.teleportTo(check.getX() + 0.5, check.getY(), check.getZ() + 0.5);
                 return true;
             }

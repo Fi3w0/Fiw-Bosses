@@ -51,6 +51,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Root Fields](#root-fields)
 - [Boss Movement Modes](#boss-movement-modes)
 - [Vanilla Looks vs Vanilla Minions](#vanilla-looks-vs-vanilla-minions)
+  - [Size and hitbox](#size-and-hitbox)
 - [Color Codes](#color-codes)
 - [Boss Bar](#boss-bar)
 - [Skin](#skin)
@@ -182,6 +183,8 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `health` | float | 200.0 | Max HP. Any value works — see [Health above 1024](#health-above-1024) |
 | `baseEntity` | string | `"custom"` | Boss visual base. Bosses always use the custom boss entity for AI/abilities; a registry ID here makes it render like that mob |
 | `renderEntity` | string | null | Optional visual override. Use this when you want to keep `baseEntity: "custom"` but render the boss as a vanilla/modded mob |
+| `scale` | float | 1.0 | Size of model **and** hitbox: `2.0` = twice as big, `0.5` = half. Range 0.0625-16 (clamped). See [Size and hitbox](#size-and-hitbox) |
+| `reach` | float | 0.0 | Extra melee reach in blocks (0-16) on top of normal reach |
 | `armor` | float | 0.0 | Armor points (iron chestplate ≈ 8) |
 | `speed` | float | 0.3 | Move speed (zombie = 0.23, player walk ≈ 0.13) |
 | `movement` | string | `"side"` | Boss movement mode. See [Boss Movement Modes](#boss-movement-modes) |
@@ -256,6 +259,25 @@ You can also keep `baseEntity: "custom"` and use `renderEntity` as the visual-on
 ```
 
 When `renderEntity` is set, that vanilla/modded entity is the visual model. The player `skin` field is ignored for rendering, but configured `equipment` is still applied to the disguised mob.
+
+### Size and hitbox
+
+The hitbox matches the look: a boss with `renderEntity` gets that mob's hitbox (an iron golem disguise is 1.4 x 2.7 blocks), otherwise the player size (0.6 x 1.95). `scale` multiplies model and hitbox together:
+
+```json
+{
+  "id": "colossus",
+  "renderEntity": "minecraft:iron_golem",
+  "scale": 2.0,
+  "reach": 1.5
+}
+```
+
+- Melee reach already grows with the hitbox, so big bosses hit you without walking into you. `reach` adds extra blocks on top, for long weapons or small bosses.
+- Ability `radius`/`range` values are **not** scaled; set them for the boss's size.
+- Spawning (`/boss spawn`, summon items, schedules) checks for room. The boss is lifted up to 3 blocks if needed; with no room the spawn is refused with the size it needs. Teleport, swap and slam skip a landing spot the boss would not fit in.
+- `scale` and `reach` also work on custom minions (`baseEntity: "custom"`) and are copied by shadow clones. Difficulty variants keep the boss's size.
+- Client and server must both run this version.
 
 For minions, there are two different choices:
 
@@ -1941,7 +1963,9 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 | `id` | string | **required** | Unique ID — used in boss phase `minionId` and `/boss minion spawn <id>` |
 | `displayName` | string | id | Name shown above the minion. Supports `&` color codes |
 | `baseEntity` | string | `"custom"` | `"custom"` = FIW custom minion with abilities/smart movement. Any registry ID (e.g. `"minecraft:zombie"`) = true vanilla/modded mob minion with limited customization |
-| `renderEntity` | string | null | Visual-only disguise for custom minions. Only used when `baseEntity` is `"custom"` |
+| `renderEntity` | string | null | Visual-only disguise for custom minions. Only used when `baseEntity` is `"custom"`. The hitbox follows the disguise |
+| `scale` | float | 1.0 | Custom minions only. Size of model and hitbox (0.0625-16). See [Size and hitbox](#size-and-hitbox) |
+| `reach` | float | 0.0 | Custom minions only. Extra melee reach in blocks (0-16) |
 | `health` | float | 40.0 | Max HP |
 | `armor` | float | 0.0 | Armor points |
 | `speed` | float | 0.3 | Move speed |

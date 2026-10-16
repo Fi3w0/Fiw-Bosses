@@ -65,6 +65,8 @@ public class MinionEntity extends BossEntity {
         syntheticDef.attackDamage = def.attackDamage;
         syntheticDef.movement     = def.movement;
         syntheticDef.renderEntity = def.renderEntity;
+        syntheticDef.scale        = def.scale;
+        syntheticDef.reach        = def.reach;
         syntheticDef.equipment   = def.equipment;
         syntheticDef.skin        = def.skin;
         syntheticDef.protection  = def.protection;

@@ -1,0 +1,13 @@
+{
+  "id": "qa_scaled_minion",
+  "displayName": "&2QA Scaled zombie minion x1.5",
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:zombie",
+  "scale": 1.5,
+  "health": 10,
+  "attackDamage": 1,
+  "movement": "normal",
+  "skin": null,
+  "abilities": [],
+  "loot": []
+}

@@ -1,0 +1,24 @@
+{
+  "id": "qa_golem_small",
+  "displayName": "&aQA Small golem x0.6",
+  "health": 120,
+  "armor": 0.0,
+  "attackDamage": 2.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:iron_golem",
+  "scale": 0.6,
+  "skin": null,
+  "bossBar": {
+    "color": "GREEN",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

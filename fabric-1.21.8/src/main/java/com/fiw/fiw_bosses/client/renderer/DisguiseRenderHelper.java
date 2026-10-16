@@ -56,6 +56,11 @@ final class DisguiseRenderHelper {
         fake.setInvisible(source.isInvisible());
 
         if (fake instanceof LivingEntity living) {
+            // The disguise is drawn from this throwaway mob, so it needs the boss's `scale`.
+            var scale = living.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+            if (scale != null) {
+                scale.setBaseValue(source.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.SCALE));
+            }
             living.yBodyRot = source.yBodyRot;
             living.yBodyRotO = source.yBodyRotO;
             living.yHeadRot = source.yHeadRot;
