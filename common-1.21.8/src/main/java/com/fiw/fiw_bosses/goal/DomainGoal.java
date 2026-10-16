@@ -290,8 +290,6 @@ public class DomainGoal extends Goal {
 
         level.playSound(null, center.x, center.y, center.z,
                 ModRefs.DOMAIN_BREAK, SoundSource.HOSTILE, 3.0f, 1.0f);
-        level.playSound(null, center.x, center.y, center.z,
-                SoundEvents.ENDER_DRAGON_DEATH, SoundSource.HOSTILE, 1.2f, 1.5f);
 
         for (int ring = 0; ring < 6; ring++) {
             double br = radius * (6 - ring) / 6.0;

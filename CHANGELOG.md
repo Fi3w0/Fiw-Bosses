@@ -18,6 +18,7 @@ matching the tag).
 - Local `file` skins accept a name with or without `.png`.
 - Correct configuration guide commands, paths, navigation, persistence notes and domain sound overrides; give global settings, webhooks, pathfinding and records their own sections.
 - Domain attacks accept `cooldownTicks` as an alias of `cooldown` on every supported target. If both are supplied, `cooldown` wins; the default remains 40 ticks.
+- Domain collapse is no longer deafening: the layered ender dragon death roar is removed and the `domain_break` sound plays at 60% volume.
 
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
 
