@@ -111,7 +111,9 @@ run_session() {
 }
 
 # Lines every loader prints that are not our problem. Keep this list short and specific.
-KNOWN_NOISE='No data fixer registered for fiw_bosses:(boss|minion)|Missing (texture|sound)'
+# kqueue: vanilla 1.21.11 probes the macOS/BSD network transport on Linux and NeoForge's debug
+# log appender fails to render Netty's debug message about it.
+KNOWN_NOISE='No data fixer registered for fiw_bosses:(boss|minion)|Missing (texture|sound)|io\.netty\.channel\.kqueue|Only supported on OSX/BSD'
 
 check_log() {
   local log="$1"; shift
