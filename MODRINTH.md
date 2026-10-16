@@ -163,7 +163,7 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 
 ## Commands
 
-`/boss` needs op level 2; `/boss reload` needs op level 3.
+`/boss` needs op level 2; `/boss reload` and `/boss validate` need op level 3.
 
 ```
 /boss spawn <id> [x y z] [count]   /boss list        /boss kill <id> | all
@@ -173,7 +173,7 @@ Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss f
 /boss spawn <id> variant <name> [x y z]   /boss limits <id> [reset]
 /boss rage <targets> start <name> | end   /boss stats [id]
 /boss schedule list | trigger <id>
-/boss reload
+/boss reload                       /boss validate
 ```
 
 ---

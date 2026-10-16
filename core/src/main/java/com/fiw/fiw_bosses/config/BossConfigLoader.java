@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,21 +60,13 @@ public class BossConfigLoader {
         int failed = 0;
 
         for (File file : files) {
-            try (FileReader reader = new FileReader(file)) {
-                BossDefinition def = GSON.fromJson(reader, BossDefinition.class);
-                if (def.id == null || def.id.isEmpty()) {
-                    FiwBossesCore.LOGGER.error("Boss definition in {} has no 'id' field, skipping", file.getName());
+            try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(file.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
+                ConfigValidator.Checked<BossDefinition> checked = ConfigValidator.boss("bosses/" + file.getName(), reader);
+                ConfigValidator.log(checked.issues());
+                BossDefinition def = checked.value();
+                if (def == null) {
                     failed++;
                     continue;
-                }
-                if (def.health > 10_000_000f) {
-                    FiwBossesCore.LOGGER.warn("Boss '{}' has health {} — above ~10,000,000 very small hits may stop registering (float precision)", def.id, def.health);
-                }
-                if (def.health <= 0) {
-                    FiwBossesCore.LOGGER.warn("Boss '{}' has health {} — boss may die instantly or behave unexpectedly", def.id, def.health);
-                }
-                if (def.phases == null || def.phases.isEmpty()) {
-                    FiwBossesCore.LOGGER.warn("Boss '{}' has no phases defined — boss will have no abilities", def.id);
                 }
                 definitions.put(def.id, def);
                 loaded++;

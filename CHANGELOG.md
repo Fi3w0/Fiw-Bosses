@@ -11,11 +11,11 @@ matching the tag).
 > **⚠ Upgrade note:** domains with custom attacks could crash dedicated or singleplayer servers when their goals were replaced. Fixed on every supported loader/version.
 
 ### Added
+- `/boss validate` (op level 3) lists every config problem with its file and field: misspelled keys with a "did you mean" hint, unknown ability types (also inside domain `attacks` and rages), out-of-range values, missing minions/variants/rages and schedule mistakes. `/boss reload` says how many problems it found, and each one is logged.
 - `scale` (0.0625-16, default 1) on bosses and custom minions sizes model and hitbox together; `reach` (blocks, default 0) adds melee reach. Shadow clones copy both. ([#3](https://github.com/Fi3w0/Fiw-Bosses/issues/3))
 - `domainBreakSound` (on/off) and `domainBreakVolume` (0-100%, default 50%) in `settings.json` control the domain collapse sound for every boss. It still carries 48 blocks.
 
 ### Changed
-- Include a two-instance regression pack for domain aliases, local skins, schedules, reloads and restart checks, with a bundled test skin.
 - Include copy-ready `examples/settings.json` defaults and `examples/schedules/clockwork_guardian.json` with a 30-minute world spawn schedule.
 
 ### Fixed

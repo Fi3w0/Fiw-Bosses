@@ -36,6 +36,11 @@ public final class SettingsLoader {
             return;
         }
         try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            ConfigValidator.log(ConfigValidator.settings("settings.json", reader).issues());
+        } catch (Exception ignored) {
+            // Reported by the parse below.
+        }
+        try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             settings = parse(reader);
         } catch (Exception e) {
             FiwBossesCore.LOGGER.error("Failed to load {}: {} — using defaults", file, e.getMessage());

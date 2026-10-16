@@ -227,7 +227,7 @@ soul_tether, wind_charge
 
 ## Commands
 
-`/boss` requires op level 2; `/boss reload` requires op level 3.
+`/boss` requires op level 2; `/boss reload` and `/boss validate` require op level 3.
 
 ```text
 /boss spawn <id> [x y z] [count]      /boss minion list
@@ -241,6 +241,7 @@ soul_tether, wind_charge
 /boss rage <targets> start <name> | end
 /boss stats [bossId]
 /boss schedule list | trigger <id>
+/boss validate
 ```
 
 **Config folders**
@@ -255,8 +256,6 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 ---
 
 Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.
-
-The current two-instance regression pack and command checklist are in [examples/v1.3.1-test](examples/v1.3.1-test/README.md).
 
 ## Building
 

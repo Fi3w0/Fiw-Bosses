@@ -14,6 +14,8 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 **Units:** Ability, idle and phase timing uses ticks (20 ticks = 1 second), unless the field explicitly names another unit. Summoning, spawn limits, rages, loot lockouts and schedules use seconds, minutes or hours as named by the field. Daily schedule times use the server timezone.
 
 > **Hot reload:** `/boss reload` — picks up all boss + minion changes instantly.
+>
+> **Check your files:** `/boss validate` lists every problem with its file and field: misspelled keys (`"scael"` → did you mean `scale`?), unknown ability types, values out of range, minions/variants/rages that don't exist and schedule mistakes. The same problems are written to the server log on every reload.
 
 **Commands:**
 
@@ -25,6 +27,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 | `/boss kill all` | level 2 | Kill every living boss in all worlds |
 | `/boss list` | level 2 | List all loaded boss IDs |
 | `/boss reload` | level 3 | Reload all boss + minion configs without restart |
+| `/boss validate` | level 3 | List every config problem with its file and field, without reloading |
 | `/boss minion list` | level 2 | List all loaded minion definitions |
 | `/boss minion spawn <id> [count]` | level 2 | Spawn one or more minions from a loaded definition (custom or vanilla base) |
 | `/boss minion kill <id>` | level 2 | Kill all living minions with that ID |

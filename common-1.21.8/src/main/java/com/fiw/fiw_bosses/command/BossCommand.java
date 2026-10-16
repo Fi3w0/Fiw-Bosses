@@ -2,6 +2,8 @@ package com.fiw.fiw_bosses.command;
 
 import com.fiw.fiw_bosses.api.FiwBossesAPI;
 import com.fiw.fiw_bosses.config.BossConfigLoader;
+import com.fiw.fiw_bosses.config.ConfigIssue;
+import com.fiw.fiw_bosses.config.ConfigValidator;
 import com.fiw.fiw_bosses.config.FightSummaryConfig;
 import com.fiw.fiw_bosses.config.SettingsLoader;
 import com.fiw.fiw_bosses.config.BossDefinition;
@@ -187,6 +189,9 @@ public final class BossCommand {
                 .then(Commands.literal("reload")
                         .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
                         .executes(ctx -> reloadConfigs(ctx.getSource())))
+                .then(Commands.literal("validate")
+                        .requires(Commands.hasPermission(Commands.LEVEL_ADMINS))
+                        .executes(ctx -> validateConfigs(ctx.getSource())))
                 .then(Commands.literal("minion")
                         .then(Commands.literal("list")
                                 .executes(ctx -> listMinions(ctx.getSource())))
@@ -646,6 +651,11 @@ public final class BossCommand {
         FiwToolsBridge.reportUnknownToolIds();
         source.sendSuccess(() -> Component.literal("Reloaded " + bosses + " boss + " + minions + " minion definitions.")
                 .withStyle(ChatFormatting.GREEN), true);
+        int problems = ConfigValidator.validateDirectory(BossConfigLoader.getConfigDir()).size();
+        if (problems > 0) {
+            source.sendSuccess(() -> Component.literal(problems + " config problem(s) found. Run /boss validate for details.")
+                    .withStyle(ChatFormatting.YELLOW), false);
+        }
         List<String> scheduleWarnings = ScheduleRunner.reload();
         for (String w : scheduleWarnings) {
             source.sendSuccess(() -> Component.literal("Schedule: " + w).withStyle(ChatFormatting.YELLOW), false);
@@ -657,6 +667,29 @@ public final class BossCommand {
         }
         return bosses + minions;
     }
+    /** Lists every config problem (unknown keys, bad values, broken references) without reloading. */
+    private static int validateConfigs(CommandSourceStack source) {
+        List<ConfigIssue> issues = ConfigValidator.validateDirectory(BossConfigLoader.getConfigDir());
+        if (issues.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No config problems found.").withStyle(ChatFormatting.GREEN), false);
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal(issues.size() + " config problem(s):").withStyle(ChatFormatting.YELLOW), false);
+        int limit = 20;
+        for (int i = 0; i < Math.min(limit, issues.size()); i++) {
+            ConfigIssue issue = issues.get(i);
+            ChatFormatting color = issue.severity() == ConfigIssue.Severity.ERROR ? ChatFormatting.RED : ChatFormatting.YELLOW;
+            source.sendSuccess(() -> Component.literal(" " + issue.describe()).withStyle(color), false);
+        }
+        if (issues.size() > limit) {
+            int more = issues.size() - limit;
+            source.sendSuccess(() -> Component.literal(" ... and " + more + " more in the server log.")
+                    .withStyle(ChatFormatting.GRAY), false);
+        }
+        ConfigValidator.log(issues);
+        return issues.size();
+    }
+
     // ── Phase control ────────────────────────────────────────────────────────
 
     /** delta ±1 steps from the current phase; otherwise jumps to setTo (1-based). */

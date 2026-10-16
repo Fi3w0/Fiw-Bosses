@@ -1,18 +1,14 @@
 package com.fiw.fiw_bosses.config;
 
 import com.fiw.fiw_bosses.core.FiwBossesCore;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.File;
-import java.io.FileReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MinionConfigLoader {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<String, MinionDefinition> definitions = new HashMap<>();
 
     public static File getMinionsDir() {
@@ -41,10 +37,11 @@ public class MinionConfigLoader {
         int failed = 0;
 
         for (File file : files) {
-            try (FileReader reader = new FileReader(file)) {
-                MinionDefinition def = GSON.fromJson(reader, MinionDefinition.class);
-                if (def.id == null || def.id.isEmpty()) {
-                    FiwBossesCore.LOGGER.error("Minion definition in {} has no 'id' field, skipping", file.getName());
+            try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(file.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
+                ConfigValidator.Checked<MinionDefinition> checked = ConfigValidator.minion("minions/" + file.getName(), reader);
+                ConfigValidator.log(checked.issues());
+                MinionDefinition def = checked.value();
+                if (def == null) {
                     failed++;
                     continue;
                 }
