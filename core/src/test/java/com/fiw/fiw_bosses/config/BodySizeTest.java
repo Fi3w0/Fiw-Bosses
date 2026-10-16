@@ -17,6 +17,15 @@ class BodySizeTest {
     }
 
     @Test
+    void meleeReachShrinksOnlyBelowNormalSize() {
+        assertEquals(1.0, BodySize.meleeReachFactor(1f));
+        assertEquals(1.0, BodySize.meleeReachFactor(3f));
+        assertEquals(0.5, BodySize.meleeReachFactor(0.5f));
+        assertEquals(BodySize.MIN_SCALE, BodySize.meleeReachFactor(0f), 1e-6);
+        assertEquals(0.828, BodySize.VANILLA_MELEE_REACH, 0.001);
+    }
+
+    @Test
     void reachIgnoresNegativeAndCapsLargeValues() {
         assertEquals(0f, BodySize.reach(-2f));
         assertEquals(0f, BodySize.reach(Float.NaN));

@@ -1370,7 +1370,8 @@ public class BossEntity extends Monster {
 
     @Override
     protected AABB getAttackBoundingBox(double horizontalReach) {
-        return super.getAttackBoundingBox(horizontalReach + extraReach);
+        return super.getAttackBoundingBox(horizontalReach
+                * com.fiw.fiw_bosses.config.BodySize.meleeReachFactor(getScale()) + extraReach);
     }
     public net.minecraft.world.entity.ai.goal.GoalSelector getGoalSelector() { return this.goalSelector; }
     public net.minecraft.world.entity.ai.goal.GoalSelector getTargetSelector() { return this.targetSelector; }

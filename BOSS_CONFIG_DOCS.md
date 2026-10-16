@@ -276,7 +276,7 @@ The hitbox matches the look: a boss with `renderEntity` gets that mob's hitbox (
 }
 ```
 
-- Melee reach already grows with the hitbox, so big bosses hit you without walking into you. `reach` adds extra blocks on top, for long weapons or small bosses.
+- Melee reach already grows with the hitbox, so big bosses hit you without walking into you. Bosses smaller than 1x also get proportionally shorter reach, so a tiny boss can't hit you from further away than you can hit it. `reach` adds extra blocks on top, for long weapons or small bosses.
 - Ability `radius`/`range` values are **not** scaled; set them for the boss's size.
 - Spawning (`/boss spawn`, summon items, schedules) checks for room. The boss is lifted up to 3 blocks if needed; with no room the spawn is refused with the size it needs. Teleport, swap and slam skip a landing spot the boss would not fit in.
 - `scale` and `reach` also work on custom minions (`baseEntity: "custom"`) and are copied by shadow clones. Difficulty variants keep the boss's size.
