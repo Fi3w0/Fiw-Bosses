@@ -213,7 +213,7 @@ Bosses use the root `movement` field. Custom minions use the minion `movement` f
 
 | Mode | Behavior |
 |------|----------|
-| `"side"` / `"normal"` | Default smart movement. Chases normally, then strafes at 2–7 blocks from target |
+| `"side"` / `"normal"` | Default smart movement. Chases normally, advances while strafing at 2–7 blocks, then continues into melee range |
 | `"vanilla"` | Disables the smart movement overlay and leaves normal Minecraft pathing/melee goals in control |
 | `"hit_and_run"` | Closes distance, retreats after reaching melee range, then re-engages |
 | `"guard_point"` | Anchors to its spawn/apply position, fights nearby targets, and returns if pulled too far |
@@ -223,6 +223,8 @@ Bosses use the root `movement` field. Custom minions use the minion `movement` f
 | `"berserk"` | Uses normal side movement above 35% HP, then switches to direct high-speed chase below 35% HP |
 
 > Smart movement pauses while an ability that locks movement is running, so channelled attacks and dashes are not fought by the movement AI.
+
+Movement does not add damage: a boss configured with `attackDamage: 0` remains harmless in melee. Most QA fixtures use zero damage; `qa_melee` uses 4 for combat checks.
 
 ---
 
@@ -1964,7 +1966,7 @@ Minions are defined as `.json` files in `config/fiw_bosses/minions/`. They can h
 
 | Mode | Behavior |
 |------|----------|
-| `"normal"` / `"side"` | Smart chase + close-range strafing |
+| `"normal"` / `"side"` | Smart chase + advancing close-range strafing |
 | `"vanilla"` | Normal Minecraft pathing with no smart movement overlay |
 | `"hit_and_run"` | Rushes into melee range, then retreats before re-engaging |
 | `"guard_point"` | Stays near its spawn/apply point and returns if pulled away |

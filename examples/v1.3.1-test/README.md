@@ -4,6 +4,14 @@ Use the existing **FIW Test Fabric 1.21.8** and **FIW Test NeoForge 1.21.11** Pr
 
 Status on 2026-10-16 after access was enabled: the full eight-target Gradle build and 58 core tests passed. All eight dedicated servers passed console/config and clean-restart checks. Visible skins, domain attack cadence, sound, player summons and rewards remain for the two-instance player pass.
 
+## Follow-up after the player-reported domain crash
+
+The rebuilt **1.3.1** jars include the domain goal-cleanup and advancing-strafe fixes on all eight loader targets. Both selected Prism instances have these replacement jars plus `qa_melee`; fully close and reopen Minecraft to load them. Existing settings/worlds were not changed by this replacement.
+
+The full Java 21 build and 58 core tests pass. All eight dedicated targets separately confirmed real melee damage against a stationary, damageable zombie, and an active custom-attack domain via its effective speed changing from 0.2 to 0.7. Active domains then survived forced phases 2/3/4/1/2/3, natural expiry/recast time, reload and clean stop without an exception. This exercises the goal lifecycle without a connected player; captured-player effects and visual feel still need the player pass.
+
+The initial temporary domain dummy was invulnerable and could not be targeted, so those domain attempts are excluded. The corrected runs require a 0.7 speed sample before accepting a pass. On the newer targets, the valid melee result from the unchanged movement code and the corrected domain rerun are recorded separately. Exact accepted logs: `/private/tmp/fiw-domain-regression/results-final.json`; archived report/logs/hashes: repository `Jar/domain-fix-validation-2026-10-16/`.
+
 ## Build and install
 
 From this repository:
@@ -102,7 +110,7 @@ Use `stop` for a clean restart; after boot, inspect the same entities with `/dat
 
 Record the instance, first failing step and log lines. Player boxes remain unchecked. Completed headless checks are listed below; they do not establish client rendering or player combat behavior. No push or release.
 
-## Dedicated-server results (2026-10-16)
+## Earlier console/restart results (before the player crash)
 
 The documented Java 21 eight-target build passed, including 58 core tests. Each target reached `Done` twice and stopped cleanly with exit 0. Server checks covered six bosses/four minions, both local skin filename forms, spawning, forced phases, hard variant, rage start/end, limits, settings commands and scheduled spawns. A dual-timing schedule was warned/disabled; removing it and reloading recovered. On restart, the domain boss retained zero-based `BossPhase: 3`, summary settings retained top=2/duration=false, and the saved live scheduled boss prevented duplication.
 
