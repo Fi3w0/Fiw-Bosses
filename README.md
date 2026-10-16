@@ -85,7 +85,7 @@ Fabric builds require **[Fabric API](https://modrinth.com/mod/fabric-api)**. **[
 
 ## Features
 
-Domains with custom attacks now stop safely across expiry, phase changes and reloads; active rage settings remain applied.
+Domains with custom attacks now stop safely across expiry, phase changes and reloads; active rage settings remain applied. Side-strafing closes into melee range instead of backing away indefinitely.
 
 Local `file` skins accept names with or without `.png`. Domain `attacks[]` accept both `cooldown` and `cooldownTicks` (ticks; `cooldown` wins if both are set). See the [configuration guide](BOSS_CONFIG_DOCS.md).
 

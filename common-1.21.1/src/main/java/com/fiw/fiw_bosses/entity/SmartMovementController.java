@@ -122,7 +122,9 @@ public class SmartMovementController {
             strafeTimer++;
             if (strafeTimer % 30 == 0 && boss.getRandom().nextFloat() < 0.5f) strafeDir *= -1;
             if (strafeTimer % 2 == 0) {
-                boss.getMoveControl().strafe(-0.3f, strafeDir * 0.6f);
+                // Close the gap while circling. Backpedalling here overrides melee
+                // navigation and can keep a boss outside attack range indefinitely.
+                boss.getMoveControl().strafe(0.3f, strafeDir * 0.6f);
                 boss.getLookControl().setLookAt(target, 30.0f, 30.0f);
             }
         } else {

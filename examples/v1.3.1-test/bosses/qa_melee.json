@@ -1,0 +1,22 @@
+{
+  "id": "qa_melee",
+  "displayName": "&cQA Melee chase",
+  "health": 200.0,
+  "armor": 0.0,
+  "attackDamage": 4.0,
+  "speed": 0.25,
+  "movement": "side",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "BLUE",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": []
+}

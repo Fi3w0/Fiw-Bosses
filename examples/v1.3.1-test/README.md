@@ -16,6 +16,8 @@ The two player-test jars are `fabric-1.21.8/build/libs/fiw-bosses-fabric-1.21.8-
 
 Copy `bosses/*.json` directly into `config/fiw_bosses/bosses/`, `minions/*.json` into `config/fiw_bosses/minions/`, and `skins/qa_skin.png` into `config/fiw_bosses/skins/`. Back up the existing `settings.json`, then use this pack's `settings.json` in the test instance. Do not activate the file in `negative/` yet. The schedule creates at most one QA boss near x=8,z=8 once per minute; this is for the disposable world only.
 
+Most QA bosses deliberately set `attackDamage: 0` and `movement: "guard_point"` so visual/config checks are safe. They can approach/strafe without dealing melee damage. The added `qa_melee` config has `attackDamage: 4` and `movement: "side"` for actual melee checks. In survival, `/boss spawn qa_melee` from about five blocks away: it should close the distance while sidestepping and land melee hits. Remove it with `/boss kill qa_melee` afterwards.
+
 ## Required player checks on both instances
 
 Run `/boss reload` as an operator (level 3); other `/boss` commands need level 2.
