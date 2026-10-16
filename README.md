@@ -85,9 +85,6 @@ Fabric builds require **[Fabric API](https://modrinth.com/mod/fabric-api)**. **[
 
 ## Features
 
-**New in 1.3.1:** `scale` and `reach` resize bosses and their hitbox, and disguised bosses get the hitbox of the mob they look like. Spawns check that the boss fits. `/boss validate` finds config mistakes like misspelled keys. The domain collapse sound has an on/off and volume setting. Domains with custom attacks no longer crash on phase changes or reloads, and strafing bosses close into melee again. Full list in the [changelog](CHANGELOG.md); every key is in the [configuration guide](BOSS_CONFIG_DOCS.md).
-
-
 ### Phase-based fights
 Bosses change behavior as their HP drops. Each phase can alter speed, damage, equipment, minion pools, transition messages, sounds, particles, and the active ability set.
 
@@ -252,8 +249,6 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 ```
 
 ---
-
-Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.
 
 ## Building
 

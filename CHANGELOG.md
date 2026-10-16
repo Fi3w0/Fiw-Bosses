@@ -38,7 +38,7 @@ Maintenance and bug-fix update. If something breaks or behaves differently than 
 ### Documentation
 - Configuration guide: new "Size and hitbox" section, `scale`/`reach` fields, `/boss validate` and the domain sound settings.
 - Corrected commands, paths, navigation, persistence notes and domain sound overrides; global settings, webhooks, pathfinding and records have their own sections.
-- README and Modrinth page list `/boss validate` and what to back up in `config/fiw_bosses/data/`.
+- README and Modrinth page list `/boss validate`.
 
 ## [1.3.0] - Summon altars, variants, rages and anti-cheese
 

@@ -15,11 +15,6 @@ No Java. No restarts. No combat-modding degree required.
 
 </div>
 
-**New in 1.3.1:** `scale` and `reach` resize bosses and their hitbox, and disguised bosses get the hitbox of the mob they look like. Spawns check that the boss fits. `/boss validate` finds config mistakes like misspelled keys. The domain collapse sound has an on/off and volume setting. Domains with custom attacks no longer crash on phase changes or reloads, and strafing bosses close into melee again. Full list in the [changelog](https://github.com/Fi3w0/Fiw-Bosses/blob/main/CHANGELOG.md); every key is in the [configuration guide](https://github.com/Fi3w0/Fiw-Bosses/blob/main/BOSS_CONFIG_DOCS.md).
-
-Back up `config/fiw_bosses/data/`: `spawns.json`, `lockouts.json`, `records.json` and `schedules.json`. Example defaults: `examples/settings.json`; scheduled boss: `examples/schedules/clockwork_guardian.json`.
-
-
 ---
 
 ## The pitch
