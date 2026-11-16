@@ -71,6 +71,7 @@ Full JSON reference → **[BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)**
 | Loader   | Minecraft | Module             | Java |
 | -------- | --------- | ------------------ | ---- |
 | Fabric   | 26.1.2    | `fabric-26.1.2`    | 25   |
+| NeoForge | 26.1.2    | `neoforge-26.1.2`  | 25   |
 | Fabric   | 1.21.11   | `fabric-1.21.11`   | 21   |
 | NeoForge | 1.21.11   | `neoforge-1.21.11` | 21   |
 | Fabric   | 1.21.8    | `fabric-1.21.8`    | 21   |
@@ -268,7 +269,7 @@ cd Fiw-Bosses
 <summary><strong>Full release-style matrix build</strong></summary>
 
 ```bash
-./gradlew :core:test :fabric-26.1.2:build \
+./gradlew :core:test :fabric-26.1.2:build :neoforge-26.1.2:build \
   :fabric-1.21.11:build :neoforge-1.21.11:build \
   :fabric-1.21.8:build  :neoforge-1.21.8:build \
   :fabric-1.21.1:build  :neoforge-1.21.1:build \

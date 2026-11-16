@@ -27,6 +27,7 @@ body:
       options:
         - All targets
         - Fabric 26.1.2
+        - NeoForge 26.1.2
         - Fabric 1.21.11
         - NeoForge 1.21.11
         - Fabric 1.21.8

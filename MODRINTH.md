@@ -142,6 +142,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 | Loader | Minecraft | Java |
 |---|---|---|
 | Fabric | 26.1.2 | 25 |
+| NeoForge | 26.1.2 | 25 |
 | Fabric | 1.21.11 | 21 |
 | NeoForge | 1.21.11 | 21 |
 | Fabric | 1.21.8 | 21 |
@@ -151,7 +152,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 | Fabric | 1.20.1 | 17 |
 | Forge | 1.20.1 | 17 |
 
-Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all nine targets.
+Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all ten targets.
 
 **Optional:** [Fiw Custom Items](https://modrinth.com/mod/fiw-custom-items) — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are skipped and nothing breaks.
 

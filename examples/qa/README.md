@@ -89,7 +89,7 @@ Stay within 8 blocks (creative/spectator players are not captured).
 - [ ] Hit `qa_loot` down to half health: it enters phase 2. Kill it: 3 diamonds drop (plus a
   **QA Boss drop** emerald when Fiw Custom Items is installed and has a `qa_boss_drop` item).
 - [ ] Restart: `qa_affix` still has both words and 200 HP.
-- [ ] On Minecraft 26.1.2 (Fabric), repeat sections 1-3 and this one.
+- [ ] On Minecraft 26.1.2 (Fabric and NeoForge), repeat sections 1-3 and this one.
 
 ## 8. Invalid config
 
