@@ -33,4 +33,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    // ExampleConfigsTest validates every file under examples/: re-run it when one changes.
+    inputs.dir(rootProject.file('examples')).withPropertyName('examples').withPathSensitivity(PathSensitivity.RELATIVE)
 }
