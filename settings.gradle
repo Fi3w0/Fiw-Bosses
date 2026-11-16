@@ -22,6 +22,8 @@ include 'core'
 // Loader modules. Each MC version's shared 'common-<v>' source is compiled into
 // its loader modules via srcDir (see each loader build.gradle), so common-<v> is
 // not itself a Gradle subproject.
+include 'fabric-26.3'
+include 'neoforge-26.3'
 include 'fabric-26.1.2'
 include 'neoforge-26.1.2'
 include 'fabric-1.21.11'

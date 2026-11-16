@@ -23,6 +23,8 @@ PLAYER_PHASES="first,restart"
 
 # Every released jar, newest Minecraft first: "<module> <modrinth loader> <minecraft version>".
 TARGETS=(
+  "fabric-26.3 fabric 26.3"
+  "neoforge-26.3 neoforge 26.3"
   "fabric-26.1.2 fabric 26.1.2"
   "neoforge-26.1.2 neoforge 26.1.2"
   "fabric-1.21.11 fabric 1.21.11"

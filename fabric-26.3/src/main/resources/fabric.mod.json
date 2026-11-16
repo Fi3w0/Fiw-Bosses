@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "fiw_bosses",
+  "version": "${version}",
+  "name": "FIW Bosses",
+  "description": "A data-driven boss framework for Fabric, NeoForge, and Forge. Define multi-phase bosses and minions with configurable abilities entirely through JSON — no coding, no restarts.",
+  "authors": ["Fi3w0"],
+  "license": "GPL-3.0-only",
+  "contact": {
+    "issues": "https://github.com/Fi3w0/Fiw-Bosses/issues",
+    "sources": "https://github.com/Fi3w0/Fiw-Bosses"
+  },
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.fiw.fiw_bosses.FiwBossesFabric"],
+    "client": ["com.fiw.fiw_bosses.FiwBossesClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

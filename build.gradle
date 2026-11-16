@@ -1,7 +1,7 @@
 // Plugin versions live here, once; each module applies the one it needs without a version.
 // :core is plain Java. common-<v> folders are source sets compiled into their loader modules.
-// :fabric-26.1.2 uses Loom without remapping (26.x ships unobfuscated); older :fabric-* use
-// Loom's remapping plugin with Mojang mappings; :neoforge-* use ModDevGradle;
+// :fabric-26.3 and :fabric-26.1.2 use Loom without remapping (26.x ships unobfuscated); older
+// :fabric-* use Loom's remapping plugin with Mojang mappings; :neoforge-* use ModDevGradle;
 // :forge-1.20.1 uses ModDevGradle's legacy Forge support.
 plugins {
     id 'net.fabricmc.fabric-loom-remap' version '1.16.3' apply false

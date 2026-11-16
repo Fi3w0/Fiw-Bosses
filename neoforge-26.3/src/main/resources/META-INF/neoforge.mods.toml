@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "GPL-3.0-only"
+issueTrackerURL = "https://github.com/Fi3w0/Fiw-Bosses/issues"
+
+[[mods]]
+modId = "fiw_bosses"
+version = "${version}"
+displayName = "FIW Bosses"
+authors = "Fi3w0"
+logoFile = "icon.png"
+description = "A data-driven boss framework for Fabric, NeoForge, and Forge. Define multi-phase bosses and minions with configurable abilities entirely through JSON — no coding, no restarts."
+
+[[dependencies.fiw_bosses]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.3.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.fiw_bosses]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3,26.4)"
+ordering = "NONE"
+side = "BOTH"

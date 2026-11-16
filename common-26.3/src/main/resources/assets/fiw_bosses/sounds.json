@@ -1,0 +1,11 @@
+{
+  "domain_break": {
+    "sounds": [
+      {
+        "name": "fiw_bosses:domain_break",
+        "attenuation_distance": 48,
+        "stream": false
+      }
+    ]
+  }
+}
