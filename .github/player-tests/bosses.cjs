@@ -7,7 +7,8 @@
 //
 // Installs the QA pack (examples/qa), spawns every QA boss and minion, forces phases and rages,
 // checks reload, room, limits and schedules, damages a boss through a phase threshold and to
-// death, checks its ground loot, and that a boss in phase 3 survives a restart. When Fiw Custom
+// death, checks its ground loot, rolls spawn affixes, and that a boss's phase and affixes
+// survive a restart. When Fiw Custom
 // Items is installed next to it, the boss must also drop a Fiw Custom Items item.
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -45,6 +46,26 @@ const boss = id => `@e[nbt={BossId:"${id}"},limit=1]`
 async function phaseOf(id) {
   const output = await expect(`data get entity ${boss(id)} BossPhase`, 'has the following entity data:')
   return Number(output.match(/has the following entity data: (-?\d+)/)[1])
+}
+// The attribute was renamed from generic.x to x in 1.21.2; only one of the two names exists.
+async function attribute(selector, name, base = false) {
+  const start = mark()
+  for (const id of [`minecraft:${name}`, `minecraft:generic.${name}`]) {
+    emit({ console: `attribute ${selector} ${id} ${base ? 'base ' : ''}get` })
+  }
+  const output = await until(start, o => / is -?\d/.test(o), `attribute ${name}`)
+  return Number(output.match(/ is (-?[\d.]+)/)[1])
+}
+// The affixes qa_affix must have: both pool entries (count 2 of 2), one from the settings library.
+async function checkAffixes() {
+  const saved = await expect(`data get entity ${boss('qa_affix')} BossAffixes`, 'has the following entity data:')
+  assert.match(saved, /qa_swift/, 'the library affix rolled and was saved')
+  assert.match(saved, /qa_armored/, 'the inline affix rolled and was saved')
+  const name = await expect(`data get entity ${boss('qa_affix')} CustomName`, 'has the following entity data:')
+  for (const part of ['Swift', 'Armored', 'QA Affix']) assert.match(name, new RegExp(part), `name shows ${part}`)
+  assert.equal(await attribute(boss('qa_affix'), 'armor'), 10, 'Armored adds 10 armor')
+  assert(Math.abs(await attribute(boss('qa_affix'), 'max_health') - 200) < 0.01, 'Armored doubles health')
+  assert(Math.abs(await attribute(boss('qa_affix'), 'movement_speed', true) - 0.4) < 0.001, 'Swift doubles speed')
 }
 async function count(selector) {
   const start = mark()
@@ -100,7 +121,7 @@ async function first() {
     ['qa_domain', '0 80 0'], ['qa_melee', '6 80 0'], ['qa_skin', '-6 80 0'], ['qa_shield', '0 80 6'],
     ['qa_golem_disguise', '10 80 10'], ['qa_golem_giant', '-12 80 -12'], ['qa_golem_small', '12 80 -12'],
     ['qa_player_giant', '-12 80 12'], ['qa_player_tiny', '4 80 -8'], ['qa_player_reach', '-4 80 -8'],
-    ['qa_scale_abilities', '16 80 0'], ['qa_loot', '-20 80 0']
+    ['qa_scale_abilities', '16 80 0'], ['qa_loot', '-20 80 0'], ['qa_affix', '20 80 0']
   ]
   for (const [id, pos] of spawns) await expect(`boss spawn ${id} ${pos}`, `Spawned boss ${id}`)
   await expect('boss spawn qa_summon variant hard 0 80 -16', 'Spawned boss qa_summon')
@@ -108,6 +129,8 @@ async function first() {
   await delay(4000)
   assert.equal(await count('@e[type=fiw_bosses:boss]'), spawns.length + 1, 'every spawned boss is alive in the world')
   emit({ assertion: 'all QA bosses and minions spawn' })
+  await checkAffixes()
+  emit({ assertion: 'spawn affixes roll from the pool and the settings library and change name, armor, health and speed' })
 
   if (!legacy) {
     // 1.21.1 still names the attribute generic.scale; only one of the two names exists per version.
@@ -160,7 +183,7 @@ async function first() {
   await run('boss minion kill all')
   await run(`boss phase ${boss('qa_domain')} set 3`, 2000)
   await delay(2000)
-  assert.equal(await count('@e[type=fiw_bosses:boss]'), 1, 'only qa_domain is left for the restart check')
+  assert.equal(await count('@e[type=fiw_bosses:boss]'), 2, 'only qa_domain and qa_affix are left for the restart check')
   await expect('save-all flush', 'Saved the game')
 }
 
@@ -169,6 +192,8 @@ async function restart() {
   await expect('boss list', 'qa_domain')
   assert.equal(await phaseOf('qa_domain'), 2, 'qa_domain is still in phase 3 after a restart')
   emit({ assertion: 'a boss keeps its phase across a restart' })
+  await checkAffixes()
+  emit({ assertion: 'a boss keeps its affixes across a restart' })
   await run('boss kill all', 2000)
   assert.equal(await count('@e[type=fiw_bosses:boss]'), 0, 'boss kill all removes every boss')
 }

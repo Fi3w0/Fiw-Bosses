@@ -11,5 +11,11 @@
   "pathfinding": "vanilla",
   "domainBreakSound": true,
   "domainBreakVolume": 50,
-  "schedules": []
+  "schedules": [],
+  "affixes": {
+    "qa_swift": {
+      "name": "&bSwift",
+      "speedMultiplier": 2
+    }
+  }
 }

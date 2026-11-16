@@ -1,0 +1,29 @@
+{
+  "id": "qa_affix",
+  "displayName": "&dQA Affix",
+  "health": 100,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "PINK",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    }
+  ],
+  "loot": [],
+  "affixes": {
+    "count": 2,
+    "pool": [
+      { "id": "qa_swift" },
+      { "id": "qa_armored", "name": "&7Armored", "armorBonus": 10, "healthMultiplier": 2 }
+    ]
+  }
+}
