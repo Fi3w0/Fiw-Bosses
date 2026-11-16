@@ -7,7 +7,7 @@ matching the tag).
 ## [1.3.2] - Minecraft 26.3, 26.1.2 and spawn affixes
 
 ### Added
-- **Minecraft 26.3 and 26.1.2 (Fabric and NeoForge).** Both need Java 25, and Fabric API for the same Minecraft version on Fabric. Boss files work the same as on every other version, and Fiw Custom Items items still work in equipment and loot (`toolId`).
+- **Minecraft 26.3 and 26.1.2 (Fabric and NeoForge).** Both need Java 25, and Fabric API for the same Minecraft version on Fabric. Boss files work the same as on every other version, and items from Fiw Custom Items still work in equipment and loot (`toolId`).
 - **Spawn affixes.** An `affixes` block on a boss makes every spawn roll random affixes from a weighted `pool`, for example **Swift**, **Armored** or **Vampiric**. Each one adds a word in front of the boss name and can change health, damage (all, melee-only or ability-only), speed, armor and loot, or add extra abilities to every phase. `chance` decides how often a spawn gets any, `count` how many different ones it gets, and `nameFormat` where they go in the name (default `{affixes} {name}`).
 - **Shared affixes** in `config/fiw_bosses/settings.json` under `"affixes"`: define an affix once and list just its `id` in each boss's pool. Values set in the boss's own pool entry win.
 - Example: `examples/affixes/storm_sentinel.json` with the shared affixes in `examples/settings.json`.

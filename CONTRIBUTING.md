@@ -8,7 +8,7 @@
 
 ## Build
 
-The mod targets 5 Minecraft versions across 3 loaders (9 modules total). Run Gradle with JDK 25;
+The mod targets 6 Minecraft versions across 3 loaders (12 loader modules plus `core`). Run Gradle with JDK 25;
 toolchains compile each module for its own Java version (17, 21 or 25):
 
 ```
@@ -35,7 +35,7 @@ For a single target:
 - Follow the patterns in existing goal classes for new abilities.
 - Keep per-version API adaptations minimal — change only what differs between
   Minecraft versions.
-- No AI co-author trailers on commits. Author must be a human.
+- No co-author trailers on commits.
 
 ## Testing
 

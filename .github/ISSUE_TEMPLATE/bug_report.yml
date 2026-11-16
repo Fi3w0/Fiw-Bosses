@@ -32,8 +32,8 @@ body:
     id: mod_version
     attributes:
       label: FIW Bosses version
-      description: The mod version (e.g. 1.1.0).
-      placeholder: "1.1.0"
+      description: The mod version (e.g. 1.3.2).
+      placeholder: "1.3.2"
     validations:
       required: true
 

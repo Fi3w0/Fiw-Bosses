@@ -136,7 +136,7 @@ The optional `fluid` block stops river cheese: `canSwim` (pathfinding follows pl
 Loot entries roll random amounts with `minCount`/`maxCount` (e.g. 10–120 diamonds at 50% chance) — oversized amounts split into multiple stacks automatically.
 
 ### Raid rewards
-MMO-style boss loot with `"lootMode": "per_player"`: every player who dealt enough damage gets their own roll straight into their inventory. `unique` entries go to exactly one raider (never duplicated — perfect for a one-of-a-kind Fiw Tools weapon), `damageLuck` makes top contributors luckier, `topRanks` gates entries to the top N, and kill/participant/MVP commands hand out anything else. Leechers, offline players and `/boss kill` earn nothing.
+MMO-style boss loot with `"lootMode": "per_player"`: every player who dealt enough damage gets their own roll straight into their inventory. `unique` entries go to exactly one raider (never duplicated — perfect for a one-of-a-kind Fiw Custom Items weapon), `damageLuck` makes top contributors luckier, `topRanks` gates entries to the top N, and kill/participant/MVP commands hand out anything else. Leechers, offline players and `/boss kill` earn nothing.
 
 ### Fight summary
 Optional post-fight chat recap — killing blow, top damage with share %, most damage taken, who fell, unique drops, fight time. Only players who actually engaged the boss are listed. Global defaults in `config/fiw_bosses/settings.json` (toggle live with `/boss summary`), overridable per boss.
@@ -145,7 +145,7 @@ Optional post-fight chat recap — killing blow, top damage with share %, most d
 `health` isn't capped at vanilla's 1024 — a 60,000 HP boss really has 60,000 HP, and Jade / WTHIT / The One Probe show it. `bossBar.showHealth` also puts the HP (`60,000/60,000 ❤`) in the bar title.
 
 ### Summon items & altars
-Players start fights without an admin: right-click with a summon item (a vanilla item, optionally with an exact name, or a Fiw Tools item), optionally only on an altar block. `spawnLimits` caps how many are alive (`maxAlive`), adds a server-wide cooldown, and tells players why a summon was refused. Admin `/boss spawn` is never limited.
+Players start fights without an admin: right-click with a summon item (a vanilla item, optionally with an exact name, or a Fiw Custom Items item), optionally only on an altar block. `spawnLimits` caps how many are alive (`maxAlive`), adds a server-wide cooldown, and tells players why a summon was refused. Admin `/boss spawn` is never limited.
 
 ### Difficulty variants
 Named variants such as `hard` scale health, all/melee/ability damage and loot, with their own name. The summon item picks the variant, or use `/boss spawn <id> variant <name>`; the boss keeps it through restarts.

@@ -26,6 +26,7 @@ FIW Bosses hands you the toolkit Mojang didn't: drop a JSON file into `config/fi
 It isn't one hardcoded boss bolted onto the game. It's a **framework**: HP-threshold phases, per-phase ability loadouts, custom minions with their own AI, pre-fight and pre-death dialogue, custom skins, hot reload — one config schema that behaves the same on every loader and version it supports.
 
 > 🧩 **Both-sides mod.** Install the matching jar on the **server and every client** that joins it.
+
 ---
 
 ![Short showcase](https://cdn.modrinth.com/data/O9BUcsSY/images/7a6808da1a73d6c234247a25f17242dba341652f.gif)
@@ -110,6 +111,7 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 🎲 **Loot ranges** — roll random drop amounts with `minCount`/`maxCount` (10–120 diamonds at 50% chance); big rolls split into stacks automatically.
 
 ♻️ **Hot reload & persistence** — `/boss reload` re-reads everything live, deleted configs are removed from the world, and a boss's phase survives server restarts.
+
 ---
 
 ## 50+ abilities, mixed and matched

@@ -231,7 +231,7 @@ Bosses use the root `movement` field. Custom minions use the minion `movement` f
 
 > Smart movement pauses while an ability that locks movement is running, so channelled attacks and dashes are not fought by the movement AI.
 
-Movement does not add damage: a boss configured with `attackDamage: 0` remains harmless in melee. Most QA fixtures use zero damage; `qa_melee` uses 4 for combat checks.
+Movement does not add damage: a boss configured with `attackDamage: 0` remains harmless in melee.
 
 ---
 
@@ -463,7 +463,7 @@ players are stuck on, or push a stalled one forward:
 `<targets>` is an entity selector, e.g. `@e[type=fiw_bosses:boss,limit=1,sort=nearest]`.
 The normal transition (message, sound, particles, equipment, abilities) plays. After a forced
 phase, HP thresholds the boss has already passed won't pull it back; crossing a *new* threshold
-further down still triggers that phase as usual. With Fiw Tools installed, the `boss_phase`
+further down still triggers that phase as usual. With Fiw Custom Items installed, the `boss_phase`
 item ability does the same from an admin item, and `on_boss_phase` item abilities fire for
 nearby players on every phase change.
 
@@ -514,10 +514,10 @@ the phase map fall through to the boss map.
 
 **Per-version notes:**
 
-| Damage type | 1.21.11 | 1.21.8 | 1.21.1 | 1.20.1 |
-|-------------|---------|--------|--------|--------|
-| `minecraft:mace_smash` | ✔ | ✔ | ✖ | ✖ (no mace) |
-| `minecraft:spear` | ✔ | ✖ | ✖ | ✖ (no spear) |
+| Damage type | 26.3 | 26.1.2 | 1.21.11 | 1.21.8 | 1.21.1 | 1.20.1 |
+|-------------|------|--------|---------|--------|--------|--------|
+| `minecraft:mace_smash` | ✔ | ✔ | ✔ | ✔ | ✖ | ✖ (no mace) |
+| `minecraft:spear` | ✔ | ✔ | ✔ | ✖ | ✖ | ✖ (no spear) |
 
 On versions without a dedicated damage type, use the **item id** key instead
 (`"minecraft:mace": 0.2` works everywhere the mace exists). On 1.20.1, projectiles
@@ -2233,7 +2233,7 @@ entry is one way to do it; a boss can have several (e.g. a normal key and a hard
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `item` | string | — | Vanilla item id that summons the boss. Ignored when `toolId` is set |
-| `toolId` | string | — | Fiw Tools item id (needs Fiw Tools; not available on 1.20.1) |
+| `toolId` | string | — | Fiw Custom Items item id (needs Fiw Custom Items; not available on 1.20.1) |
 | `name` | string | — | Optional exact item name (color codes ignored). Use it so only a renamed item works, not every copy of that item |
 | `altar` | string | — | Optional block id. The item then only works when used on that block, and the boss appears on top of it |
 | `consume` | bool | true | Use up one item on a successful summon (never in creative) |
@@ -2250,7 +2250,7 @@ clicked; when used in the air, on the ground about 5 blocks in front of the play
 ## Spawn Limits
 
 Limits for **player summons** (summon items and altars). Admin `/boss spawn`, command
-blocks and Fiw Tools `run_command` items are never limited.
+blocks and Fiw Custom Items `run_command` items are never limited.
 
 ```json
 "spawnLimits": { "maxAlive": 1, "cooldownSeconds": 1800 }
@@ -2456,7 +2456,7 @@ Extra fields used only in per-player mode (see [Raid Rewards](#raid-rewards-per-
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `toolId` | null | A Fiw Tools item id instead of `item` (needs Fiw Tools) |
+| `toolId` | null | A Fiw Custom Items item id instead of `item` (needs Fiw Custom Items) |
 | `unique` | false | Rolled once for the whole raid and given to **exactly one** player — never duplicated |
 | `damageLuck` | rewards value | Overrides `rewards.damageLuck` for this entry |
 | `topRanks` | 0 | Only the top N damage dealers may get this entry. `0` = every eligible player |
@@ -2505,7 +2505,7 @@ straight into their inventory — no scramble for a ground pile, no one player v
 - Normal entries roll **independently for each eligible player** — two players can both get diamonds.
 - `unique` entries roll their `chance` **once**; on success exactly one eligible player receives it
   (weighted by damage when luck is on). There is never a second copy — ideal for one-of-a-kind
-  Fiw Tools weapons.
+  Fiw Custom Items weapons.
 - `topRanks` restricts an entry to the top N damage dealers.
 - Items go into the inventory; anything that doesn't fit drops at that player's feet and only
   they can pick it up. Each player gets a chat line listing their loot.
