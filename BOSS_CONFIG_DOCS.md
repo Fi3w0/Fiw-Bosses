@@ -138,6 +138,7 @@ Bosses are defined as `.json` files — no coding or server restart needed.
 - [Summoning & Altars](#summoning--altars)
 - [Spawn Limits](#spawn-limits)
 - [Difficulty Variants](#difficulty-variants)
+- [Spawn Affixes](#spawn-affixes)
 - [Scheduled Spawns](#scheduled-spawns)
 - [Loot](#loot)
 - [Raid Rewards (per-player loot)](#raid-rewards-per-player-loot)
@@ -2301,6 +2302,77 @@ for `minDamagePercent`.
 
 Full example: [`examples/summon/ember_warden.json`](examples/summon/ember_warden.json).
 
+## Spawn Affixes
+
+Every time the boss spawns it rolls random affixes from a pool: a word in front of its name
+and a stat change, so the same boss plays a little differently each time. They roll on every
+spawn route (`/boss spawn`, summon items, schedules) and the boss keeps them through restarts
+and `/boss reload`.
+
+```json
+"affixes": {
+  "chance": 0.75,
+  "count": 1,
+  "pool": [
+    { "id": "swift", "weight": 3 },
+    { "id": "armored", "weight": 2 },
+    { "id": "thundering", "name": "&eThundering", "abilityDamageMultiplier": 1.25,
+      "abilities": [ { "type": "chain_lightning", "cooldownTicks": 160, "params": { "damage": 6.0 } } ] }
+  ]
+}
+```
+
+A spawned boss with the `armored` affix is called **Armored Storm Sentinel**.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `chance` | float | 1.0 | Chance (0-1) that a spawn gets any affixes at all |
+| `count` | int | 1 | How many different affixes one spawn rolls (at most the pool size; never the same affix twice) |
+| `pool` | array | — | The affixes to pick from, by `weight` |
+| `nameFormat` | string | `{affixes} {name}` | Name with affixes: `{affixes}` = the rolled names, `{name}` = the boss's own name. For example `{name} the {affixes}` |
+
+Each affix in the pool:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | string | — | Required. Must not contain `,` |
+| `name` | string | — | Shown before the boss name (color codes work) |
+| `weight` | float | 1.0 | Relative chance to be picked; `0` never picks it |
+| `healthMultiplier` | float | 1.0 | Scales max health |
+| `damageMultiplier` | float | 1.0 | Scales all damage the boss deals |
+| `meleeDamageMultiplier` | float | 1.0 | Scales melee hits only |
+| `abilityDamageMultiplier` | float | 1.0 | Scales ability hits only |
+| `speedMultiplier` | float | 1.0 | Scales movement speed |
+| `armorBonus` | float | 0 | Added to the boss's `armor` |
+| `lootMultiplier` | float | 1.0 | Scales loot counts like a variant's. `unique` drops stay single |
+| `abilities` | array | — | Extra abilities the boss uses in every phase (and every rage that lists its own abilities) |
+
+**Shared affixes.** Define an affix once in `settings.json` under `"affixes"` (keyed by id) and
+list just its `id` (and maybe a `weight`) in each boss's pool. Anything the pool entry sets
+itself wins over the shared definition:
+
+```json
+"affixes": {
+  "swift": { "name": "&bSwift", "speedMultiplier": 1.35 },
+  "armored": { "name": "&7Armored", "armorBonus": 8, "healthMultiplier": 1.25, "lootMultiplier": 1.5 }
+}
+```
+
+How affixes combine:
+
+- Affix multipliers stack with variant and phase multipliers. A **Hard** variant with the
+  **Armored** affix gets both health multipliers.
+- With a `variant`, the variant's name comes first and the affix words go in front of it.
+- Raid rewards use the boss's final health, after affixes, for `minDamagePercent`.
+- Kill records, lockouts and limits still count by boss id, so an **Armored Storm Sentinel**
+  and a plain one share them.
+- A boss already alive keeps the affixes it rolled. If an affix is later removed from both the
+  pool and `settings.json`, that boss loses it on the next restart and the log says so.
+- Admins can read what a boss rolled with `/data get entity <boss> BossAffixes`.
+
+Full example: [`examples/affixes/storm_sentinel.json`](examples/affixes/storm_sentinel.json)
+with the shared affixes in [`examples/settings.json`](examples/settings.json).
+
 ## Scheduled Spawns
 
 Copy `examples/schedules/clockwork_guardian.json` into `config/fiw_bosses/bosses/` for a working interval schedule. It is a boss definition with its own `schedule` block; there is no separate schedules config folder.
@@ -2511,9 +2583,13 @@ Created on first start at `config/fiw_bosses/settings.json`. Applies to every bo
   "pathfinding": "vanilla",
   "domainBreakSound": true,
   "domainBreakVolume": 50,
-  "schedules": []
+  "schedules": [],
+  "affixes": {}
 }
 ```
+
+`affixes` is a shared affix library: bosses can list these by id in their own affix pool (see
+[Spawn Affixes](#spawn-affixes)).
 
 `showBossBarHealth` is the default for every boss's `bossBar.showHealth` (see [Boss Bar](#boss-bar)).
 

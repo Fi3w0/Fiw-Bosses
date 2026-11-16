@@ -16,5 +16,13 @@
   "pathfinding": "vanilla",
   "domainBreakSound": true,
   "domainBreakVolume": 50,
-  "schedules": []
+  "schedules": [],
+  "affixes": {
+    "swift": { "name": "&bSwift", "speedMultiplier": 1.35 },
+    "armored": { "name": "&7Armored", "armorBonus": 8, "healthMultiplier": 1.25, "lootMultiplier": 1.5 },
+    "vampiric": {
+      "name": "&4Vampiric",
+      "abilities": [ { "type": "heal", "cooldownTicks": 400, "params": { "amount": 60.0, "belowPercent": 0.4 } } ]
+    }
+  }
 }

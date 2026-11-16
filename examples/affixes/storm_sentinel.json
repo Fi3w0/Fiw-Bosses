@@ -1,0 +1,52 @@
+{
+  "id": "storm_sentinel",
+  "displayName": "&3&lStorm Sentinel",
+  "health": 900.0,
+  "armor": 6.0,
+  "speed": 0.28,
+  "knockbackResistance": 0.6,
+  "attackDamage": 9.0,
+  "baseEntity": "custom",
+  "renderEntity": "minecraft:stray",
+  "bossBar": { "color": "BLUE", "overlay": "PROGRESS", "showHealth": true },
+  "affixes": {
+    "chance": 0.75,
+    "count": 1,
+    "pool": [
+      { "id": "swift", "weight": 3 },
+      { "id": "armored", "weight": 2 },
+      { "id": "vampiric", "weight": 1 },
+      {
+        "id": "thundering",
+        "name": "&eThundering",
+        "weight": 1,
+        "abilityDamageMultiplier": 1.25,
+        "abilities": [
+          { "type": "chain_lightning", "cooldownTicks": 160, "params": { "damage": 6.0 } }
+        ]
+      }
+    ]
+  },
+  "loot": [
+    { "item": "minecraft:diamond", "minCount": 2, "maxCount": 5, "chance": 1.0 },
+    { "item": "minecraft:trident", "count": 1, "chance": 0.25 }
+  ],
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": [
+        { "type": "melee_slash", "cooldownTicks": 40, "params": { "damage": 8.0 } },
+        { "type": "lightning_radial", "cooldownTicks": 200, "params": {} }
+      ]
+    },
+    {
+      "hpThresholdPercent": 0.5,
+      "speedMultiplier": 1.2,
+      "transitionMessage": "&3[Storm Sentinel] &bThe sky answers me.",
+      "abilities": [
+        { "type": "melee_slash", "cooldownTicks": 30, "params": { "damage": 9.0 } },
+        { "type": "shockwave", "cooldownTicks": 140, "params": { "damage": 7.0 } }
+      ]
+    }
+  ]
+}
