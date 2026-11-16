@@ -45,13 +45,16 @@ class ExampleConfigsTest {
         Map<String, BossDefinition> bosses = new LinkedHashMap<>();
         Map<String, String> bossFiles = new LinkedHashMap<>();
         Map<String, MinionDefinition> minions = new LinkedHashMap<>();
+        Map<String, AffixDefinition> affixLibrary = new LinkedHashMap<>();
         int checked = 0;
         for (Path file : files(".json")) {
             if (under(file, "items")) continue; // Fiw Tools item configs, checked by Fiw Tools
             String name = examples().relativize(file).toString();
             try (Reader r = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
                 if (file.getFileName().toString().equals("settings.json")) {
-                    issues.addAll(ConfigValidator.settings(name, r).issues());
+                    var c = ConfigValidator.settings(name, r);
+                    issues.addAll(c.issues());
+                    if (c.value() != null && c.value().affixes != null) affixLibrary.putAll(c.value().affixes);
                 } else if (under(file, "minions")) {
                     var c = ConfigValidator.minion(name, r);
                     issues.addAll(c.issues());
@@ -65,6 +68,7 @@ class ExampleConfigsTest {
             checked++;
         }
         issues.addAll(ConfigValidator.references(bosses, bossFiles, minions));
+        issues.addAll(ConfigValidator.affixReferences(bosses, bossFiles, affixLibrary));
         assertTrue(checked > 20, "only " + checked + " example files found under " + examples());
         assertTrue(issues.isEmpty(), "\n" + String.join("\n", issues.stream().map(ConfigIssue::describe).toList()));
     }

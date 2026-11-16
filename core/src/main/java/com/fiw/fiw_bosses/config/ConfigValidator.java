@@ -92,6 +92,7 @@ public final class ConfigValidator {
         checkPathfinding(file, def.pathfinding, issues);
         checkSkin(file, def.skin, issues);
         checkLoot(file, def.loot, issues);
+        checkAffixes(file, def.affixes, issues);
         return new Checked<>(def, issues);
     }
 
@@ -139,6 +140,14 @@ public final class ConfigValidator {
             issues.add(warn(file, "domainBreakVolume", s.domainBreakVolume + " is outside 0-100; clamped"));
         }
         checkPathfinding(file, s.pathfinding, issues);
+        if (s.affixes != null) {
+            s.affixes.forEach((id, a) -> {
+                if (a == null) return;
+                String path = "affixes." + id;
+                if (id.contains(",")) issues.add(warn(file, path, "affix ids must not contain ','"));
+                checkAffixValues(file, path, a, issues);
+            });
+        }
         return new Checked<>(s, issues);
     }
 
@@ -185,6 +194,7 @@ public final class ConfigValidator {
         }
 
         issues.addAll(references(bosses, bossFiles, minions));
+        issues.addAll(affixReferences(bosses, bossFiles, settings != null ? settings.affixes : null));
         for (String w : Schedules.collect(bosses, settings != null ? settings.schedules : null).warnings()) {
             issues.add(warn("schedules", "", w));
         }
@@ -251,6 +261,73 @@ public final class ConfigValidator {
     }
 
     // ── Checks ───────────────────────────────────────────────────────────────
+
+    /**
+     * Cross-file: an affix a boss's pool only names (no name or effects of its own) must exist
+     * in the settings.json {@code affixes} library, or it can never roll.
+     */
+    public static List<ConfigIssue> affixReferences(Map<String, BossDefinition> bosses, Map<String, String> bossFiles,
+                                                    Map<String, AffixDefinition> library) {
+        List<ConfigIssue> issues = new ArrayList<>();
+        for (BossDefinition def : bosses.values()) {
+            if (def.affixes == null || def.affixes.pool == null) continue;
+            String file = bossFiles.getOrDefault(def.id, "boss " + def.id);
+            for (int i = 0; i < def.affixes.pool.size(); i++) {
+                AffixDefinition a = def.affixes.pool.get(i);
+                if (a == null || a.id == null || a.id.isBlank()) continue;
+                if (BossAffixes.isEmpty(a) && (library == null || library.get(a.id) == null)) {
+                    issues.add(warn(file, "affixes.pool[" + i + "].id", "affix '" + a.id
+                            + "' sets nothing and is not in settings.json \"affixes\"; it never rolls"));
+                }
+            }
+        }
+        return issues;
+    }
+
+    private static void checkAffixes(String file, AffixConfig cfg, List<ConfigIssue> issues) {
+        if (cfg == null) return;
+        if (cfg.chance < 0f || cfg.chance > 1f) {
+            issues.add(warn(file, "affixes.chance", cfg.chance + " is outside 0-1"));
+        }
+        if (cfg.count < 0) issues.add(warn(file, "affixes.count", cfg.count + " is below 0; no affixes roll"));
+        if (cfg.nameFormat != null && !cfg.nameFormat.contains("{name}")) {
+            issues.add(warn(file, "affixes.nameFormat", "has no {name}; the boss name is left out"));
+        }
+        if (cfg.pool == null || cfg.pool.isEmpty()) {
+            issues.add(warn(file, "affixes.pool", "empty pool; no affixes roll"));
+            return;
+        }
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (int i = 0; i < cfg.pool.size(); i++) {
+            AffixDefinition a = cfg.pool.get(i);
+            if (a == null) continue;
+            String path = "affixes.pool[" + i + "]";
+            if (a.id == null || a.id.isBlank()) {
+                issues.add(warn(file, path + ".id", "missing \"id\"; affix skipped"));
+                continue;
+            }
+            if (a.id.contains(",")) issues.add(warn(file, path + ".id", "affix ids must not contain ','"));
+            if (!seen.add(a.id)) issues.add(warn(file, path + ".id", "duplicate affix '" + a.id + "'; only the first is used"));
+            checkAffixValues(file, path, a, issues);
+        }
+    }
+
+    private static void checkAffixValues(String file, String path, AffixDefinition a, List<ConfigIssue> issues) {
+        if (a.weight != null && a.weight < 0f) issues.add(warn(file, path + ".weight", a.weight + " is below 0; never picked"));
+        positiveOrUnset(file, path + ".healthMultiplier", a.healthMultiplier, issues);
+        positiveOrUnset(file, path + ".damageMultiplier", a.damageMultiplier, issues);
+        positiveOrUnset(file, path + ".meleeDamageMultiplier", a.meleeDamageMultiplier, issues);
+        positiveOrUnset(file, path + ".abilityDamageMultiplier", a.abilityDamageMultiplier, issues);
+        positiveOrUnset(file, path + ".speedMultiplier", a.speedMultiplier, issues);
+        if (a.lootMultiplier != null && a.lootMultiplier < 0f) {
+            issues.add(warn(file, path + ".lootMultiplier", a.lootMultiplier + " is below 0; 0 is used"));
+        }
+        checkAbilities(file, path + ".abilities", a.abilities, issues);
+    }
+
+    private static void positiveOrUnset(String file, String field, Float value, List<ConfigIssue> issues) {
+        if (value != null && value <= 0f) issues.add(warn(file, field, value + " is not above 0; 1 is used"));
+    }
 
     private static void checkBody(String file, float health, String baseEntity, String renderEntity,
                                   float scale, float reach, List<ConfigIssue> issues) {

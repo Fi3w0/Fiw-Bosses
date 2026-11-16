@@ -35,6 +35,9 @@ public class GlobalSettings {
     }
 
     /** Fills fields a partial or old settings.json left null. */
+    // Shared affix library by id. A boss's affix pool can name these instead of repeating them.
+    public java.util.Map<String, AffixDefinition> affixes = new java.util.LinkedHashMap<>();
+
     void normalize() {
         FightSummaryConfig defaults = FightSummaryConfig.defaults();
         fightSummary = fightSummary == null ? defaults : fightSummary.over(defaults);
@@ -42,5 +45,6 @@ public class GlobalSettings {
         domainBreakVolume = Math.max(0, Math.min(100, domainBreakVolume));
         if (webhooks == null) webhooks = new WebhookConfig();
         if (schedules == null) schedules = new java.util.ArrayList<>();
+        if (affixes == null) affixes = new java.util.LinkedHashMap<>();
     }
 }

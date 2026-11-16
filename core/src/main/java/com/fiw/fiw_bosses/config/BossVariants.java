@@ -35,17 +35,20 @@ public final class BossVariants {
         def.variantAbilityScale = positive(v.damageMultiplier) * positive(v.abilityDamageMultiplier);
 
         List<LootEntry> loot = v.loot != null ? copyLoot(v.loot) : def.loot;
-        if (loot != null && v.lootMultiplier != 1.0f) {
-            float m = Math.max(0f, v.lootMultiplier);
-            for (LootEntry e : loot) {
-                if (e.unique) continue;
-                e.count = scale(e.count, m);
-                if (e.minCount != null) e.minCount = scale(e.minCount, m);
-                if (e.maxCount != null) e.maxCount = scale(e.maxCount, m);
-            }
-        }
+        if (v.lootMultiplier != 1.0f) scaleLoot(loot, Math.max(0f, v.lootMultiplier));
         def.loot = loot;
         return def;
+    }
+
+    /** Multiplies every non-unique entry's counts in place (never below one). */
+    static void scaleLoot(List<LootEntry> loot, float m) {
+        if (loot == null) return;
+        for (LootEntry e : loot) {
+            if (e == null || e.unique) continue;
+            e.count = scale(e.count, m);
+            if (e.minCount != null) e.minCount = scale(e.minCount, m);
+            if (e.maxCount != null) e.maxCount = scale(e.maxCount, m);
+        }
     }
 
     private static List<LootEntry> copyLoot(List<LootEntry> loot) {

@@ -92,6 +92,8 @@ public class BossDefinition {
     public ScheduleConfig schedule;
     // Optional. Difficulty variants by name, e.g. "hard".
     public Map<String, VariantDefinition> variants;
+    // Optional. Every spawn rolls random affixes (name prefix + stat changes) from this pool.
+    public AffixConfig affixes;
 
     // ── Arena leash, anti-cheese & rages ────────────────────────────────────
     // Optional. Reset the boss when it is pulled too far from its spawn point.
@@ -105,4 +107,6 @@ public class BossDefinition {
     public transient String variantName;
     public transient float variantMeleeScale = 1.0f;
     public transient float variantAbilityScale = 1.0f;
+    // Set by BossAffixes.apply on the per-entity copy: the affixes this boss rolled (may be empty).
+    public transient List<String> affixIds;
 }
