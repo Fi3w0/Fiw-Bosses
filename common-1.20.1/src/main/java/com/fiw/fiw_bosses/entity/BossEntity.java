@@ -664,6 +664,9 @@ public class BossEntity extends Monster {
     protected void writeBossCustomData(CompoundTag tag) {
         if (bossId != null) tag.putString("BossId", bossId);
         if (definition != null && definition.variantName != null) tag.putString("BossVariant", definition.variantName);
+        if (definition != null && definition.affixIds != null && !definition.affixIds.isEmpty()) {
+            tag.putString("BossAffixes", com.fiw.fiw_bosses.config.BossAffixes.encode(definition.affixIds));
+        }
         if (home != null) {
             tag.putDouble("HomeX", home.x);
             tag.putDouble("HomeY", home.y);
@@ -704,6 +707,8 @@ public class BossEntity extends Monster {
         this.bossId = tag.getString("BossId");
         BossDefinition def = BossVariants.apply(BossConfigLoader.getDefinition(bossId),
                 tag.contains("BossVariant") ? tag.getString("BossVariant") : null);
+        def = com.fiw.fiw_bosses.config.BossAffixes.restore(def,
+                tag.contains("BossAffixes") ? tag.getString("BossAffixes") : null);
         if (def == null) {
             FiwBossesCore.LOGGER.warn("Boss definition '{}' not found, entity will be removed", bossId);
             this.discard();

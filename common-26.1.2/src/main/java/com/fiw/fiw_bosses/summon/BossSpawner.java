@@ -28,6 +28,8 @@ public final class BossSpawner {
         BossEntity boss = ModRefs.BOSS.create(level, reason);
         if (boss == null) return null;
         boss.snapTo(x, y, z, 0, 0);
+        // Every spawn route ends here, so each boss rolls its affixes exactly once.
+        def = com.fiw.fiw_bosses.config.BossAffixes.rollAndApply(def, java.util.concurrent.ThreadLocalRandom.current());
         boss.applyDefinition(def);
         boss.finalizeSpawn(level, level.getCurrentDifficultyAt(boss.blockPosition()), reason, null);
         level.addFreshEntity(boss);
