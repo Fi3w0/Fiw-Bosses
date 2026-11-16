@@ -4,6 +4,20 @@ All notable changes to this project are documented here. Each release's section 
 is used verbatim as the GitHub Release notes (the release workflow extracts the entry
 matching the tag).
 
+## [1.3.2] - Minecraft 26.1.2 and spawn affixes
+
+### Added
+- **Minecraft 26.1.2 (Fabric).** Needs Java 25 and Fabric API for 26.1.2. Boss files work the same as on every other version, and Fiw Custom Items items still work in equipment and loot (`toolId`).
+- **Spawn affixes.** An `affixes` block on a boss makes every spawn roll random affixes from a weighted `pool`, for example **Swift**, **Armored** or **Vampiric**. Each one adds a word in front of the boss name and can change health, damage (all, melee-only or ability-only), speed, armor and loot, or add extra abilities to every phase. `chance` decides how often a spawn gets any, `count` how many different ones it gets, and `nameFormat` where they go in the name (default `{affixes} {name}`).
+- **Shared affixes** in `config/fiw_bosses/settings.json` under `"affixes"`: define an affix once and list just its `id` in each boss's pool. Values set in the boss's own pool entry win.
+- Example: `examples/affixes/storm_sentinel.json` with the shared affixes in `examples/settings.json`.
+
+### Notes
+- Affixes roll on every spawn route: `/boss spawn`, summon items and altars, and scheduled world spawns. A boss keeps the affixes it rolled through restarts and `/boss reload`; `/data get entity <boss> BossAffixes` shows them.
+- Affix multipliers stack with variant and phase multipliers, so a **Hard** **Armored** boss gets both health multipliers. Raid rewards use the boss's final health for `minDamagePercent`.
+- Kill records, loot lockouts and spawn limits still count by boss id: an **Armored Storm Sentinel** and a plain one share them.
+- `/boss validate` and every reload also check affixes: missing ids, weights below 0, multipliers of 0 or less, unknown ability types, and pool entries that name an affix `settings.json` does not define.
+
 ## [1.3.1] - Boss size, config checking and domain fixes
 
 Maintenance and bug-fix update. If something breaks or behaves differently than before, please report it on the [issue tracker](https://github.com/Fi3w0/Fiw-Bosses/issues).

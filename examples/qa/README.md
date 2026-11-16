@@ -1,4 +1,4 @@
-# QA pack (1.4.0)
+# QA pack (1.3.2)
 
 One test pack for the current version. Update it in place for each release instead of adding
 new folders.
