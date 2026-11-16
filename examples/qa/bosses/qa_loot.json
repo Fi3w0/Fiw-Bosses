@@ -1,0 +1,29 @@
+{
+  "id": "qa_loot",
+  "displayName": "&6QA Loot",
+  "health": 60,
+  "armor": 0.0,
+  "attackDamage": 0.0,
+  "speed": 0.2,
+  "movement": "guard_point",
+  "baseEntity": "custom",
+  "skin": null,
+  "bossBar": {
+    "color": "YELLOW",
+    "showHealth": true
+  },
+  "phases": [
+    {
+      "hpThresholdPercent": 1.0,
+      "abilities": []
+    },
+    {
+      "hpThresholdPercent": 0.5,
+      "abilities": []
+    }
+  ],
+  "loot": [
+    { "item": "minecraft:diamond", "minCount": 3, "maxCount": 3, "chance": 1.0 },
+    { "toolId": "qa_boss_drop", "chance": 1.0 }
+  ]
+}
