@@ -36,6 +36,15 @@ async function until(start, condition, description, timeout = 15000) {
   }
 }
 async function run(command, wait = 1000) { emit({ console: command }); await delay(wait) }
+// Repeats an async check until it holds, so a slow server only makes the test slower, not flaky.
+async function eventually(check, description, timeout = 15000) {
+  const end = Date.now() + timeout
+  for (;;) {
+    if (await check()) return
+    if (Date.now() > end) throw new Error(`Timed out: ${description}`)
+    await delay(1000)
+  }
+}
 // Sends a command and waits until its response appears in the log.
 async function expect(command, response, timeout) {
   const start = mark()
@@ -63,7 +72,7 @@ async function checkAffixes() {
   assert.match(saved, /qa_armored/, 'the inline affix rolled and was saved')
   const name = await expect(`data get entity ${boss('qa_affix')} CustomName`, 'has the following entity data:')
   for (const part of ['Swift', 'Armored', 'QA Affix']) assert.match(name, new RegExp(part), `name shows ${part}`)
-  assert.equal(await attribute(boss('qa_affix'), 'armor'), 10, 'Armored adds 10 armor')
+  assert.equal(await attribute(boss('qa_affix'), 'armor', true), 10, 'Armored adds 10 armor')
   assert(Math.abs(await attribute(boss('qa_affix'), 'max_health') - 200) < 0.01, 'Armored doubles health')
   assert(Math.abs(await attribute(boss('qa_affix'), 'movement_speed', true) - 0.4) < 0.001, 'Swift doubles speed')
 }
@@ -151,6 +160,8 @@ async function first() {
 
   await expect('boss reload', 'minion definitions.')
   await delay(3000)
+  await checkAffixes()
+  emit({ assertion: 'a boss keeps its affixes through /boss reload' })
   // A 7x3x7 pocket under a stone roof is too small for the x6 boss.
   await fill('fill 20 80 20 26 82 26 minecraft:air')
   await fill('fill 20 83 20 26 83 26 minecraft:stone')
@@ -162,14 +173,16 @@ async function first() {
   emit({ assertion: 'reload keeps bosses alive; room check refuses a cramped spawn; schedules stay single' })
 
   // Real damage, not /boss kill: the fight, phase and payout paths must run.
-  await run(`damage ${boss('qa_loot')} 40`, 2000)
-  assert.equal(await phaseOf('qa_loot'), 1, 'qa_loot entered phase 2 below half health')
-  await run(`damage ${boss('qa_loot')} 200`, 3000)
-  assert.equal(await count(boss('qa_loot')), 0, 'qa_loot died from damage')
-  assert(await count('@e[type=minecraft:item,nbt={Item:{id:"minecraft:diamond"}}]') >= 1, 'qa_loot dropped its diamonds')
+  await run(`damage ${boss('qa_loot')} 40`)
+  await eventually(async () => await phaseOf('qa_loot') === 1, 'qa_loot entered phase 2 below half health')
+  await run(`damage ${boss('qa_loot')} 200`)
+  await eventually(async () => await count(boss('qa_loot')) === 0, 'qa_loot died from damage')
+  await eventually(async () => await count('@e[type=minecraft:item,nbt={Item:{id:"minecraft:diamond"}}]') >= 1,
+    'qa_loot dropped its diamonds')
   if (tools) {
-    assert(await count('@e[type=minecraft:item,nbt={Item:{components:{"minecraft:custom_data":{fiw_tools_id:"qa_boss_drop"}}}}]') >= 1,
-      'qa_loot dropped the Fiw Custom Items item')
+    await eventually(async () => await count(
+      '@e[type=minecraft:item,nbt={Item:{components:{"minecraft:custom_data":{fiw_tools_id:"qa_boss_drop"}}}}]') >= 1,
+    'qa_loot dropped the Fiw Custom Items item')
     emit({ assertion: 'boss loot includes a Fiw Custom Items item' })
   }
   await run('kill @e[type=minecraft:item]')
