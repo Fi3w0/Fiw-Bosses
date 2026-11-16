@@ -72,7 +72,8 @@ public final class BossAffixes {
 
         Map<String, Float> candidates = new LinkedHashMap<>();
         for (AffixDefinition entry : cfg.pool) {
-            if (entry == null || entry.id == null || candidates.containsKey(entry.id)) continue;
+            // Saved ids are comma separated: an id with a comma could not be restored, so it never rolls.
+            if (entry == null || entry.id == null || entry.id.contains(",") || candidates.containsKey(entry.id)) continue;
             AffixDefinition a = resolve(def, entry.id, library);
             float w = a != null && a.weight != null ? a.weight : 1.0f;
             if (a != null && !isEmpty(a) && w > 0f) candidates.put(entry.id, w);

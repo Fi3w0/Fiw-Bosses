@@ -68,6 +68,9 @@ class BossAffixesTest {
         Map<String, Integer> seen = new HashMap<>();
         for (int i = 0; i < 2000; i++) seen.merge(BossAffixes.roll(def, Map.of(), random).get(0), 1, Integer::sum);
         assertNull(seen.get("c"));
+        // An id with a comma could not be saved and restored, so it never rolls.
+        BossDefinition comma = boss("{\"count\":2,\"pool\":[{\"id\":\"a,b\",\"name\":\"AB\"},{\"id\":\"c\",\"name\":\"C\"}]}");
+        for (int i = 0; i < 50; i++) assertEquals(List.of("c"), BossAffixes.roll(comma, Map.of(), new Random(i)));
         assertTrue(seen.get("a") > 1600 && seen.get("b") > 100, "about 90% / 10%: " + seen);
     }
 

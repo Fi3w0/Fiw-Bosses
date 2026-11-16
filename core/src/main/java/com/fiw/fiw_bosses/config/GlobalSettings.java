@@ -34,10 +34,10 @@ public class GlobalSettings {
         return "shared".equalsIgnoreCase(mode);
     }
 
-    /** Fills fields a partial or old settings.json left null. */
     // Shared affix library by id. A boss's affix pool can name these instead of repeating them.
     public java.util.Map<String, AffixDefinition> affixes = new java.util.LinkedHashMap<>();
 
+    /** Fills fields a partial or old settings.json left null. */
     void normalize() {
         FightSummaryConfig defaults = FightSummaryConfig.defaults();
         fightSummary = fightSummary == null ? defaults : fightSummary.over(defaults);

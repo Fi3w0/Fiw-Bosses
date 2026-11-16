@@ -144,7 +144,7 @@ public final class ConfigValidator {
             s.affixes.forEach((id, a) -> {
                 if (a == null) return;
                 String path = "affixes." + id;
-                if (id.contains(",")) issues.add(warn(file, path, "affix ids must not contain ','"));
+                if (id.contains(",")) issues.add(warn(file, path, "affix ids must not contain ','; it never rolls"));
                 checkAffixValues(file, path, a, issues);
             });
         }
@@ -306,7 +306,7 @@ public final class ConfigValidator {
                 issues.add(warn(file, path + ".id", "missing \"id\"; affix skipped"));
                 continue;
             }
-            if (a.id.contains(",")) issues.add(warn(file, path + ".id", "affix ids must not contain ','"));
+            if (a.id.contains(",")) issues.add(warn(file, path + ".id", "affix ids must not contain ','; it never rolls"));
             if (!seen.add(a.id)) issues.add(warn(file, path + ".id", "duplicate affix '" + a.id + "'; only the first is used"));
             checkAffixValues(file, path, a, issues);
         }
