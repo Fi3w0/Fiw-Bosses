@@ -8,7 +8,7 @@
 No Java. No restarts. No combat-modding degree required.
 
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.3_·_26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
 [![Fabric](https://img.shields.io/badge/Fabric-✓-DBB591)](https://fabricmc.net)
 [![NeoForge](https://img.shields.io/badge/NeoForge-✓-F16436)](https://neoforged.net)
 [![Forge](https://img.shields.io/badge/Forge_1.20.1-✓-1E2D4A)](https://minecraftforge.net)
@@ -141,6 +141,8 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 
 | Loader | Minecraft | Java |
 |---|---|---|
+| Fabric | 26.3 | 25 |
+| NeoForge | 26.3 | 25 |
 | Fabric | 26.1.2 | 25 |
 | NeoForge | 26.1.2 | 25 |
 | Fabric | 1.21.11 | 21 |
@@ -152,7 +154,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 | Fabric | 1.20.1 | 17 |
 | Forge | 1.20.1 | 17 |
 
-Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all ten targets.
+Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all twelve targets.
 
 **Optional:** [Fiw Custom Items](https://modrinth.com/mod/fiw-custom-items) — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are skipped and nothing breaks.
 

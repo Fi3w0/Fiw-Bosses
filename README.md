@@ -6,7 +6,7 @@
 
 [![Build](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml/badge.svg)](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml)
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.3_·_26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 [![Fabric](https://img.shields.io/badge/Fabric-✓-DBB591)](https://fabricmc.net)
@@ -70,6 +70,8 @@ Full JSON reference → **[BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)**
 
 | Loader   | Minecraft | Module             | Java |
 | -------- | --------- | ------------------ | ---- |
+| Fabric   | 26.3      | `fabric-26.3`      | 25   |
+| NeoForge | 26.3      | `neoforge-26.3`    | 25   |
 | Fabric   | 26.1.2    | `fabric-26.1.2`    | 25   |
 | NeoForge | 26.1.2    | `neoforge-26.1.2`  | 25   |
 | Fabric   | 1.21.11   | `fabric-1.21.11`   | 21   |
@@ -257,7 +259,7 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 
 ## Building
 
-Run Gradle with **JDK 25**. Toolchains compile Minecraft 26.1.2 for Java 25, 1.21.x for Java 21 and 1.20.1 for Java 17.
+Run Gradle with **JDK 25**. Toolchains compile Minecraft 26.3 and 26.1.2 for Java 25, 1.21.x for Java 21 and 1.20.1 for Java 17.
 
 ```bash
 git clone https://github.com/Fi3w0/Fiw-Bosses
@@ -269,7 +271,8 @@ cd Fiw-Bosses
 <summary><strong>Full release-style matrix build</strong></summary>
 
 ```bash
-./gradlew :core:test :fabric-26.1.2:build :neoforge-26.1.2:build \
+./gradlew :core:test :fabric-26.3:build :neoforge-26.3:build \
+  :fabric-26.1.2:build :neoforge-26.1.2:build \
   :fabric-1.21.11:build :neoforge-1.21.11:build \
   :fabric-1.21.8:build  :neoforge-1.21.8:build \
   :fabric-1.21.1:build  :neoforge-1.21.1:build \
@@ -284,6 +287,7 @@ Output jars land in each module's `build/libs/`. The first Forge build is slow (
 
 ```text
 core/             Minecraft-free config, text, skin, and shared support code
+common-26.3/      shared game logic for Minecraft 26.3
 common-26.1.2/    shared game logic for Minecraft 26.1.2
 common-1.21.11/   shared game logic for Minecraft 1.21.11
 common-1.21.8/    shared game logic for Minecraft 1.21.8

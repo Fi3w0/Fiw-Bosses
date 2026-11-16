@@ -24,8 +24,8 @@ For a single target:
 
 ## Development Workflow
 
-- New abilities are developed on **`common-26.1.2`** first, then ported to
-  `common-1.21.11`, `common-1.21.8`, `common-1.21.1`, and `common-1.20.1`.
+- New abilities are developed on **`common-26.3`** first, then ported to
+  `common-26.1.2`, `common-1.21.11`, `common-1.21.8`, `common-1.21.1`, and `common-1.20.1`.
 - Shared logic lives in `core/` and is Minecraft-free.
 - Each loader module pulls its `common-*` source set via Gradle `srcDir`.
 
