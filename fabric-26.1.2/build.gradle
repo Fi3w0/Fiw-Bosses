@@ -1,0 +1,56 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-fabric-26.1.2"
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Share the version-specific Minecraft code from common-26.1.2. 26.x ships with its
+// official names, so Loom compiles against it directly without any mappings.
+sourceSets {
+    main {
+        java {
+            srcDir rootProject.file('common-26.1.2/src/main/java')
+        }
+        resources {
+            srcDir rootProject.file('common-26.1.2/src/main/resources')
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    implementation project(':core')
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 25
+}
+
+jar {
+    from project(':core').sourceSets.main.output
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
