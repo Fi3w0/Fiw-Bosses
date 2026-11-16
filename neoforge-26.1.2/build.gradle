@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+    id 'net.neoforged.moddev'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-neoforge-26.1.2"
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Share the version-specific Minecraft code from common-26.1.2 (the same source the
+// Fabric 26.1.2 module compiles). 26.x ships with its official names, so there are no mappings.
+sourceSets {
+    main {
+        java {
+            srcDir rootProject.file('common-26.1.2/src/main/java')
+        }
+        resources {
+            srcDir rootProject.file('common-26.1.2/src/main/resources')
+        }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "fiw_bosses" {
+            sourceSet sourceSets.main
+            sourceSet project(':core').sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation project(':core')
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand 'version': project.version
+    }
+}
+
+jar {
+    from project(':core').sourceSets.main.output
+    from(rootProject.file('LICENSE')) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
