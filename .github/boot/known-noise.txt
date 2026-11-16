@@ -1,0 +1,4 @@
+# Log lines that look like errors but are verified harmless. One regex per line.
+# Fabric 1.20.1 and 1.21.1: vanilla logs this for every modded entity type that has no data fixer
+# of its own. Fabric API's builder takes the same vanilla path, so it cannot be avoided there.
+No data fixer registered for fiw_bosses:(boss|minion)

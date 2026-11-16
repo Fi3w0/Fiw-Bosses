@@ -1,0 +1,10 @@
+{
+  "commands": [
+    "boss validate"
+  ],
+  "expected": [
+    "boss definitions (0 failed)",
+    "minion definitions (0 failed)",
+    "No config problems found."
+  ]
+}
