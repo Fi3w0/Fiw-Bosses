@@ -8,7 +8,8 @@
 
 ## Build
 
-The mod targets 4 Minecraft versions across 3 loaders (8 modules total):
+The mod targets 5 Minecraft versions across 3 loaders (9 modules total). Run Gradle with JDK 25;
+toolchains compile each module for its own Java version (17, 21 or 25):
 
 ```
 ./gradlew build
@@ -23,8 +24,8 @@ For a single target:
 
 ## Development Workflow
 
-- New abilities are developed on **`common-1.21.11`** first, then ported to
-  `common-1.21.8`, `common-1.21.1`, and `common-1.20.1`.
+- New abilities are developed on **`common-26.1.2`** first, then ported to
+  `common-1.21.11`, `common-1.21.8`, `common-1.21.1`, and `common-1.20.1`.
 - Shared logic lives in `core/` and is Minecraft-free.
 - Each loader module pulls its `common-*` source set via Gradle `srcDir`.
 
@@ -42,9 +43,12 @@ For a single target:
   `examples/`, so a new example must load without warnings.
 - A new ability type goes in its `BossGoalFactory` on every version and in core
   `AbilityTypes`; a test checks they match.
-- Boot test on a real server with the built jar:
-  `JAVA_17=<java 17> JAVA_21=<java 21> .github/scripts/boot-test.sh fabric-1.21.8 <jar>`.
-  CI runs it for every target before publishing.
+- Gameplay check on a real server with the built jar (Node 22+, Java 17, 21 and 25 installed):
+  `bash .github/scripts/verify-target.sh fabric-1.21.8`. It installs the QA pack, spawns every
+  QA boss, forces phases and rages, kills a boss with damage and checks its loot and affixes,
+  then restarts the server and checks again. A client cannot join a FIW Bosses test server
+  without the mod, so everything is driven from the server console. CI runs it for every target
+  before publishing.
 - For in-game testing, build and copy the jar to your Minecraft instance's
   `mods/` folder and use the checklist in `examples/qa/README.md`.
 

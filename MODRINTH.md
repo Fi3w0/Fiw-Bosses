@@ -8,7 +8,7 @@
 No Java. No restarts. No combat-modding degree required.
 
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
 [![Fabric](https://img.shields.io/badge/Fabric-✓-DBB591)](https://fabricmc.net)
 [![NeoForge](https://img.shields.io/badge/NeoForge-✓-F16436)](https://neoforged.net)
 [![Forge](https://img.shields.io/badge/Forge_1.20.1-✓-1E2D4A)](https://minecraftforge.net)
@@ -91,6 +91,8 @@ That's the whole loop. Tweak the file, reload, fight again — no restart, ever.
 
 ⚔️ **Difficulty variants** — a `hard` key spawns a tougher boss: more health, more damage (all, melee-only or ability-only), more loot and its own name. It keeps its variant through restarts.
 
+🎲 **Spawn affixes** — each spawn can roll random affixes such as **Swift**, **Armored** or **Vampiric**: a word in front of the name plus more health, damage, speed, armor, loot or extra abilities. Share affixes between bosses through `settings.json`; a boss keeps what it rolled through restarts.
+
 🧱 **Cheese-proof fights** — bosses never break blocks, yet boxing, pillaring, boats, cobwebs and minion traps don't work: arena leash resets (no loot for the abandoned attempt), stuck detection that teleports, strikes or enrages with escalation, vehicles destroyed on contact, slowing blocks ignored, and minions that teleport to players they can't reach.
 
 😡 **Rages & enrage timer** — phases triggered by behavior instead of HP: trap the boss and it rages with extra health, a red bar and new abilities; take too long and the enrage timer kicks in.
@@ -139,6 +141,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 
 | Loader | Minecraft | Java |
 |---|---|---|
+| Fabric | 26.1.2 | 25 |
 | Fabric | 1.21.11 | 21 |
 | NeoForge | 1.21.11 | 21 |
 | Fabric | 1.21.8 | 21 |
@@ -148,7 +151,7 @@ Abilities are small, tunable attack modules. Stack them on a phase, set cooldown
 | Fabric | 1.20.1 | 17 |
 | Forge | 1.20.1 | 17 |
 
-Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all eight targets.
+Fabric builds need [Fabric API](https://modrinth.com/mod/fabric-api). One boss file behaves the same on all nine targets.
 
 **Optional:** [Fiw Custom Items](https://modrinth.com/mod/fiw-custom-items) — when present, equipment and loot can reference its items by `toolId`; when absent, those entries are skipped and nothing breaks.
 

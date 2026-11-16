@@ -1,4 +1,4 @@
-# QA pack (1.3.1)
+# QA pack (1.4.0)
 
 One test pack for the current version. Update it in place for each release instead of adding
 new folders.
@@ -14,7 +14,7 @@ Into a **disposable** test world's config folder:
 | `skins/qa_skin.png` | `config/fiw_bosses/skins/` |
 | `settings.json` | `config/fiw_bosses/settings.json` (back up yours first) |
 
-Then `/boss reload` (op level 3). Leave `negative/` out until step 7. Use a flat world and
+Then `/boss reload` (op level 3). Leave `negative/` out until step 8. Use a flat world and
 press **F3+B** for hitboxes. Every QA boss deals 0-4 damage; most stand still
 (`guard_point`).
 
@@ -76,7 +76,22 @@ Stay within 8 blocks (creative/spectator players are not captured).
 - [ ] First trigger spawns at x=8 z=8; the second is refused while it lives.
 - [ ] Restart: the schedule remembers its living boss; summary stays at top 2.
 
-## 7. Invalid config
+## 7. Affixes and loot
+
+```text
+/boss spawn qa_affix
+/boss spawn qa_loot
+```
+
+- [ ] `qa_affix` is called **Armored Swift QA Affix** (the two words can swap places) on its
+  nameplate and boss bar and has 200 HP. `/attribute @e[nbt={BossId:"qa_affix"},limit=1]
+  minecraft:movement_speed base get` shows 0.4 (twice its configured 0.2).
+- [ ] Hit `qa_loot` down to half health: it enters phase 2. Kill it: 3 diamonds drop (plus a
+  **QA Boss drop** emerald when Fiw Custom Items is installed and has a `qa_boss_drop` item).
+- [ ] Restart: `qa_affix` still has both words and 200 HP.
+- [ ] On Minecraft 26.1.2 (Fabric), repeat sections 1-3 and this one.
+
+## 8. Invalid config
 
 - [ ] `/boss validate` with this pack installed: "No config problems found."
 - [ ] Copy `negative/qa_bad_schedule.json.invalid` to `bosses/qa_bad_schedule.json`, `/boss reload`: reload reports problems; `/boss validate` lists the schedule needing exactly one of `intervalMinutes`/`times`. The other bosses still load. Delete it and reload.

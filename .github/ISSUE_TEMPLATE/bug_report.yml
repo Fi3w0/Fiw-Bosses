@@ -13,6 +13,7 @@ body:
       label: Loader & Minecraft version
       description: Which jar are you running?
       options:
+        - Fabric 26.1.2
         - Fabric 1.21.11
         - NeoForge 1.21.11
         - Fabric 1.21.8

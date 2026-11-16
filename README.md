@@ -6,7 +6,7 @@
 
 [![Build](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml/badge.svg)](https://github.com/Fi3w0/Fiw-Bosses/actions/workflows/build.yml)
 [![Modrinth](https://img.shields.io/modrinth/v/fiw-bosses?label=Modrinth&logo=modrinth&color=00AF5C)](https://modrinth.com/mod/fiw-bosses)
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2_·_1.21.11_·_1.21.8_·_1.21.1_·_1.20.1-62B47A)](https://minecraft.net)
 [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 [![Fabric](https://img.shields.io/badge/Fabric-✓-DBB591)](https://fabricmc.net)
@@ -70,6 +70,7 @@ Full JSON reference → **[BOSS_CONFIG_DOCS.md](BOSS_CONFIG_DOCS.md)**
 
 | Loader   | Minecraft | Module             | Java |
 | -------- | --------- | ------------------ | ---- |
+| Fabric   | 26.1.2    | `fabric-26.1.2`    | 25   |
 | Fabric   | 1.21.11   | `fabric-1.21.11`   | 21   |
 | NeoForge | 1.21.11   | `neoforge-1.21.11` | 21   |
 | Fabric   | 1.21.8    | `fabric-1.21.8`    | 21   |
@@ -145,6 +146,9 @@ Players start fights without an admin: right-click with a summon item (a vanilla
 
 ### Difficulty variants
 Named variants such as `hard` scale health, all/melee/ability damage and loot, with their own name. The summon item picks the variant, or use `/boss spawn <id> variant <name>`; the boss keeps it through restarts.
+
+### Spawn affixes
+Every spawn can roll random affixes from a weighted pool, such as **Swift**, **Armored** or **Vampiric**: a word in front of the boss name plus more health, damage, speed, armor, loot or extra abilities. Define affixes per boss or once in `settings.json` and share them; the boss keeps what it rolled through restarts.
 
 ### Arena leash, anti-cheese & rages
 Bosses never break blocks, and players may build. Instead: an `arena` radius resets a boss that's pulled away (no loot for that attempt); opt-in stuck detection teleports, strikes, heals, resets or enrages a boxed-in boss, escalating on repeats; boats and minecarts are destroyed on contact; slowing blocks can be ignored; minions that can't reach you teleport to you. **Rages** are phases triggered by behavior or an **enrage timer**, with extra health, a new bar color and their own abilities.
@@ -252,7 +256,7 @@ config/fiw_bosses/settings.json   global settings (fight summary, combat trackin
 
 ## Building
 
-Run Gradle with **JDK 21** (the 1.20.1 modules compile against a Java 17 toolchain).
+Run Gradle with **JDK 25**. Toolchains compile Minecraft 26.1.2 for Java 25, 1.21.x for Java 21 and 1.20.1 for Java 17.
 
 ```bash
 git clone https://github.com/Fi3w0/Fiw-Bosses
@@ -264,14 +268,14 @@ cd Fiw-Bosses
 <summary><strong>Full release-style matrix build</strong></summary>
 
 ```bash
-./gradlew :core:test \
+./gradlew :core:test :fabric-26.1.2:build \
   :fabric-1.21.11:build :neoforge-1.21.11:build \
   :fabric-1.21.8:build  :neoforge-1.21.8:build \
   :fabric-1.21.1:build  :neoforge-1.21.1:build \
   :fabric-1.20.1:build  :forge-1.20.1:build
 ```
 
-Output jars land in each module's `build/libs/`. The first Forge build is slow (ForgeGradle prepares Minecraft). Don't pass `--configure-on-demand` for single-loader builds — loader modules depend on `:core` being configured first.
+Output jars land in each module's `build/libs/`. The first Forge build is slow (ModDevGradle prepares Minecraft). Don't pass `--configure-on-demand` for single-loader builds — loader modules depend on `:core` being configured first.
 
 </details>
 
@@ -279,6 +283,7 @@ Output jars land in each module's `build/libs/`. The first Forge build is slow (
 
 ```text
 core/             Minecraft-free config, text, skin, and shared support code
+common-26.1.2/    shared game logic for Minecraft 26.1.2
 common-1.21.11/   shared game logic for Minecraft 1.21.11
 common-1.21.8/    shared game logic for Minecraft 1.21.8
 common-1.21.1/    shared game logic for Minecraft 1.21.1
